@@ -1,0 +1,2460 @@
+{
+  "files": [
+    {
+      "path": "packages/component-library/src/Button.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/FormError.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/Input.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/Label.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/Menu.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/Select.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: bold",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/component-library/src/styles.ts",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 20",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 36",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 300",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 4
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: -0.36",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 4
+        },
+        {
+          "pattern": "letterSpacing: 0.16",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.96",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/AccountEmptyMessage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/AccountSyncCheck.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/Balance.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 22",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/BalanceHistoryGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 800",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/Header.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 25",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/accounts/Reconcile.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/admin/UserAccess/UserAccessRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/admin/UserDirectory/UserDirectory.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/admin/UserDirectory/UserDirectoryRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/alerts.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/AppBackground.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/autocomplete/CategoryAutocomplete.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/autocomplete/PayeeAutocomplete.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 11",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 11px",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/AccountRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/BankSyncCheckboxOptions.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/BuiltInProviders.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 20",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/EditSyncAccount.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/FieldMapping.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 3
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/banksync/index.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 1.1rem",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 20",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/BalanceWithCarryover.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/budgetsummary/BudgetSummary.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0.18",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/budgetsummary/ToBudgetAmount.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/budgetsummary/TotalsList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/CoverMenu.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/EnvelopeBudgetComponents.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 5
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/HoldMenu.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/envelope/TransferMenu.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/ExpenseGroup.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/goals/BudgetAutomationReadOnly.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/goals/editor/LimitAutomation.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/goals/editor/RemainderAutomation.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/IncomeGroup.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/IncomeHeader.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/MonthPicker.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.96",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/SidebarGroup.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/tracking/budgetsummary/BudgetSummary.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/tracking/budgetsummary/BudgetTotal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/tracking/budgetsummary/Saved.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 25",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/budget/tracking/TrackingBudgetComponents.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 4
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/CommandBar.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 0.8rem",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 0.9rem",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 1rem",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/common/Modal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 25",
+          "count": 3
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/EditablePageHeaderTitle.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 25",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/FatalError.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/forms/index.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/formula/codeMirror-excelLanguage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 0.95em",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 0.9em",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 11px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12px",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 13px",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 3
+        },
+        {
+          "pattern": "letterSpacing: 0.03em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/formula/FormulaEditor.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14px",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/formula/QueryManager.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 5
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/BudgetFileSelection.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/ConfigServer.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 5
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/Bootstrap.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/ChangePassword.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/common.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 40",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/ConfirmPasswordForm.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/Error.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/subscribe/Login.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/manager/WelcomeScreen.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/ManageRules.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/accounts/AccountPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/accounts/AccountsPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 17",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/banksync/BankSyncAccountsList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.5",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/banksync/BankSyncAccountsListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/banksync/MobileBankSyncAccountEditPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/banksync/MobileBankSyncPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/BalanceCell.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/BudgetCell.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/BudgetPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/BudgetTable.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 4
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/ExpenseGroupListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/IncomeGroup.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/budget/SpentCell.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/MobileBackButton.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/MobileForms.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/payees/PayeesList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/payees/PayeesListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/rules/RulesList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/rules/RulesListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/schedules/MobileSchedulesPage.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/schedules/SchedulesList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/schedules/SchedulesListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/transactions/FocusableAmountInput.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/transactions/TransactionEdit.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 11px",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 300",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/transactions/TransactionList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/transactions/TransactionListItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/mobile/transactions/TransactionListWithBalances.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 4
+        },
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/AutomationEditorPane.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 4
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 5
+        },
+        {
+          "pattern": "letterSpacing: 0.04em",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0.05em",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/AutomationListRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0.04em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/BudgetAutomationMigrationWarning.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/BudgetAutomationsBody.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 20",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 22",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 4
+        },
+        {
+          "pattern": "letterSpacing: 0.04em",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.05em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/ConflictBanner.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/EmptyState.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: -0.01em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/TypePicker.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/BudgetAutomationsModal/UnsupportedDirectivesNotice.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/CloseAccountModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/ConfirmPayeesMergeModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/CreateAccountModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 5
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/CreateEncryptionKeyModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/CreateLocalAccountModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 0.7em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/EditFieldModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/EnvelopeBalanceMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/EnvelopeBudgetMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/EnvelopeIncomeBalanceMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/FixEncryptionKeyModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/GoalTemplateModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 1em",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/ImportTransactionsModal/SubLabel.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/KeyboardShortcutModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/LoadBackupModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/manager/ConfirmChangeDocumentDir.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/manager/DeleteFileModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/manager/FilesSettingsModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/manager/ImportModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 700",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/MergeUnusedPayeesModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/NotesModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/OutOfSyncMigrationsModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/PasswordEnableModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/ScheduledTransactionMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/SelectLinkedAccountsModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 0.9em",
+          "count": 6
+        },
+        {
+          "pattern": "fontSize: 1.1em",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 1em",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/TrackingBalanceMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/modals/TrackingBudgetMenuModal.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/Notifications.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/Page.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 17",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 25",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/payees/ManagePayees.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/payees/PayeeMenu.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/payees/PayeeTableRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/AccountSelector.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: bold",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/CategorySelector.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: bold",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/DashboardHeader.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 36",
+          "count": 3
+        },
+        {
+          "pattern": "fontWeight: 300",
+          "count": 3
+        },
+        {
+          "pattern": "letterSpacing: -0.36",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/DateRange.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0.15",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/FormulaResult.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 300",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/AgeOfMoneyGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/LineGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/NetWorthGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/SankeyGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/StackedBarGraph.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/tableGraph/ReportTableHeader.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/tableGraph/ReportTableList.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/tableGraph/ReportTableRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/graphs/tableGraph/ReportTableTotals.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/LoadingIndicator.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/ReportCardMetric.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 24",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 300",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/ReportCardName.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 20",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/ReportLegend.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/AgeOfMoney.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/AgeOfMoneyCard.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/BudgetAnalysis.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/CashFlow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/Crossover.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/CrossoverCard.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/CustomReport.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/Formula.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 11",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 4
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/NetWorth.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/Sankey.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 16",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/Spending.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/reports/Summary.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 25px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 32px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 50px",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/ReportsDashboardRouter.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/ReportSummary.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 400",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 3
+        },
+        {
+          "pattern": "fontWeight: 800",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/reports/SummaryNumber.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 300",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/rules/RuleEditor.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/rules/RuleRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 13",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/schedules/ScheduleEditForm.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 13",
+          "count": 2
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/select/RecurringSchedulePicker.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/AuthSettings.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: bold",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/Encryption.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/Experimental.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/index.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/ThemeInstaller.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 10",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 12",
+          "count": 3
+        },
+        {
+          "pattern": "fontSize: 14",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/settings/UI.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 20",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/sidebar/Account.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/sidebar/Accounts.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/sidebar/BudgetName.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 16",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/sidebar/SecondaryItem.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/table.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/tags/TagRow.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 12",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/Titlebar.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/transactions/TransactionsTable.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 300",
+          "count": 6
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: 600",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: bold",
+          "count": 2
+        },
+        {
+          "pattern": "fontWeight: normal",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: -0.5",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/UpdateNotification.tsx",
+      "patterns": [
+        {
+          "pattern": "fontWeight: 500",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 700",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/components/util/LoadComponent.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 18",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "path": "packages/desktop-client/src/style/theme.tsx",
+      "patterns": [
+        {
+          "pattern": "fontSize: 15px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 16px",
+          "count": 1
+        },
+        {
+          "pattern": "fontSize: 20px",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 400",
+          "count": 1
+        },
+        {
+          "pattern": "fontWeight: 500",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0",
+          "count": 2
+        },
+        {
+          "pattern": "letterSpacing: 0.16px",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}
