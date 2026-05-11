@@ -22,7 +22,6 @@ colors:
   canvas: "#f8f7f4"
   canvas-soft: "#fbfaf8"
   surface: "#ffffff"
-  surface-raised: "#ffffff"
   surface-subtle: "#f3f2ef"
   surface-selected: "#eef4ff"
   surface-hover: "#f5f4f1"
@@ -138,7 +137,6 @@ typography:
     fontFeatureSettings: "'ss01', 'ss04', 'tnum'"
 
 spacing:
-  xxxs: 2px
   xxs: 4px
   xs: 8px
   sm: 12px
@@ -146,7 +144,9 @@ spacing:
   lg: 20px
   xl: 24px
   xxl: 32px
-  page: 32px
+  xxxl: 48px
+  page: 32px       # semantic alias for xxl — default page padding
+  section: 48px    # semantic alias for xxxl — between major bands
 
 rounded:
   none: 0px
@@ -163,6 +163,16 @@ shadows:
   popover: "0 12px 40px rgba(12, 10, 9, 0.16)"
 
 components:
+  focus-ring:
+    boxShadow: "0 0 0 3px {colors.accent-action-muted}"
+    outline: none
+    transition: box-shadow 150ms ease-out
+    rule: Applied on :focus-visible to every interactive component (buttons, icon-button, inputs, selects, filter-chips, sidebar-item, nav-item, table-row when selectable). Never replace with `outline: none` alone.
+  page-header:
+    typography: "{typography.display-2xl}"
+    textColor: "{colors.ink-strong}"
+    marginBottom: "{spacing.lg}"
+    rule: Top-of-page hero/title for `/budget`, `/reports`, `/accounts`, `/schedules`, `/bank-sync`. The page-header is the only place display-2xl is used; other surfaces step down to display-xl or display-lg.
   page-shell:
     backgroundColor: "{colors.canvas}"
     textColor: "{colors.ink}"
@@ -182,6 +192,7 @@ components:
     textColor: "{colors.muted}"
     activeBackgroundColor: "{colors.surface-selected}"
     activeTextColor: "{colors.accent-action}"
+    focusVisible: "{component.focus-ring}"
   toolbar:
     height: 56px
     backgroundColor: "{colors.surface}"
@@ -197,6 +208,7 @@ components:
     rounded: "{rounded.pill}"
     height: 40px
     padding: 0 18px
+    focusVisible: "{component.focus-ring}"
   button-secondary:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -205,6 +217,7 @@ components:
     rounded: "{rounded.pill}"
     height: 40px
     padding: 0 18px
+    focusVisible: "{component.focus-ring}"
   button-ghost:
     backgroundColor: transparent
     hoverBackgroundColor: "{colors.surface-hover}"
@@ -213,12 +226,14 @@ components:
     rounded: "{rounded.md}"
     height: 36px
     padding: 0 12px
+    focusVisible: "{component.focus-ring}"
   icon-button:
     size: 36px
     rounded: "{rounded.md}"
     backgroundColor: transparent
     hoverBackgroundColor: "{colors.surface-hover}"
     iconColor: "{colors.muted}"
+    focusVisible: "{component.focus-ring}"
   card:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
@@ -254,6 +269,10 @@ components:
     typography: "{typography.body-sm}"
     numeric: "{typography.tabular-figure}"
     textAlign: right
+    textColor: "{colors.ink}"
+    negativeFormat: "-$X.XX"
+    negativeColor: "{colors.ink}"
+    rule: Negative amounts use a leading minus sign and stay in ink color. Do NOT auto-color negative amounts red. Reserve semantic-error for status/diff cells where overspent or warning state is the explicit intent (budget overspent, declining delta column, overdraft warning). Currency symbol is locale-aware; the format example shows USD.
   category-pill:
     typography: "{typography.caption}"
     textColor: "{colors.ink}"
@@ -283,6 +302,7 @@ components:
     placeholderColor: "{colors.muted}"
     border: "1px solid {colors.hairline-strong}"
     focusBorderColor: "{colors.accent-action}"
+    focusVisible: "{component.focus-ring}"
     typography: "{typography.body-md}"
     rounded: "{rounded.md}"
     height: 40px
@@ -291,6 +311,7 @@ components:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
     border: "1px solid {colors.hairline-strong}"
+    focusVisible: "{component.focus-ring}"
     typography: "{typography.body-md}"
     rounded: "{rounded.pill}"
     height: 40px
@@ -300,6 +321,7 @@ components:
     activeBackgroundColor: "{colors.accent-action-muted}"
     textColor: "{colors.ink}"
     activeTextColor: "{colors.accent-action-pressed}"
+    focusVisible: "{component.focus-ring}"
     typography: "{typography.caption}"
     rounded: "{rounded.pill}"
     height: 28px
@@ -400,6 +422,34 @@ Unknown custom category groups map to this palette by stable hash of the group n
 ## Action Color Rule
 
 Use A1 Calm Blue `#2563EB` for primary actions, active controls, and selected navigation states. Use ink for text and neutral actions. Do not use category colors for generic CTAs.
+
+## Token Resolution
+
+Some component specs reference `{category.solid}` or `{category.tint}` as placeholder bindings to a specific category's color. These are resolved at runtime in component code, not in the design tokens themselves.
+
+The implementer provides a typed helper:
+
+```ts
+type CategoryGroup =
+  | 'housing' | 'food' | 'transport' | 'shopping' | 'bills' | 'health'
+  | 'entertainment' | 'travel' | 'income' | 'debt' | 'savings' | 'personal'
+  | string; // custom groups
+
+function getCategoryColor(
+  group: CategoryGroup,
+  variant: 'solid' | 'tint',
+): string;
+```
+
+Resolution rules, in order:
+
+1. **Stored override (Phase 3+).** If the category record has an explicit stored color, return it (after format normalization).
+2. **Named group.** If `group` is one of the 12 named groups (housing, food, transport, shopping, bills, health, entertainment, travel, income, debt, savings, personal), return `colors.category-{group}` for `solid` or `colors.category-{group}-tint` for `tint`.
+3. **Hash fallback (custom groups).** Compute `stableHash(group) mod 12` and return the token at that index in the ordered list above. The hash MUST be stable across reloads and processes (e.g. FNV-1a) so the same custom category name always renders the same color.
+
+Bind at the usage site, not in the design tokens. Example: `<CategoryPill group={transaction.categoryGroup} />` resolves both `{category.tint}` (for `backgroundColor`) and `{category.solid}` (for `category-dot`) by calling `getCategoryColor` once per variant.
+
+The placeholder `{category.X}` in this file means "fill via `getCategoryColor` at usage site." Do not treat `{category.tint}` or `{category.solid}` as standalone tokens.
 
 ## Layout Rule
 

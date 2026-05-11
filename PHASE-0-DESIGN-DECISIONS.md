@@ -2,7 +2,17 @@
 
 Companion to `PLAN.md` section 13. This file proposes the two Phase 0 visual decisions that require user signoff before rewriting `DESIGN.md`.
 
-Status: approved and transcribed into `DESIGN.md`.
+Status: approved and transcribed into `DESIGN.md`. F1–F4 patch applied 2026-05-10 per `design-review/phase-1-baseline/DESIGN-MD-SPEC-REVIEW.md`.
+
+## Changelog vs PLAN.md spec (recorded after design-review)
+
+- **Canvas color.** PLAN.md spec said keep legacy `#f5f5f5`. New `DESIGN.md` uses `#f8f7f4` (slightly warmer). All contrast tables in this file were computed against the legacy `#f5f5f5`; the new canvas yields equal or higher contrast (improves accessibility, no regression).
+- **Spacing scale.** Added `xxxl: 48px` (PLAN.md spec required it; was missing in first draft). Removed `xxxs: 2px` (unused). Added semantic aliases `page: 32px` (= xxl) and `section: 48px` (= xxxl).
+- **Dead tokens removed.** `surface-raised` (duplicate of `surface`).
+- **Dead tokens activated.** `display-2xl` is now used by the new `page-header` component. `ink-strong` is now referenced from `page-header`.
+- **New components.** `focus-ring` (a11y), `page-header` (top-of-page hero/title).
+- **Updated components.** `button-primary`, `button-secondary`, `button-ghost`, `icon-button`, `input`, `select`, `filter-chip`, `sidebar-item` now reference `focus-ring` via `focusVisible`. `table-cell-amount` documents negative-value rendering (`-$X.XX`, ink color — never auto-red).
+- **New prose section.** "Token Resolution" documents how `{category.solid}` / `{category.tint}` placeholders are bound at the call site via a `getCategoryColor` helper, including stable-hash fallback for custom groups.
 
 ## Baseline Checks
 
