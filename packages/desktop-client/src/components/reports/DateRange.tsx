@@ -3,9 +3,9 @@ import type { ReactElement } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Block } from '@actual-app/components/block';
-import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyStrong, metricSubtitle } from '@actual-app/components/typography';
 import * as monthUtils from '@actual-app/core/shared/months';
 import * as d from 'date-fns';
 
@@ -39,7 +39,7 @@ export function DateRange({ start, end, type }: DateRangeProps): ReactElement {
     endDate = d.parseISO(checkEnd);
   } else {
     return (
-      <Text style={{ ...styles.mediumText, color: theme.errorText }}>
+      <Text style={{ ...bodyStrong, color: theme.errorText }}>
         <Trans>There was a problem loading your date range</Trans>
       </Text>
     );
@@ -89,10 +89,7 @@ export function DateRange({ start, end, type }: DateRangeProps): ReactElement {
     <Block
       style={{
         color: theme.pageTextSubdued,
-        fontSize: 15,
-        fontWeight: 400,
-        lineHeight: 1.47,
-        letterSpacing: 0.15,
+        ...metricSubtitle,
       }}
     >
       {content}

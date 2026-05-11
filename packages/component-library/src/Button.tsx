@@ -8,6 +8,7 @@ import type { CSSObject } from '@emotion/serialize';
 import { AnimatedLoading } from './icons/AnimatedLoading';
 import { styles } from './styles';
 import { theme } from './theme';
+import { buttonText } from './typography';
 import { View } from './View';
 
 const backgroundColor: {
@@ -159,10 +160,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           color: textColor[variantWithDisabled],
           transition: 'background-color .2s, border-color .2s, box-shadow .2s',
           WebkitAppRegion: 'no-drag',
-          fontSize: 15,
-          fontWeight: 500,
-          lineHeight: 1,
-          letterSpacing: 0,
+          ...buttonText,
           '&[data-hovered]': _getHoveredStyles(variant),
           '&[data-pressed]': _getActiveStyles(variant, bounce),
         }),

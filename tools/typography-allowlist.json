@@ -1,23 +1,6 @@
 {
   "files": [
     {
-      "path": "packages/component-library/src/Button.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 15",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 500",
-          "count": 1
-        },
-        {
-          "pattern": "letterSpacing: 0",
-          "count": 1
-        }
-      ]
-    },
-    {
       "path": "packages/component-library/src/FormError.tsx",
       "patterns": [
         {
@@ -1793,58 +1776,11 @@
       ]
     },
     {
-      "path": "packages/desktop-client/src/components/reports/DashboardHeader.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 36",
-          "count": 3
-        },
-        {
-          "pattern": "fontWeight: 300",
-          "count": 3
-        },
-        {
-          "pattern": "letterSpacing: -0.36",
-          "count": 3
-        }
-      ]
-    },
-    {
-      "path": "packages/desktop-client/src/components/reports/DateRange.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 15",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 400",
-          "count": 1
-        },
-        {
-          "pattern": "letterSpacing: 0.15",
-          "count": 1
-        }
-      ]
-    },
-    {
       "path": "packages/desktop-client/src/components/reports/FormulaResult.tsx",
       "patterns": [
         {
           "pattern": "fontWeight: 300",
           "count": 1
-        }
-      ]
-    },
-    {
-      "path": "packages/desktop-client/src/components/reports/graphs/AgeOfMoneyGraph.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 10",
-          "count": 1
-        },
-        {
-          "pattern": "fontSize: 12",
-          "count": 2
         }
       ]
     },
@@ -1933,36 +1869,6 @@
       "patterns": [
         {
           "pattern": "fontSize: 18",
-          "count": 1
-        }
-      ]
-    },
-    {
-      "path": "packages/desktop-client/src/components/reports/ReportCardMetric.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 24",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 300",
-          "count": 1
-        }
-      ]
-    },
-    {
-      "path": "packages/desktop-client/src/components/reports/ReportCardName.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 20",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 500",
-          "count": 1
-        },
-        {
-          "pattern": "letterSpacing: 0",
           "count": 1
         }
       ]
@@ -2419,39 +2325,6 @@
       "patterns": [
         {
           "pattern": "fontSize: 18",
-          "count": 1
-        }
-      ]
-    },
-    {
-      "path": "packages/desktop-client/src/style/theme.tsx",
-      "patterns": [
-        {
-          "pattern": "fontSize: 15px",
-          "count": 1
-        },
-        {
-          "pattern": "fontSize: 16px",
-          "count": 1
-        },
-        {
-          "pattern": "fontSize: 20px",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 400",
-          "count": 1
-        },
-        {
-          "pattern": "fontWeight: 500",
-          "count": 2
-        },
-        {
-          "pattern": "letterSpacing: 0",
-          "count": 2
-        },
-        {
-          "pattern": "letterSpacing: 0.16px",
           "count": 1
         }
       ]

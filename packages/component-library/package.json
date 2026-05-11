@@ -32,6 +32,7 @@
     "./text-one-line": "./src/TextOneLine.tsx",
     "./theme": "./src/theme.ts",
     "./tokens": "./src/tokens.ts",
+    "./typography": "./src/typography.ts",
     "./toggle": "./src/Toggle.tsx",
     "./tooltip": "./src/Tooltip.tsx",
     "./view": "./src/View.tsx",

@@ -6,6 +6,7 @@ import { SvgPencil1 } from '@actual-app/components/icons/v2';
 import { InitialFocus } from '@actual-app/components/initial-focus';
 import { Input } from '@actual-app/components/input';
 import { theme } from '@actual-app/components/theme';
+import { pageHeader } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { DashboardPageEntity } from '@actual-app/core/types/models';
 
@@ -64,11 +65,7 @@ export function DashboardHeader({ dashboard }: DashboardHeaderProps) {
       <View
         className="brand-display"
         style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: 36,
-          fontWeight: 300,
-          lineHeight: 1.17,
-          letterSpacing: -0.36,
+          ...pageHeader,
           flexGrow: 0,
           flexShrink: 0,
           flexBasis: 'auto',
@@ -84,11 +81,7 @@ export function DashboardHeader({ dashboard }: DashboardHeaderProps) {
             onUpdate={handleSaveName}
             onEscape={() => setEditingName(false)}
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 36,
-              fontWeight: 300,
-              lineHeight: 1.17,
-              letterSpacing: -0.36,
+              ...pageHeader,
               marginTop: -3,
               marginBottom: -4,
               paddingTop: 2,
@@ -101,11 +94,7 @@ export function DashboardHeader({ dashboard }: DashboardHeaderProps) {
           <View
             className="brand-display"
             style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 36,
-              fontWeight: 300,
-              lineHeight: 1.17,
-              letterSpacing: -0.36,
+              ...pageHeader,
               marginRight: 5,
               flexGrow: 0,
               flexShrink: 1,

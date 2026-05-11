@@ -187,7 +187,14 @@ export function ThemeStyle() {
   return (
     <style>{`:root {
   --font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Waldenburg', 'EB Garamond', 'Times New Roman', Times, serif;
+  --font-display: var(--font-family);
+  --font-size-body-md: 15px;
+  --font-size-button: 15px;
+  --font-size-display-lg: 20px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --letter-spacing-normal: 0;
 ${css}
 }
 
@@ -208,7 +215,14 @@ export function BrandStyle() {
   return (
     <style>{`:root {
   --font-family: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Waldenburg', 'EB Garamond', 'Times New Roman', Times, serif;
+  --font-display: var(--font-family);
+  --font-size-body-md: 15px;
+  --font-size-button: 15px;
+  --font-size-display-lg: 20px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --letter-spacing-normal: 0;
   --color-pageBackground: #f5f5f5;
   --color-pageBackgroundModalActive: #f0efed;
   --color-pageText: #0c0a09;
@@ -265,34 +279,34 @@ input,
 textarea,
 select {
   font-family: var(--font-family) !important;
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.5;
-  letter-spacing: 0.16px;
+  font-size: var(--font-size-body-md);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.45;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 button {
   font-family: var(--font-family) !important;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-semibold);
   line-height: 1;
-  letter-spacing: 0;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 .brand-display {
   color: #0c0a09;
-  font-family: var(--font-display) !important;
-  font-weight: 300 !important;
-  letter-spacing: -0.01em !important;
+  font-family: var(--font-family) !important;
+  font-weight: var(--font-weight-semibold) !important;
+  letter-spacing: var(--letter-spacing-normal) !important;
 }
 
 .brand-title {
   color: #292524;
   font-family: var(--font-family) !important;
-  font-size: 20px;
-  font-weight: 500;
-  line-height: 1.35;
-  letter-spacing: 0;
+  font-size: var(--font-size-display-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.3;
+  letter-spacing: var(--letter-spacing-normal);
 }
 
 button {

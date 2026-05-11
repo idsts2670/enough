@@ -2,7 +2,7 @@ import React from 'react';
 
 import { InitialFocus } from '@actual-app/components/initial-focus';
 import { Input } from '@actual-app/components/input';
-import { styles } from '@actual-app/components/styles';
+import { bodyStrong, metricTitle } from '@actual-app/components/typography';
 
 import { NON_DRAGGABLE_AREA_CLASS_NAME } from './constants';
 
@@ -29,7 +29,7 @@ export const ReportCardName = ({
           onUpdate={onChange}
           onEscape={onClose}
           style={{
-            ...styles.mediumText,
+            ...bodyStrong,
             marginTop: -6,
             marginBottom: -1,
             marginLeft: -6,
@@ -47,11 +47,7 @@ export const ReportCardName = ({
         display: 'block',
         margin: 0,
         padding: 0,
-        fontFamily: 'var(--font-family)',
-        fontSize: 20,
-        fontWeight: 500,
-        lineHeight: 1.35,
-        letterSpacing: 0,
+        ...metricTitle,
         marginBottom: 6,
       }}
     >

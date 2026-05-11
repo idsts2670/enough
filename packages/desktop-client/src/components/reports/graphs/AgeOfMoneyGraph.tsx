@@ -3,6 +3,11 @@ import { Trans, useTranslation } from 'react-i18next';
 
 import type { CSSProperties } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
+import {
+  bodySm,
+  chartAxis,
+  chartLabel,
+} from '@actual-app/components/typography';
 import { css } from '@emotion/css';
 import {
   Area,
@@ -44,6 +49,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
           backgroundColor: theme.menuBackground,
           color: theme.menuItemText,
           padding: 10,
+          ...bodySm,
         })}
       >
         <div style={{ marginBottom: 5 }}>
@@ -132,14 +138,14 @@ export function AgeOfMoneyGraph({
               {!compact && (
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: theme.reportsLabel, fontSize: 12 }}
+                  tick={{ fill: theme.reportsLabel, ...chartAxis }}
                   tickLine={{ stroke: theme.reportsLabel }}
                 />
               )}
               {!compact && (
                 <YAxis
                   tickFormatter={value => (privacyMode ? '•••' : `${value}d`)}
-                  tick={{ fill: theme.reportsLabel, fontSize: 12 }}
+                  tick={{ fill: theme.reportsLabel, ...chartAxis }}
                   tickLine={{ stroke: theme.reportsLabel }}
                   domain={[0, yAxisMax]}
                 />
@@ -159,7 +165,7 @@ export function AgeOfMoneyGraph({
                     value: t('30 days'),
                     position: 'insideTopRight',
                     fill: theme.reportsGreen,
-                    fontSize: 10,
+                    ...chartLabel,
                   }}
                 />
               )}

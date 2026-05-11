@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 
 import { theme } from '@actual-app/components/theme';
+import { chartLabel, chartValue } from '@actual-app/components/typography';
 import type {
   balanceTypeOpType,
   DataEntity,
@@ -172,6 +173,7 @@ const ActiveShapeMobile = ({
         y={cy + chartOuterRadius * Math.sin(-RADIAN * 270) + 17}
         textAnchor="middle"
         fill={fill}
+        {...chartLabel}
       >
         {yAxis}
       </text>
@@ -182,6 +184,7 @@ const ActiveShapeMobile = ({
           y={ey}
           textAnchor="end"
           fill={fill}
+          {...chartValue}
         >
           {format(value, 'financial')}
         </FinancialText>
@@ -190,6 +193,7 @@ const ActiveShapeMobile = ({
           y={ey}
           textAnchor="start"
           fill="#999"
+          {...chartLabel}
         >
           {`${(percent * 100).toFixed(2)}%`}
         </text>
@@ -279,7 +283,13 @@ const ActiveShapeDesktop = ({
         fill="none"
       />
       <circle cx={ex} cy={ey} r={3} fill={fill} stroke="none" />
-      <text x={labelX} y={ey} textAnchor={textAnchor} fill={fill}>
+      <text
+        x={labelX}
+        y={ey}
+        textAnchor={textAnchor}
+        fill={fill}
+        {...chartLabel}
+      >
         {yAxis}
       </text>
       <PrivacyFilter>
@@ -290,10 +300,18 @@ const ActiveShapeDesktop = ({
           dy={18}
           textAnchor={textAnchor}
           fill={fill}
+          {...chartValue}
         >
           {format(value, 'financial')}
         </FinancialText>
-        <text x={labelX} y={ey} dy={36} textAnchor={textAnchor} fill="#999">
+        <text
+          x={labelX}
+          y={ey}
+          dy={36}
+          textAnchor={textAnchor}
+          fill="#999"
+          {...chartLabel}
+        >
           {`(${(percent * 100).toFixed(2)}%)`}
         </text>
       </PrivacyFilter>

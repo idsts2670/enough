@@ -3,6 +3,7 @@ import type { SVGAttributes } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { theme } from '@actual-app/components/theme';
+import { chartLabel, chartValue } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
@@ -76,6 +77,7 @@ function CustomLabel({
         y={yOffset + 10}
         textAnchor={anchorValue[position]}
         fill={theme.tableText}
+        {...chartLabel}
       >
         {name}
       </text>
@@ -85,6 +87,7 @@ function CustomLabel({
         y={yOffset + 26}
         textAnchor={anchorValue[position]}
         fill={theme.tableText}
+        {...chartValue}
       >
         <PrivacyFilter>{format(value, 'financial')}</PrivacyFilter>
       </FinancialText>
