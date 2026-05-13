@@ -140,6 +140,7 @@ async function getAccountProperties({ id }: { id: AccountEntity['id'] }) {
   };
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function linkGoCardlessAccount({
   requisitionId,
   account,
@@ -209,6 +210,7 @@ async function linkGoCardlessAccount({
   return 'ok';
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function linkSimpleFinAccount({
   externalAccount,
   upgradingId,
@@ -283,6 +285,7 @@ async function linkSimpleFinAccount({
   return 'ok';
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function linkPluggyAiAccount({
   externalAccount,
   upgradingId,
@@ -659,6 +662,7 @@ async function checkSecret(name: string) {
 
 let stopPolling = false;
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function pollGoCardlessWebToken({
   requisitionId,
 }: {
@@ -734,11 +738,13 @@ async function pollGoCardlessWebToken({
   });
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function stopGoCardlessWebTokenPolling() {
   stopPolling = true;
   return 'ok';
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function goCardlessStatus() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -760,6 +766,7 @@ async function goCardlessStatus() {
   );
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function simpleFinStatus() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -781,6 +788,7 @@ async function simpleFinStatus() {
   );
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function pluggyAiStatus() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -802,6 +810,7 @@ async function pluggyAiStatus() {
   );
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function simpleFinAccounts() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -828,6 +837,7 @@ async function simpleFinAccounts() {
   }
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function pluggyAiAccounts() {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -949,6 +959,7 @@ async function plaidAccounts() {
   }
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function getGoCardlessBanks(country: string) {
   const userToken = await asyncStorage.getItem('user-token');
 
@@ -970,6 +981,7 @@ async function getGoCardlessBanks(country: string) {
   );
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function createGoCardlessWebToken({
   institutionId,
   accessValidForDays,
@@ -1184,6 +1196,7 @@ async function accountsBankSync({
   return { errors, newTransactions, matchedTransactions, updatedAccounts };
 }
 
+// oxlint-disable-next-line no-unused-vars -- legacy non-Plaid handler kept per PLAN.md OD3; re-registration deferred to Phase 2
 async function simpleFinBatchSync({
   ids = [],
 }: {
