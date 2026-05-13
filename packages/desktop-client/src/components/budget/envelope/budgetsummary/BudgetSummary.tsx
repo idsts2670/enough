@@ -10,6 +10,7 @@ import {
 import { Popover } from '@actual-app/components/popover';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
+import { titleMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
@@ -121,18 +122,12 @@ export const BudgetSummary = memo(({ month }: BudgetSummaryProps) => {
           </View>
 
           <div
-            className={css([
-              {
-                textAlign: 'center',
-                marginTop: 3,
-                fontSize: 18,
-                fontWeight: 500,
-                lineHeight: 1.44,
-                letterSpacing: 0.18,
-                textDecorationSkip: 'ink',
-              },
-              currentMonth === month && { fontWeight: 500 },
-            ])}
+            className={css({
+              ...titleMd,
+              textAlign: 'center',
+              marginTop: 3,
+              textDecorationSkip: 'ink',
+            })}
           >
             {monthUtils.format(month, 'MMMM', locale)}
           </div>

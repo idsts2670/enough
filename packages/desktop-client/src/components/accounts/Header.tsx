@@ -25,6 +25,7 @@ import { SpaceBetween } from '@actual-app/components/space-between';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { displayXl } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { tsToRelativeTime } from '@actual-app/core/shared/util';
 import type {
@@ -658,8 +659,7 @@ function AccountNameField({
               onUpdate={handleSave}
               onEscape={() => setEditingName(false)}
               style={{
-                fontSize: 25,
-                fontWeight: 500,
+                ...displayXl,
                 marginTop: -3,
                 marginBottom: -4,
                 marginLeft: -6,
@@ -691,8 +691,7 @@ function AccountNameField({
         >
           <View
             style={{
-              fontSize: 25,
-              fontWeight: 500,
+              ...displayXl,
               marginRight: 5,
               marginBottom: -1,
             }}

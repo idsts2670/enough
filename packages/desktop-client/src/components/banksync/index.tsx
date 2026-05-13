@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { useResponsive } from '@actual-app/components/hooks/useResponsive';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
+import { bodyMd, displayLg } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { AccountEntity } from '@actual-app/core/types/models';
 
@@ -106,7 +107,7 @@ export function BankSync() {
         />
 
         {openAccounts.length === 0 && (
-          <Text style={{ fontSize: '1.1rem' }}>
+          <Text style={bodyMd}>
             <Trans>
               To use the bank syncing features, you must first add an account.
             </Trans>
@@ -117,9 +118,7 @@ export function BankSync() {
           return (
             <View key={syncProvider} style={{ minHeight: 'initial' }}>
               {groupedAccountEntries.length > 1 && (
-                <Text
-                  style={{ fontWeight: 500, fontSize: 20, margin: '.5em 0' }}
-                >
+                <Text style={{ ...displayLg, margin: '.5em 0' }}>
                   {syncSourceReadable[syncProvider]}
                 </Text>
               )}

@@ -3,9 +3,9 @@ import type { CSSProperties, MouseEventHandler } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Block } from '@actual-app/components/block';
-import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { displayXl, tabularFigure } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { css } from '@emotion/css';
 
@@ -80,29 +80,27 @@ export function ToBudgetAmount({
               onClick={onClick}
               onContextMenu={onContextMenu}
               data-cellname={sheetName}
-              className={css([
-                styles.veryLargeText,
-                {
-                  fontWeight: 400,
-                  userSelect: 'none',
-                  cursor: 'pointer',
-                  color: isPositive
+              className={css({
+                ...displayXl,
+                ...tabularFigure,
+                ...(amountStyle ?? {}),
+                userSelect: 'none',
+                cursor: 'pointer',
+                color: isPositive
+                  ? theme.toBudgetPositive
+                  : isNegative
+                    ? theme.toBudgetNegative
+                    : theme.toBudgetZero,
+                marginBottom: -1,
+                borderBottom: '1px solid transparent',
+                ':hover': {
+                  borderColor: isPositive
                     ? theme.toBudgetPositive
                     : isNegative
                       ? theme.toBudgetNegative
                       : theme.toBudgetZero,
-                  marginBottom: -1,
-                  borderBottom: '1px solid transparent',
-                  ':hover': {
-                    borderColor: isPositive
-                      ? theme.toBudgetPositive
-                      : isNegative
-                        ? theme.toBudgetNegative
-                        : theme.toBudgetZero,
-                  },
                 },
-                amountStyle,
-              ])}
+              })}
             >
               <FinancialText>{format(num, 'financial')}</FinancialText>
             </Block>

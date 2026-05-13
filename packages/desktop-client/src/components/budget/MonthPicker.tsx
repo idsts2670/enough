@@ -9,6 +9,7 @@ import {
 } from '@actual-app/components/icons/v1';
 import { SvgCalendar } from '@actual-app/components/icons/v2';
 import { theme } from '@actual-app/components/theme';
+import { bodyStrong, caption } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 
@@ -159,10 +160,7 @@ export const MonthPicker = ({
                 cursor: 'default',
                 borderRadius: 2,
                 border: 'none',
-                fontSize: 15,
-                fontWeight: 500,
-                lineHeight: 1.4,
-                letterSpacing: 0,
+                ...bodyStrong,
                 ...(!isMonthBudgeted && {
                   textDecoration: 'line-through',
                   color: theme.pageTextSubdued,
@@ -222,10 +220,7 @@ export const MonthPicker = ({
                       position: 'absolute',
                       top: -16,
                       left: 0,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      lineHeight: 1.4,
-                      letterSpacing: 0.96,
+                      ...caption,
                       color: isMonthBudgeted
                         ? theme.pageText
                         : theme.pageTextSubdued,

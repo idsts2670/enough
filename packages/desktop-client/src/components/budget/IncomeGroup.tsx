@@ -2,6 +2,7 @@
 import React from 'react';
 
 import { theme } from '@actual-app/components/theme';
+import { titleMd } from '@actual-app/components/typography';
 import type { CategoryGroupEntity } from '@actual-app/core/types/models';
 
 import { Row } from '#components/table';
@@ -35,7 +36,7 @@ export function IncomeGroup({
     <Row
       collapsed
       style={{
-        fontWeight: 500,
+        ...titleMd,
         backgroundColor: theme.budgetHeaderCurrentMonth, //use budget color
       }}
     >

@@ -3,9 +3,9 @@ import type { CSSProperties, Ref } from 'react';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 
 import { SpaceBetween } from '@actual-app/components/space-between';
-import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyStrong, chartLabel } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { integerToCurrency } from '@actual-app/core/shared/util';
@@ -297,7 +297,7 @@ export function BalanceHistoryGraph({
                     justifyContent: 'space-between',
                     width: LABEL_WIDTH,
                     textAlign: 'right',
-                    ...styles.verySmallText,
+                    ...chartLabel,
                   }}
                 >
                   {percentageChange === 0 ? (
@@ -311,9 +311,7 @@ export function BalanceHistoryGraph({
 
                   {hoveredValue && (
                     <View>
-                      <Text style={{ fontWeight: 800 }}>
-                        {hoveredValue.date}
-                      </Text>
+                      <Text style={bodyStrong}>{hoveredValue.date}</Text>
                       <PrivacyFilter activationFilters={[() => !isHovered]}>
                         <Text>{integerToCurrency(hoveredValue.balance)}</Text>
                       </PrivacyFilter>

@@ -8,6 +8,7 @@ import { SpaceBetween } from '@actual-app/components/space-between';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { bodySm } from '@actual-app/components/typography';
 
 import { LabeledCheckbox } from '#components/forms/LabeledCheckbox';
 import { ToggleField } from '#components/mobile/MobileForms';
@@ -133,7 +134,7 @@ function CheckboxOptionWithHelp({
       {showHelp && (
         <Text
           style={{
-            fontSize: 13,
+            ...bodySm,
             color: theme.pageTextSubdued,
           }}
         >

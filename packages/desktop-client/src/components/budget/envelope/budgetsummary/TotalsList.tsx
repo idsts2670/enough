@@ -6,6 +6,7 @@ import { AlignedText } from '@actual-app/components/aligned-text';
 import { Block } from '@actual-app/components/block';
 import { styles } from '@actual-app/components/styles';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { bodySm, tableCellAmount } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { EnvelopeCellValue } from '#components/budget/envelope/EnvelopeBudgetComponents';
@@ -53,10 +54,10 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
   return (
     <View
       style={{
+        ...bodySm,
         flexDirection: 'row',
         lineHeight: 1.5,
         justifyContent: 'center',
-        ...styles.smallText,
         ...style,
       }}
     >
@@ -97,7 +98,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
             binding={envelopeBudget.incomeAvailable}
             type="financial"
           >
-            {props => <CellValueText {...props} style={{ fontWeight: 500 }} />}
+            {props => <CellValueText {...props} style={tableCellAmount} />}
           </EnvelopeCellValue>
         </Tooltip>
 
@@ -108,7 +109,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
           {props => (
             <CellValueText
               {...props}
-              style={{ fontWeight: 500 }}
+              style={tableCellAmount}
               formatter={signedFormatter}
             />
           )}
@@ -121,7 +122,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
           {props => (
             <CellValueText
               {...props}
-              style={{ fontWeight: 500 }}
+              style={tableCellAmount}
               formatter={signedFormatter}
             />
           )}
@@ -134,7 +135,7 @@ export function TotalsList({ prevMonthName, style }: TotalsListProps) {
           {props => (
             <CellValueText
               {...props}
-              style={{ fontWeight: 500 }}
+              style={tableCellAmount}
               formatter={invertedSignedFormatter}
             />
           )}

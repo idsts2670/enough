@@ -7,6 +7,11 @@ import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import {
+  bodySm,
+  displayXl,
+  tabularFigure,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { css } from '@emotion/css';
 
@@ -32,7 +37,7 @@ export function Saved({ projected, style }: SavedProps) {
   const diff = totalSaved - budgetedSaved;
 
   return (
-    <View style={{ alignItems: 'center', fontSize: 14, ...style }}>
+    <View style={{ ...bodySm, alignItems: 'center', ...style }}>
       {projected ? (
         <Text style={{ color: theme.pageTextLight }}>
           <Trans>Projected savings:</Trans>
@@ -44,7 +49,7 @@ export function Saved({ projected, style }: SavedProps) {
       )}
 
       <Tooltip
-        style={{ ...styles.tooltip, fontSize: 14, padding: 10 }}
+        style={{ ...styles.tooltip, ...bodySm, padding: 10 }}
         content={
           <>
             <AlignedText
@@ -72,7 +77,8 @@ export function Saved({ projected, style }: SavedProps) {
       >
         <View
           className={css({
-            fontSize: 25,
+            ...displayXl,
+            ...tabularFigure,
             color: projected
               ? theme.templateNumberUnderFunded
               : isNegative

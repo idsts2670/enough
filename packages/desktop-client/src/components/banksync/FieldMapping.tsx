@@ -7,6 +7,7 @@ import { Select } from '@actual-app/components/select';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyStrong, tableCellLabel } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { Cell, Row, TableHeader } from '#components/table';
@@ -111,10 +112,10 @@ export function FieldMapping({
               style={{ paddingLeft: '10px' }}
               plain
             >
-              <Text
-                style={{ whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500 }}
-              >
-                {calculatedActualFieldWidth > 70 ? t('Enough field') : 'Enough'}
+              <Text style={{ ...bodyStrong, whiteSpace: 'nowrap' }}>
+                {calculatedActualFieldWidth > 70
+                  ? t('Enough field')
+                  : t('Enough')}
               </Text>
             </Cell>
             <Cell value="" width={arrowCellWidth} style={{ padding: 0 }} />
@@ -136,7 +137,7 @@ export function FieldMapping({
               <Row
                 key={field.actualField}
                 style={{
-                  fontSize: 13,
+                  ...tableCellLabel,
                   backgroundColor: theme.tableBackground,
                   display: 'flex',
                   alignItems: 'center',
@@ -150,7 +151,7 @@ export function FieldMapping({
                   style={{ ...commonCellStyle, paddingLeft: '10px' }}
                   plain
                 >
-                  <Text style={{ whiteSpace: 'nowrap', fontSize: 13 }}>
+                  <Text style={{ whiteSpace: 'nowrap' }}>
                     {field.actualField}
                   </Text>
                 </Cell>

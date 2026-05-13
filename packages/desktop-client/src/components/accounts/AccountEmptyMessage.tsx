@@ -3,6 +3,7 @@ import { Trans } from 'react-i18next';
 import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyMd, bodySm } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 type AccountEmptyMessageProps = {
@@ -25,7 +26,7 @@ export function AccountEmptyMessage({ onAdd }: AccountEmptyMessageProps) {
         style={{
           width: 550,
           marginTop: 75,
-          fontSize: 15,
+          ...bodyMd,
           alignItems: 'center',
         }}
       >
@@ -46,9 +47,7 @@ export function AccountEmptyMessage({ onAdd }: AccountEmptyMessageProps) {
           <Trans>Add account</Trans>
         </Button>
 
-        <View
-          style={{ marginTop: 20, fontSize: 13, color: theme.tableTextLight }}
-        >
+        <View style={{ marginTop: 20, color: theme.tableTextLight, ...bodySm }}>
           <Trans>In the future, you can add accounts from the sidebar.</Trans>
         </View>
       </View>

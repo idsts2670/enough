@@ -12,6 +12,7 @@ import { Popover } from '@actual-app/components/popover';
 import { SpaceBetween } from '@actual-app/components/space-between';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
+import { titleMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
@@ -118,10 +119,9 @@ export function BudgetSummary({ month }: BudgetSummaryProps) {
 
           <div
             className={css({
+              ...titleMd,
               textAlign: 'center',
               marginTop: 3,
-              fontSize: 18,
-              fontWeight: 500,
               textDecorationSkip: 'ink',
             })}
           >

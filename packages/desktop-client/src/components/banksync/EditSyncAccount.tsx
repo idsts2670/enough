@@ -5,6 +5,7 @@ import { Button } from '@actual-app/components/button';
 import { SpaceBetween } from '@actual-app/components/space-between';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { AccountEntity } from '@actual-app/core/types/models';
 
@@ -199,7 +200,7 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
             rightContent={<ModalCloseButton onPress={() => state.close()} />}
           />
 
-          <Text style={{ fontSize: 15 }}>
+          <Text style={bodyMd}>
             <Trans>Field mapping</Trans>
           </Text>
 
@@ -211,7 +212,7 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
             setMapping={setMapping}
           />
 
-          <Text style={{ fontSize: 15, margin: '1em 0 .5em 0' }}>
+          <Text style={{ ...bodyMd, margin: '1em 0 .5em 0' }}>
             <Trans>Options</Trans>
           </Text>
 

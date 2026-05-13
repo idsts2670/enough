@@ -11,6 +11,7 @@ import { Popover } from '@actual-app/components/popover';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { tableCellAmount } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { format as monthUtilFormat } from '@actual-app/core/shared/months';
 import { getNormalisedString } from '@actual-app/core/shared/normalisation';
@@ -171,6 +172,7 @@ export function ScheduleAmountCell({
       )}
       <FinancialText
         style={{
+          ...tableCellAmount,
           flex: 1,
           color: num > 0 ? theme.noticeTextLight : theme.tableText,
           whiteSpace: 'nowrap',

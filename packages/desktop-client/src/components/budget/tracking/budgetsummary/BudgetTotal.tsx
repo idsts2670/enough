@@ -3,9 +3,9 @@ import React from 'react';
 import type { ComponentType, CSSProperties, ReactNode } from 'react';
 import { Trans } from 'react-i18next';
 
-import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodySm, tableCellAmount } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { CellValue } from '#components/spreadsheet/CellValue';
@@ -34,16 +34,16 @@ export function BudgetTotal<
   return (
     <View
       style={{
+        ...bodySm,
         lineHeight: 1.5,
         flexDirection: 'row',
         alignItems: 'center',
-        fontSize: 14,
         ...style,
       }}
     >
       <ProgressComponent current={current} target={target} />
 
-      <View style={{ marginLeft: 10, ...styles.tnum }}>
+      <View style={{ marginLeft: 10, ...tableCellAmount }}>
         <View>
           <Text style={{ color: theme.pageTextLight }}>{title}</Text>
         </View>

@@ -6,6 +6,11 @@ import { Button } from '@actual-app/components/button';
 import { SvgArrowButtonRight1 } from '@actual-app/components/icons/v2';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import {
+  bodyStrong,
+  displayXl,
+  tabularFigure,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { q } from '@actual-app/core/shared/query';
 import type { Query } from '@actual-app/core/shared/query';
@@ -46,7 +51,7 @@ function DetailedBalance({
     >
       {name}{' '}
       <PrivacyFilter>
-        <FinancialText style={{ fontWeight: 600 }}>
+        <FinancialText style={{ ...bodyStrong, ...tabularFigure }}>
           {!isExactBalance && '~ '}
           {format(balance, 'financial')}
         </FinancialText>
@@ -230,8 +235,8 @@ export function Balances({
             <CellValueText
               {...props}
               style={{
-                fontSize: 22,
-                fontWeight: 400,
+                ...displayXl,
+                ...tabularFigure,
                 color:
                   props.value < 0
                     ? theme.numberNegative

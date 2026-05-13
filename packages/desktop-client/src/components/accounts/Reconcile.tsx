@@ -10,6 +10,7 @@ import { Input } from '@actual-app/components/input';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodyStrong } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { Query } from '@actual-app/core/shared/query';
 import { tsToRelativeTime } from '@actual-app/core/shared/util';
@@ -95,7 +96,7 @@ export function ReconcilingMessage({
                 needs <strong>{{ difference } as TransObjectLiteral}</strong> to
                 match
                 <br /> your bank&apos;s balance of{' '}
-                <Text style={{ fontWeight: 700 }}>
+                <Text style={bodyStrong}>
                   {{ bankBalance } as TransObjectLiteral}
                 </Text>
               </Trans>

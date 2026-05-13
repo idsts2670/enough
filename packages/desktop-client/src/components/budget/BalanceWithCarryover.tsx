@@ -12,6 +12,7 @@ import { SvgArrowThinRight } from '@actual-app/components/icons/v1';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { bodyStrong, tableCellAmount } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { TransObjectLiteral } from '@actual-app/core/types/util';
 import { css } from '@emotion/css';
@@ -139,6 +140,7 @@ export function BalanceWithCarryover({
   const getDefaultClassName = useCallback(
     (balanceValue: number) =>
       css({
+        ...tableCellAmount,
         ...getBalanceAmountStyle(balanceValue),
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -154,7 +156,7 @@ export function BalanceWithCarryover({
     (balanceValue, type) => {
       return (
         <>
-          <span style={{ fontWeight: 500 }}>
+          <span style={bodyStrong}>
             {getDifferenceToGoal(balanceValue) === 0 ? (
               <span style={{ color: theme.templateNumberFunded }}>
                 <Trans>Fully funded</Trans>

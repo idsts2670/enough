@@ -44,6 +44,12 @@ import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import {
+  bodySm,
+  bodyStrong,
+  caption,
+  tableCellAmount,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
@@ -190,7 +196,7 @@ const TransactionHeader = memo(
     return (
       <Row
         style={{
-          fontWeight: 300,
+          ...caption,
           zIndex: 200,
           color: theme.tableHeaderText,
           backgroundColor: theme.tableHeaderBackground,
@@ -453,7 +459,7 @@ function HeaderCell({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     color: theme.tableHeaderText,
-    fontWeight: 300,
+    ...caption,
     marginLeft,
     marginRight,
   };
@@ -599,8 +605,8 @@ function PayeeCell({
           />
           <Text
             style={{
+              ...bodySm,
               fontStyle: 'italic',
-              fontWeight: 300,
               userSelect: 'none',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -615,12 +621,10 @@ function PayeeCell({
               <Tooltip
                 content={
                   <View style={{ padding: 10 }}>
-                    <Text style={{ fontWeight: 'bold' }}>
+                    <Text style={bodyStrong}>
                       <Trans>Imported Payee</Trans>
                     </Text>
-                    <Text style={{ fontWeight: 'normal' }}>
-                      {importedPayee}
-                    </Text>
+                    <Text style={bodySm}>{importedPayee}</Text>
                   </View>
                 }
                 style={{ ...styles.tooltip, borderRadius: '0px 5px 5px 0px' }}
@@ -693,12 +697,10 @@ function PayeeCell({
                 <Tooltip
                   content={
                     <View style={{ padding: 10 }}>
-                      <Text style={{ fontWeight: 'bold' }}>
+                      <Text style={bodyStrong}>
                         <Trans>Imported Payee</Trans>
                       </Text>
-                      <Text style={{ fontWeight: 'normal' }}>
-                        {importedPayee}
-                      </Text>
+                      <Text style={bodySm}>{importedPayee}</Text>
                     </View>
                   }
                   style={{ ...styles.tooltip, borderRadius: '0px 5px 5px 0px' }}
@@ -1175,9 +1177,9 @@ const Transaction = memo(function Transaction({
   const isBudgetTransfer = transferAcct && transferAcct.offbudget === 0;
   const isOffBudget = account && account.offbudget === 1;
 
-  const valueStyle = added ? { fontWeight: 600 } : null;
+  const valueStyle = added ? bodyStrong : null;
   const backgroundFocus = focusedField === 'select';
-  const amountStyle = hideFraction ? { letterSpacing: -0.5 } : null;
+  const amountStyle = hideFraction ? tableCellAmount : null;
 
   const runningBalance = !isTemporaryId(id) ? balance : balance + amount;
 
@@ -1675,8 +1677,8 @@ const Transaction = memo(function Transaction({
                 {!isPreview && (
                   <Text
                     style={{
+                      ...bodySm,
                       fontStyle: 'italic',
-                      fontWeight: 300,
                       userSelect: 'none',
                     }}
                   >
@@ -1708,7 +1710,7 @@ const Transaction = memo(function Transaction({
             style={{
               fontStyle: 'italic',
               color: theme.pageTextSubdued,
-              fontWeight: 300,
+              ...bodySm,
             }}
             inputProps={{
               readOnly: true,
@@ -1736,7 +1738,7 @@ const Transaction = memo(function Transaction({
                 ? {
                     // uncategorized transaction
                     fontStyle: 'italic',
-                    fontWeight: 300,
+                    ...bodySm,
                     color: theme.formInputTextHighlight,
                   }
                 : valueStyle
@@ -1799,7 +1801,7 @@ const Transaction = memo(function Transaction({
           onExpose={name => !isPreview && onEdit(id, name)}
           style={{
             ...(isParent && { fontStyle: 'italic' }),
-            ...styles.tnum,
+            ...tableCellAmount,
             ...amountStyle,
           }}
           inputProps={{
@@ -1830,7 +1832,7 @@ const Transaction = memo(function Transaction({
           onExpose={name => !isPreview && onEdit(id, name)}
           style={{
             ...(isParent && { fontStyle: 'italic' }),
-            ...styles.tnum,
+            ...tableCellAmount,
             ...amountStyle,
           }}
           inputProps={{
@@ -1858,7 +1860,7 @@ const Transaction = memo(function Transaction({
                   ? theme.numberNegative
                   : theme.numberPositive,
             }}
-            style={{ ...styles.tnum, ...amountStyle }}
+            style={{ ...tableCellAmount, ...amountStyle }}
             width={103}
             textAlign="right"
             privacyFilter
@@ -1910,7 +1912,7 @@ const Transaction = memo(function Transaction({
             </Text>
             <Text
               style={{
-                fontWeight: 500,
+                ...bodyStrong,
                 color: theme.tableText,
                 width: '50%',
                 paddingLeft: 16,
@@ -1987,7 +1989,7 @@ function TransactionError({
           >
             <Text style={{ whiteSpace: 'nowrap' }}>
               <Trans>Amount left:</Trans>{' '}
-              <Text style={{ fontWeight: 500 }}>
+              <Text style={tableCellAmount}>
                 {integerToCurrency(
                   isDeposit ? error.difference : -error.difference,
                 )}

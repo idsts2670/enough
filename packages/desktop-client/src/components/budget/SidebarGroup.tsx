@@ -11,6 +11,7 @@ import { Popover } from '@actual-app/components/popover';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
+import { bodyStrong, titleMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type {
   CategoryEntity,
@@ -103,7 +104,7 @@ export function SidebarGroup({
           minWidth: 0,
         }}
       >
-        {dragPreview && <Text style={{ fontWeight: 500 }}>Group: </Text>}
+        {dragPreview && <Text style={bodyStrong}>Group: </Text>}
         {group.name}
       </div>
       {!dragPreview && (
@@ -244,7 +245,7 @@ export function SidebarGroup({
           }
         }}
         onBlur={() => onEdit(null)}
-        style={{ fontWeight: 500 }}
+        style={titleMd}
         inputProps={{
           style: { marginLeft: 20 },
           placeholder: temporary ? t('New group name') : '',

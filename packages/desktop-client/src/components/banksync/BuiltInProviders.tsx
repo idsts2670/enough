@@ -8,6 +8,12 @@ import { Paragraph } from '@actual-app/components/paragraph';
 import { Popover } from '@actual-app/components/popover';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import {
+  bodyMd,
+  bodySm,
+  bodyStrong,
+  displayLg,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { Warning } from '#components/alerts';
@@ -33,14 +39,12 @@ export function BuiltInProviders({
   return (
     <View style={{ gap: 12 }}>
       <View style={{ gap: 4 }}>
-        <Text style={{ fontSize: 20, fontWeight: 500, lineHeight: 1.35 }}>
+        <Text style={displayLg}>
           <Trans>Providers</Trans>
         </Text>
         <Paragraph
           style={{
-            fontSize: 15,
-            fontWeight: 400,
-            lineHeight: 1.47,
+            ...bodyMd,
             color: theme.pageTextSubdued,
           }}
         >
@@ -60,10 +64,10 @@ export function BuiltInProviders({
             backgroundColor: theme.tableBackground,
           }}
         >
-          <Button isDisabled style={{ padding: '10px 0', fontSize: 15 }}>
+          <Button isDisabled style={{ padding: '10px 0' }}>
             <Trans>Set up bank sync</Trans>
           </Button>
-          <Paragraph style={{ fontSize: 15, marginTop: 10 }}>
+          <Paragraph style={{ ...bodyMd, marginTop: 10 }}>
             <Trans>
               Connect to an Enough server to set up{' '}
               <Link
@@ -111,29 +115,21 @@ export function BuiltInProviders({
                     flex: 1,
                   }}
                 >
-                  <Text
-                    style={{ fontSize: 20, fontWeight: 500, lineHeight: 1.35 }}
-                  >
-                    {provider.displayName}
-                  </Text>
+                  <Text style={displayLg}>{provider.displayName}</Text>
                   <Text
                     style={{
+                      ...bodySm,
                       color: theme.pageTextSubdued,
-                      fontSize: 14,
-                      fontWeight: 400,
-                      lineHeight: 1.43,
                     }}
                   >
                     {provider.description}
                   </Text>
                   <Text
                     style={{
+                      ...bodyStrong,
                       color: provider.isConfigured
                         ? theme.noticeTextDark
                         : theme.pageTextSubdued,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      lineHeight: 1.43,
                     }}
                   >
                     {provider.isConfigured ? (

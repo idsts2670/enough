@@ -5,6 +5,7 @@ import { useResponsive } from '@actual-app/components/hooks/useResponsive';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { pageHeader, titleMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 const HEADER_HEIGHT = 50;
@@ -28,8 +29,7 @@ export function PageHeader({ title, style }: PageHeaderProps) {
       <View
         style={{
           flexDirection: 'row',
-          fontSize: 25,
-          fontWeight: 500,
+          ...pageHeader,
         }}
       >
         {typeof title === 'string' ? <Text>{title}</Text> : title}
@@ -84,8 +84,7 @@ export function MobilePageHeader({
           justifyContent: 'center',
           flexDirection: 'row',
           flexBasis: '50%',
-          fontSize: 17,
-          fontWeight: 500,
+          ...titleMd,
           overflowY: 'auto',
           display: 'flex',
           margin: 0,

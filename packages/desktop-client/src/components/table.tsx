@@ -29,10 +29,10 @@ import { Input } from '@actual-app/components/input';
 import { Menu } from '@actual-app/components/menu';
 import type { MenuItem } from '@actual-app/components/menu';
 import { Popover } from '@actual-app/components/popover';
-import { styles } from '@actual-app/components/styles';
 import type { CSSProperties } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { caption, tableCellLabel } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { useFormat } from '#hooks/useFormat';
@@ -90,7 +90,7 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(
         borderTopWidth: 1,
         borderBottomWidth: 1,
         borderColor: theme.tableBorder,
-        ...styles.smallText,
+        ...tableCellLabel,
         ...style,
       }}
       data-testid={name}
@@ -221,7 +221,7 @@ export function Cell({
               flex: 1,
               padding: '0 5px',
               alignItems: 'center',
-              ...styles.smallText,
+              ...tableCellLabel,
               ...valueStyle,
             }}
             // Can't use click because we only want to expose the cell if
@@ -805,7 +805,7 @@ export function TableHeader({
           color: theme.tableHeaderText,
           backgroundColor: theme.tableHeaderBackground,
           zIndex: 200,
-          fontWeight: 500,
+          ...caption,
           ...rowProps.style,
         }}
       >

@@ -13,6 +13,7 @@ import { Popover } from '@actual-app/components/popover';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodySm, tableCellAmount } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { css } from '@emotion/css';
@@ -57,21 +58,15 @@ const TrackingSheetCell = <FieldName extends SheetFields<'tracking-budget'>>(
 };
 
 const headerLabelStyle: CSSProperties = {
+  ...bodySm,
   flex: 1,
   padding: '0 5px',
   textAlign: 'right',
-  fontSize: 15,
-  fontWeight: 400,
-  lineHeight: 1.47,
-  letterSpacing: 0.15,
 };
 
 const cellStyle: CSSProperties = {
+  ...tableCellAmount,
   color: theme.tableHeaderText,
-  fontSize: 15,
-  fontWeight: 500,
-  lineHeight: 1.47,
-  letterSpacing: 0,
 };
 
 export const BudgetTotalsMonth = memo(function BudgetTotalsMonth() {
@@ -162,7 +157,7 @@ export const GroupMonth = memo(function GroupMonth({
         name="budgeted"
         width="flex"
         textAlign="right"
-        style={{ fontWeight: 500, ...styles.tnum }}
+        style={tableCellAmount}
         valueProps={{
           binding: trackingBudget.groupBudgeted(id),
           type: 'financial',
@@ -172,7 +167,7 @@ export const GroupMonth = memo(function GroupMonth({
         name="spent"
         width="flex"
         textAlign="right"
-        style={{ fontWeight: 500, ...styles.tnum }}
+        style={tableCellAmount}
         valueProps={{
           binding: trackingBudget.groupSumAmount(id),
           type: 'financial',
@@ -184,9 +179,8 @@ export const GroupMonth = memo(function GroupMonth({
           width="flex"
           textAlign="right"
           style={{
-            fontWeight: 500,
+            ...tableCellAmount,
             paddingRight: styles.monthRightPadding,
-            ...styles.tnum,
           }}
           valueProps={{
             binding: trackingBudget.groupBalance(id),
@@ -370,7 +364,7 @@ export const CategoryMonth = memo(function CategoryMonth({
           focused={editing}
           width="flex"
           onExpose={() => onEdit(category.id, month)}
-          style={{ ...(editing && { zIndex: 100 }), ...styles.tnum }}
+          style={{ ...tableCellAmount, ...(editing && { zIndex: 100 }) }}
           textAlign="right"
           valueStyle={{
             cursor: 'default',

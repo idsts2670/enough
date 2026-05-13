@@ -6,6 +6,7 @@ import { Button } from '@actual-app/components/button';
 import { SvgExclamationOutline } from '@actual-app/components/icons/v1';
 import { Popover } from '@actual-app/components/popover';
 import { theme } from '@actual-app/components/theme';
+import { bodySm } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { AccountEntity } from '@actual-app/core/types/models';
 
@@ -164,7 +165,7 @@ export function AccountSyncCheck() {
         placement="bottom start"
         isOpen={open}
         onOpenChange={() => setOpen(false)}
-        style={{ fontSize: 14, padding: 15, maxWidth: 400 }}
+        style={{ ...bodySm, padding: 15, maxWidth: 400 }}
       >
         <div style={{ marginBottom: '1.15em' }}>
           <Trans>The server returned the following error:</Trans>

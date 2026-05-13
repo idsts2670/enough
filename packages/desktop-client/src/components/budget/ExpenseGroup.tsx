@@ -3,6 +3,7 @@ import React from 'react';
 import type { ComponentProps } from 'react';
 
 import { theme } from '@actual-app/components/theme';
+import { titleMd } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type {
   CategoryEntity,
@@ -91,7 +92,7 @@ export function ExpenseGroup({
     <Row
       collapsed
       style={{
-        fontWeight: 500,
+        ...titleMd,
         opacity: group.hidden ? 0.33 : undefined,
         backgroundColor: theme.budgetHeaderCurrentMonth, //use budget colors
       }}
