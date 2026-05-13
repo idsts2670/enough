@@ -74,6 +74,8 @@ Negative amount formatting for normal amount cells stays ink-colored `-$X.XX`. R
    - `packages/desktop-client/src/components/reports/ReportCardName.tsx`
    - `packages/desktop-client/src/components/reports/DashboardHeader.tsx`
    - `packages/desktop-client/src/components/reports/DateRange.tsx`
+   - `packages/desktop-client/src/components/reports/SummaryNumber.tsx` (added 2026-05-12: had inline 48/300 + auto-color bypassing metricValue token)
+   - `packages/desktop-client/src/components/reports/FormulaResult.tsx` (added 2026-05-12: same inline 48/300 anti-pattern as SummaryNumber)
    - `packages/desktop-client/src/components/reports/graphs/CashFlowCard.tsx`
    - `packages/desktop-client/src/components/reports/graphs/renderCustomLabel.tsx`
    - `packages/desktop-client/src/components/reports/graphs/DonutGraph.tsx`

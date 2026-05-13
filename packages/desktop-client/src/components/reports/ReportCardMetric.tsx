@@ -9,10 +9,6 @@ import { FinancialText } from '#components/FinancialText';
 
 export const REPORT_DISPLAY_MAX_FONT_SIZE = 48;
 
-export function getReportDisplayLetterSpacing(_fontSize: number) {
-  return 0;
-}
-
 export const reportCardMetricStyle: CSSProperties = {
   ...metricValue,
 };

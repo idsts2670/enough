@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import type { Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { theme } from '@actual-app/components/theme';
+import { metricValue } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import debounce from 'lodash/debounce';
 
@@ -13,10 +13,7 @@ import { useMergedRefs } from '#hooks/useMergedRefs';
 import { useResizeObserver } from '#hooks/useResizeObserver';
 
 import { LoadingIndicator } from './LoadingIndicator';
-import {
-  getReportDisplayLetterSpacing,
-  REPORT_DISPLAY_MAX_FONT_SIZE,
-} from './ReportCardMetric';
+import { REPORT_DISPLAY_MAX_FONT_SIZE } from './ReportCardMetric';
 
 const FONT_SIZE_SCALE_FACTOR = 1.6;
 const CONTAINER_MARGIN = 8;
@@ -96,27 +93,18 @@ export function SummaryNumber({
                   : t('Positive amount: {{amount}}', { amount: displayAmount })
           }
           style={{
+            ...metricValue,
             alignItems: 'center',
             flexGrow: 1,
             flexShrink: 1,
             width: '100%',
             height: '100%',
             maxWidth: '100%',
-            fontFamily: 'var(--font-display)',
             fontSize,
-            fontWeight: 300,
             lineHeight: 1,
-            letterSpacing: getReportDisplayLetterSpacing(fontSize),
             margin: `${CONTAINER_MARGIN}px 0`,
             justifyContent: 'center',
             transition: animate ? 'font-size 0.3s ease' : '',
-            color: !isNumericValue
-              ? theme.reportsNumberNeutral
-              : value === 0
-                ? theme.reportsNumberNeutral
-                : value < 0
-                  ? theme.reportsNumberNegative
-                  : theme.reportsNumberPositive,
           }}
         >
           {!hasSized ? (
