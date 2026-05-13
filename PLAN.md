@@ -50,6 +50,7 @@ All five Phase 0 blockers are resolved. Phase 0 implementation is unblocked. The
 Primary CTAs use blue. Ink (`#292524`) reserved for secondary actions and text. New DESIGN.md must define `accent-action` blue with light/dark variants and WCAG-passing contrast. Specific hex TBD by Phase 0 (designed fresh, not a Copilot hex).
 
 **OD2 — Category color model: GROUP-LEVEL, STORED ON RECORD, DETERMINISTIC FALLBACK.**
+
 - Color attaches to category **group**. All children inherit (Food & Drink → Restaurants, Groceries share the group hue at distinct saturations or share the same chip color).
 - Persistence: stored on the category record (user-overridable).
 - Default for custom categories without an explicit color: deterministic generation from a stable hash of the category name (so the same custom category gets the same color across reloads).
@@ -57,6 +58,7 @@ Primary CTAs use blue. Ink (`#292524`) reserved for secondary actions and text. 
 - Color is never the only signal — every category color is paired with its label.
 
 **OD3 — Returning-user non-Plaid behavior: PRESERVE READ-ONLY, HIDE SETUP, DEPRECATION BANNER ON ACCESS.**
+
 - Legacy GoCardless / SimpleFIN / Pluggy linked accounts: preserved, read-only (no new sync attempts).
 - Setup UI for those providers: hidden from `/bank-sync` entirely.
 - Deprecation banner: shown only when a user opens a specific legacy-linked account (not on the bank-sync index page).
@@ -75,6 +77,7 @@ Plaid Investments product not confirmed. Vanguard 401k / Roth IRA accounts visib
 **Goal:** produce a DESIGN.md that's an app-UI design system, not a marketing brand spec.
 
 **Keep from current DESIGN.md (translate):**
+
 - Ink color `#292524`
 - Off-white canvas `#f5f5f5`
 - Body color `#4e4e4e`, muted `#777169`
@@ -83,6 +86,7 @@ Plaid Investments product not confirmed. Vanguard 401k / Roth IRA accounts visib
 - 8px-base spacing scale (4 / 8 / 12 / 16 / 20 / 24 / 32 / 48)
 
 **Remove from current DESIGN.md (do not preserve):**
+
 - Waldenburg display tokens (`display-mega 64`, `display-xl 48`, `display-lg 36`, `display-md 32`, `display-sm 24`)
 - The `300` weight as display signature
 - Gradient orb tokens (`gradient-mint / peach / lavender / sky / rose`)
@@ -93,6 +97,7 @@ Plaid Investments product not confirmed. Vanguard 401k / Roth IRA accounts visib
 **Add to new DESIGN.md (app-UI tokens):**
 
 Typography scale (recommendation, pending validation against actual screen densities — verify weights aren't too heavy):
+
 - `display-2xl` Inter 28–32 / 600 (page heroes — Dashboard greeting)
 - `display-xl` Inter 24 / 600 (section heads)
 - `display-lg` Inter 20 / 600 (card titles)
@@ -104,6 +109,7 @@ Typography scale (recommendation, pending validation against actual screen densi
 - `tabular-figure` modifier (`font-variant-numeric: tabular-nums` — see section 8 on standardizing the two existing mechanisms)
 
 Color tokens:
+
 - `category-*` × 10–12 hues (designed fresh; see OD2 for model)
 - `accent-action` (TBD per OD1; if blue, define light/dark/contrast variants)
 - `status-success / warning / error` — explicitly separate namespace from category colors
@@ -111,6 +117,7 @@ Color tokens:
 - Reserve token slots for dark-mode variants (defer full dark-mode design to a later phase)
 
 App-UI components (specs, with default + state coverage):
+
 - `table-row` (height 36–40px comfortable, 28–32px dense — single density default in v0; toggle deferred)
 - `table-cell-label` / `table-cell-amount` (right-aligned amounts, tabular figures)
 - `category-pill` (small chip with background tint at low saturation, label in ink)
@@ -122,6 +129,7 @@ App-UI components (specs, with default + state coverage):
 - `filter-chip` / `badge-numeric` / `nav-row`
 
 **Validation criteria for the rewritten DESIGN.md:**
+
 - For each Phase 1 visible surface (section 4), produce a screenshot mockup or annotated wireframe showing where each new token is used.
 - Run `/design-review` skill against the rewrite to capture a baseline design score before Phase 1 implementation begins.
 - No token defined in new DESIGN.md is decorative — every token must have at least one named usage in an existing or planned component spec.
@@ -133,6 +141,7 @@ App-UI components (specs, with default + state coverage):
 **Goal:** fix the typography on the visible surfaces against the new DESIGN.md tokens, with a CI guardrail.
 
 **Visible surfaces in v0/Phase 1 scope** (the only places "0 unapproved raw values" must be true; everything else stays on the audit-script allowlist):
+
 - `/budget` — month header, budget table (headers, group rows, category rows, amount cells), sidebar (account list, balances)
 - `/reports/*` — current widget grid (10 cards: Total Income, Total Expenses, Avg Per Month, Avg Per Transaction, Net Worth, Cash Flow, This Month, Budget Overview, 3-Month Average, Recent Net Worth Change)
 - `/accounts/*` — account list, transaction list
@@ -152,6 +161,7 @@ Out-of-scope for Phase 1 (covered by allowlist; cleaned in Phase 1.5): mobile sc
 7. **Audit script in CI** lands alongside step 1. Two modes: (a) report mode — outputs current baseline count of raw values by file; (b) gate mode — rejects any PR that introduces a new raw `fontSize:` / `fontWeight:` / `letterSpacing:` not in the allowlist. Initial allowlist = all current violations. Each subsequent phase tightens the allowlist.
 
 **Phase 1 acceptance:**
+
 - Zero unapproved raw typography values in the files touched in steps 3–5. Other files stay on allowlist.
 - Before/after screenshot pairs at 1440×900 of each visible surface, captured via `/design-review`.
 - Audit script reports the same or lower violation count on the touched files.
@@ -175,6 +185,7 @@ Tighten audit-script allowlist after each batch.
 **Hide rule:** for inherited features, hide visible UI first; defer data/server deletion to a later cleanup phase. This protects against tests, migrations, and backwards compatibility paths.
 
 **Reports widget grid — hide these from default Reports dashboard:**
+
 - Dashboard Tips
 - Transaction Calendar (if present)
 - Sankey (low-signal for personal finance command center)
@@ -185,12 +196,14 @@ Tighten audit-script allowlist after each batch.
 **Keep as default:** Cash Flow, Net Worth, Spending, Summary, BudgetAnalysis, AgeOfMoney. Six core widgets. User can still add demoted ones manually if they exist in the codebase — the change is to the default dashboard template, not the widget catalog.
 
 **Bank Sync — visible UI is Plaid-only:**
+
 - Hide setup flows for GoCardless, SimpleFIN, Pluggy.
 - Returning-user behavior per OD3: legacy accounts stay read-only with deprecation banner on access.
 
 **Navigation — clarify whether "Dashboard" is `/budget` or a new route:**
 
 The current app has no `/dashboard` route. `/budget` is the home. Two paths:
+
 - (a) Keep `/budget` as home, rename it "Dashboard" in nav. Lowest-risk.
 - (b) Build a new `/dashboard` route distinct from `/budget`, with budget remaining as the envelope-budgeting view.
 
@@ -199,6 +212,7 @@ Recommend (a) for v0; revisit (b) after Phase 3 redesigns Dashboard content. Fla
 **Reports as primary nav:** Move "Reports" under a secondary section ("More" or "Advanced"). Don't delete the route — just demote in primary nav.
 
 **Phase 2 acceptance:**
+
 - Six default Reports widgets visible in a new demo budget.
 - Non-Plaid setup hidden in `/bank-sync` (Plaid only in primary CTA, providers behind "advanced" disclosure or hidden entirely).
 - Legacy non-Plaid accounts still functional read-only.
@@ -211,6 +225,7 @@ Recommend (a) for v0; revisit (b) after Phase 3 redesigns Dashboard content. Fla
 **Goal:** rebuild the core surfaces around Copilot's interaction principles, not its visual identity.
 
 **Concrete principles for "Copilot-inspired":**
+
 - Light canvas with subtle hairlines (already there)
 - Single ink/accent action color (per OD1)
 - 16px rounded cards
@@ -224,6 +239,7 @@ Recommend (a) for v0; revisit (b) after Phase 3 redesigns Dashboard content. Fla
 **Information hierarchy for redesigned Dashboard:**
 
 Default card order on `/budget` (treat as "Dashboard" per Phase 2 decision):
+
 1. **Monthly Spending** — large card. Current month spend vs prior month / vs budget.
 2. **Net Worth** — line chart, last 6 months.
 3. **Transactions to Review** — uncategorized + low-confidence Plaid suggestions. Quick category-assign workflow inline.
@@ -236,6 +252,7 @@ Defer Goals (not in current product, not user-requested) until separately decide
 **Categories redesign — acknowledge the data-model mismatch:**
 
 Actual's categories are **envelope-budget categories** with monthly budget allocations. Copilot's categories are **spend-tracking labels** with no envelope. These are different mental models. Phase 3 must decide:
+
 - (a) Keep envelope budgeting visible (preserve Actual's strength): categories show budget allocation + spend + balance, with progress bars showing fill against allocation.
 - (b) Hide envelope mechanics, show Copilot-style spend analysis only.
 - (c) Layer Copilot-style spend view on top of envelope data (two views of same data).
@@ -245,16 +262,19 @@ Recommend (a) for v0 of Phase 3 — preserves the budgeting product instinct. De
 **Category color attachment:** Per OD2 — confirm group vs leaf, persistence, fallback for custom categories.
 
 **Transactions:**
+
 - Review-first workflow: unreviewed indicator, category quick-edit inline, bulk category change.
 - Plaid suggested category as the default for new transactions; user confirms or changes.
 - Right-side detail sheet on transaction click (not modal).
 
 **Accounts:**
+
 - Grouped by account type (Checking / Savings / Credit Card / Investment / Loan).
 - Each row shows balance, sync status, last-synced timestamp.
 - Click → account detail with transaction list.
 
 **Bank Sync (post-Phase 2):**
+
 - "Connect institution" primary CTA (Plaid)
 - Linked institutions list
 - Sync status + last-sync time
@@ -262,6 +282,7 @@ Recommend (a) for v0 of Phase 3 — preserves the budgeting product instinct. De
 - No multi-provider marketplace UI.
 
 **Phase 3 acceptance:**
+
 - All Phase 3 surfaces use only new DESIGN.md tokens (no raw values introduced).
 - Before/after screenshots captured per surface; design score improvement documented via `/design-review`.
 - Information hierarchy decisions logged for each surface (which cards / fields are primary, secondary, tertiary).
@@ -273,6 +294,7 @@ Recommend (a) for v0 of Phase 3 — preserves the budgeting product instinct. De
 ## 7 — Phase 4: Visual polish + screenshot acceptance
 
 Apply only after Phase 3 structure is right. Sweat the details:
+
 - Card padding, radius, shadow tiers
 - Category pill styling per OD2 outcome
 - Progress bar fill animation (none, ease-out, or `prefers-reduced-motion`-aware)
@@ -290,13 +312,13 @@ Apply only after Phase 3 structure is right. Sweat the details:
 
 The app has two competing mechanisms today:
 
-| Mechanism | Where | Coverage |
-|---|---|---|
-| Global `font-feature-settings: "ss01", "ss04", "tnum"` | `packages/desktop-client/src/style/theme.tsx:202` | Body-wide |
-| `styles.tnum` + `FinancialText` wrapper | `packages/component-library/src/styles.ts`, `FinancialText.tsx` | Specific amount surfaces |
-| Inline `fontVariantNumeric: 'tabular-nums'` | `AutomationListRow.tsx:149/169` | Two spots |
+| Mechanism                                              | Where                                                           | Coverage                 |
+| ------------------------------------------------------ | --------------------------------------------------------------- | ------------------------ |
+| Global `font-feature-settings: "ss01", "ss04", "tnum"` | `packages/desktop-client/src/style/theme.tsx:202`               | Body-wide                |
+| `styles.tnum` + `FinancialText` wrapper                | `packages/component-library/src/styles.ts`, `FinancialText.tsx` | Specific amount surfaces |
+| Inline `fontVariantNumeric: 'tabular-nums'`            | `AutomationListRow.tsx:149/169`                                 | Two spots                |
 
-Phase 1 step 5 decision: **keep both global + `FinancialText`** (broad fallback + explicit call-site clarity), remove inline `fontVariantNumeric`. Document the rule in new DESIGN.md: *amounts must be wrapped in `FinancialText` for semantic clarity, even though the global rule would catch them anyway.*
+Phase 1 step 5 decision: **keep both global + `FinancialText`** (broad fallback + explicit call-site clarity), remove inline `fontVariantNumeric`. Document the rule in new DESIGN.md: _amounts must be wrapped in `FinancialText` for semantic clarity, even though the global rule would catch them anyway._
 
 ---
 
@@ -305,16 +327,19 @@ Phase 1 step 5 decision: **keep both global + `FinancialText`** (broad fallback 
 Lives in: `bin/lint-typography.ts` (new — language-of-choice: TypeScript since the repo is already TypeScript).
 
 **Two modes:**
+
 - `--report` — outputs raw-value violation count per file, grouped by category (size / weight / letter-spacing). For dashboards and PR descriptions.
 - `--gate` (CI default) — fails when a PR introduces a violation not in the current allowlist. Allowlist lives at `tools/typography-allowlist.json`, generated initially by `--report` baseline.
 
 **Patterns flagged:**
+
 - `fontSize:` with raw numbers
 - `fontWeight: 'bold'` or numeric weight outside `[400, 500, 600]`
 - `letterSpacing:` with `em` / raw-number values not from token
 - Raw `<text>` elements without `fontFamily` / `fontSize` props (SVG-specific)
 
 **Allowlist tightening cadence:**
+
 - After Phase 1 step 4: remove report-card files from allowlist
 - After Phase 1.5: remove component-library files
 - After Phase 3: remove Phase 3 surfaces
@@ -325,6 +350,7 @@ Lives in: `bin/lint-typography.ts` (new — language-of-choice: TypeScript since
 ## 10 — Brand-string pass ("Actual" → "Enough")
 
 Scope:
+
 - Welcome / onboarding copy (multiple files, not just `WelcomeScreen`)
 - Page titles (`<title>` tags)
 - Server config copy ("Configure your server")
@@ -333,6 +359,7 @@ Scope:
 - In-app docs links and external doc URLs (verify whether `actualbudget.org/docs` is still authoritative or fork-specific docs exist)
 
 i18n-aware approach:
+
 - All replacements go through translation keys (`t('appName')`) — not literal string swaps.
 - For Phase 1, accept English-only ("Enough") and mark the translation key as needing fan-out per locale. Don't block on translations for non-en locales.
 - Audit deliverable: list of every translation key referencing "Actual" + per-locale fallback strategy.
@@ -344,16 +371,19 @@ Out of scope: codebase identifier renames (e.g., `@actual-app/web` workspace nam
 ## 11 — Guardrails (must hold across all phases)
 
 **Code change guardrails:**
+
 - No code changes until the revised PLAN.md is approved by the user.
 - No reverts of unrelated work in dirty worktrees. Always `git status` first; preserve untracked files (`?? .claude/`, etc.) unless explicitly told to discard.
 - No new raw typography values in any new code (audit script enforces).
 
 **Design guardrails:**
+
 - Copilot Money screenshots are visual reference only. No logos, icons, fonts, hexes, copy strings, or proprietary assets enter the codebase.
 - Category palette is designed fresh.
 - Accessibility: no color-only signals (every color carries a label). WCAG AA contrast minimum on text against backgrounds.
 
 **Process guardrails:**
+
 - DESIGN.md rewrite (Phase 0) requires user review before code begins consuming it. Keep `DESIGN.legacy.md` available for reference during the transition.
 - Every phase requires before/after screenshots on the affected visible surfaces.
 - Design score (via gstack `/design-review`) is the visual acceptance gate, not computed-style equivalence.
@@ -363,6 +393,7 @@ Out of scope: codebase identifier renames (e.g., `@actual-app/web` workspace nam
 ## 12 — Out of scope (explicitly)
 
 These are deferred or removed from scope to keep the plan executable:
+
 - **Goals.** Copilot has them; current app doesn't. Defer until separately requested.
 - **Investments as a dedicated surface.** Out of v0–Phase 3. Vanguard 401k / Roth IRA stay as ordinary off-budget accounts.
 - **Full dark-mode visual design.** Phase 0 reserves token slots; full dark-mode pass is a later phase.
@@ -380,11 +411,13 @@ Resolves operational/HOW ambiguities so an implementing agent doesn't need to as
 **Read these first, in this order:** `AGENTS.md` (commit rules, lint, PR conventions, yarn workflow) → `PLAN.md` (this file) → `PHASE-3-DATA-INVENTORY.md` → current `DESIGN.md` (the spec being retired).
 
 **File handling:**
+
 - `PLAN.md.bak` is the v1 PLAN.md backup. Do not modify or delete.
 - For Phase 0: **rename current `DESIGN.md` → `DESIGN.legacy.md`** (preserves git history via rename), then write new `DESIGN.md` in the **same markdown + YAML-frontmatter format** as the current file.
 - New `DESIGN.md` is the only source of truth for tokens after Phase 0 lands. Do not import from `DESIGN.legacy.md`.
 
 **Decisions that require user signoff before finalizing (do not pick alone):**
+
 - **OD1 accent blue hex.** Propose 2–3 options with rationale (e.g., contrast against canvas, distinctness from semantic colors, alignment with brand restraint). Wait for user pick before writing into `DESIGN.md`.
 - **OD2 category palette (10–12 hues).** Propose the full palette in one batch — name + hex + WCAG contrast against ink text + against canvas background. Wait for user pick.
 - Both proposals go in a sub-doc (`PHASE-0-DESIGN-DECISIONS.md`) — not directly into `DESIGN.md`. After approval, transcribe into `DESIGN.md`.
@@ -394,12 +427,14 @@ Resolves operational/HOW ambiguities so an implementing agent doesn't need to as
 **Phase 1 first deliverable: token translation table.** Before editing any component, produce `PHASE-1-TOKEN-MAP.md`: a table mapping every old DESIGN.md token name to its new DESIGN.md equivalent. Review with user. Then edit components per the map. This prevents per-file improvisation.
 
 **Audit script + allowlist format:**
+
 - `bin/lint-typography.ts` — TypeScript, runnable via `yarn workspace @actual-app/web exec tsx bin/lint-typography.ts --report` (or similar — match repo conventions).
 - `tools/typography-allowlist.json` schema: `{ "files": [ { "path": "...", "patterns": [ "fontSize: 13", "fontWeight: 'bold'", ... ] } ] }`. Per-file pattern list (not line numbers — line numbers churn).
 
 **Phase 2 hide pattern:** for default-dashboard widget changes, modify the default template constant (not feature flag, not user-setting). For non-Plaid bank-sync UI, conditional render gated on `provider === 'plaid'` — no feature flag.
 
 **Operational guardrails (from AGENTS.md — re-stated here):**
+
 - `yarn typecheck` and `yarn lint:fix` must pass before any commit.
 - Commit messages prefixed `[AI]`. PR titles prefixed `[AI]`. Add "AI generated" label to PRs.
 - Never `--no-verify`, never amend (always new commit on hook failure).
@@ -408,6 +443,7 @@ Resolves operational/HOW ambiguities so an implementing agent doesn't need to as
 **Branch strategy:** one branch per phase, named `phase-{N}-{slug}` (e.g., `phase-0-design-rewrite`, `phase-1-typography`). Phase 0 starts from `master` (or current HEAD if branching from this worktree). Each phase merges before the next begins.
 
 **Screenshots:**
+
 - Stored in `design-review/{phase}/{surface}-{state}.png` (e.g., `design-review/phase-1/budget-before.png`, `.../budget-after.png`).
 - Captured at 1440×900 via `/design-review` skill (or `mcp__Claude_Preview__preview_screenshot` if running headless).
 - Linked in the PR description for that phase.

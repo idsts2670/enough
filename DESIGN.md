@@ -400,20 +400,20 @@ Raw `fontSize`, `fontWeight`, and `letterSpacing` values are not allowed in new 
 
 Use the B1 Fresh Finance Palette:
 
-| Token | Solid | Tint | Use |
-|---|---:|---:|---|
-| `category-housing` | `#B45309` | `#FEF3C7` | Housing, rent, mortgage, home |
-| `category-food` | `#15803D` | `#DCFCE7` | Groceries, restaurants |
-| `category-transport` | `#0E7490` | `#CFFAFE` | Transit, gas, car |
-| `category-shopping` | `#BE123C` | `#FFE4E6` | Retail and discretionary shopping |
-| `category-bills` | `#6D28D9` | `#EDE9FE` | Utilities, subscriptions, recurring bills |
-| `category-health` | `#047857` | `#D1FAE5` | Medical, pharmacy, fitness |
-| `category-entertainment` | `#C2410C` | `#FFEDD5` | Media, events, hobbies |
-| `category-travel` | `#0369A1` | `#E0F2FE` | Flights, hotels, trips |
-| `category-income` | `#0F766E` | `#CCFBF1` | Income groups |
-| `category-debt` | `#B91C1C` | `#FEE2E2` | Debt, loans, interest |
-| `category-savings` | `#4D7C0F` | `#ECFCCB` | Savings, investments, goals |
-| `category-personal` | `#7E22CE` | `#F3E8FF` | Personal care, fallback |
+| Token                    |     Solid |      Tint | Use                                       |
+| ------------------------ | --------: | --------: | ----------------------------------------- |
+| `category-housing`       | `#B45309` | `#FEF3C7` | Housing, rent, mortgage, home             |
+| `category-food`          | `#15803D` | `#DCFCE7` | Groceries, restaurants                    |
+| `category-transport`     | `#0E7490` | `#CFFAFE` | Transit, gas, car                         |
+| `category-shopping`      | `#BE123C` | `#FFE4E6` | Retail and discretionary shopping         |
+| `category-bills`         | `#6D28D9` | `#EDE9FE` | Utilities, subscriptions, recurring bills |
+| `category-health`        | `#047857` | `#D1FAE5` | Medical, pharmacy, fitness                |
+| `category-entertainment` | `#C2410C` | `#FFEDD5` | Media, events, hobbies                    |
+| `category-travel`        | `#0369A1` | `#E0F2FE` | Flights, hotels, trips                    |
+| `category-income`        | `#0F766E` | `#CCFBF1` | Income groups                             |
+| `category-debt`          | `#B91C1C` | `#FEE2E2` | Debt, loans, interest                     |
+| `category-savings`       | `#4D7C0F` | `#ECFCCB` | Savings, investments, goals               |
+| `category-personal`      | `#7E22CE` | `#F3E8FF` | Personal care, fallback                   |
 
 Group-level category color is the rule. Child categories inherit their group color unless a later explicit color-setting feature is built.
 
@@ -431,8 +431,18 @@ The implementer provides a typed helper:
 
 ```ts
 type CategoryGroup =
-  | 'housing' | 'food' | 'transport' | 'shopping' | 'bills' | 'health'
-  | 'entertainment' | 'travel' | 'income' | 'debt' | 'savings' | 'personal'
+  | 'housing'
+  | 'food'
+  | 'transport'
+  | 'shopping'
+  | 'bills'
+  | 'health'
+  | 'entertainment'
+  | 'travel'
+  | 'income'
+  | 'debt'
+  | 'savings'
+  | 'personal'
   | string; // custom groups
 
 function getCategoryColor(

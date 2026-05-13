@@ -22,14 +22,14 @@ It does **not** land the **completeness** target. Several tokens are dead (defin
 
 ### Tokens to keep (translate) — PLAN required vs DESIGN.md delivers
 
-| PLAN.md required | DESIGN.md actual | Match |
-|---|---|:---:|
-| Ink `#292524` | `ink: #292524` | ✅ |
-| Off-white canvas `#f5f5f5` | `canvas: #f8f7f4` | ⚠️ DEVIATION |
-| Body `#4e4e4e` | `body: #4e4e4e` | ✅ |
-| Muted `#777169` | `muted: #777169` | ✅ |
-| Hairline `#e7e5e4` | `hairline: #e7e5e4` | ✅ |
-| Pill button geometry | `button-primary rounded: pill` | ✅ |
+| PLAN.md required                                       | DESIGN.md actual                     |    Match     |
+| ------------------------------------------------------ | ------------------------------------ | :----------: |
+| Ink `#292524`                                          | `ink: #292524`                       |      ✅      |
+| Off-white canvas `#f5f5f5`                             | `canvas: #f8f7f4`                    | ⚠️ DEVIATION |
+| Body `#4e4e4e`                                         | `body: #4e4e4e`                      |      ✅      |
+| Muted `#777169`                                        | `muted: #777169`                     |      ✅      |
+| Hairline `#e7e5e4`                                     | `hairline: #e7e5e4`                  |      ✅      |
+| Pill button geometry                                   | `button-primary rounded: pill`       |      ✅      |
 | 8px-base spacing `4 / 8 / 12 / 16 / 20 / 24 / 32 / 48` | `2 / 4 / 8 / 12 / 16 / 20 / 24 / 32` | ⚠️ DEVIATION |
 
 **Deviation 1 — Canvas color shift `#f5f5f5` → `#f8f7f4`.** Not flagged in `PHASE-0-DESIGN-DECISIONS.md`. The new canvas is slightly warmer (R=248 G=247 B=244 vs uniform 245). Likely intentional for a softer feel, but should have been recorded. Implication: contrast claims in `PHASE-0-DESIGN-DECISIONS.md` were computed against `#f5f5f5`, not `#f8f7f4` — the actual numbers shift slightly (see WCAG section below).
@@ -38,36 +38,36 @@ It does **not** land the **completeness** target. Several tokens are dead (defin
 
 ### Tokens to remove — PLAN required vs DESIGN.md delivers
 
-| PLAN required to remove | DESIGN.md handling | Match |
-|---|---|:---:|
-| Waldenburg tokens | Not present; explicitly banned in "Removed From The Legacy Spec" | ✅ |
-| `display-mega 64`, `display-xl 48`, etc. | Not present | ✅ |
-| Weight 300 as display signature | Not present | ✅ |
-| Gradient orb tokens | Not present | ✅ |
-| `hero-band`, `cta-band`, etc. | Not present | ✅ |
-| 96px section padding | Replaced with `page: 32px` | ✅ |
-| Editorial Overview prose | Replaced with app-UI principles | ✅ |
+| PLAN required to remove                  | DESIGN.md handling                                               | Match |
+| ---------------------------------------- | ---------------------------------------------------------------- | :---: |
+| Waldenburg tokens                        | Not present; explicitly banned in "Removed From The Legacy Spec" |  ✅   |
+| `display-mega 64`, `display-xl 48`, etc. | Not present                                                      |  ✅   |
+| Weight 300 as display signature          | Not present                                                      |  ✅   |
+| Gradient orb tokens                      | Not present                                                      |  ✅   |
+| `hero-band`, `cta-band`, etc.            | Not present                                                      |  ✅   |
+| 96px section padding                     | Replaced with `page: 32px`                                       |  ✅   |
+| Editorial Overview prose                 | Replaced with app-UI principles                                  |  ✅   |
 
 ### Tokens to add — PLAN required vs DESIGN.md delivers
 
-| PLAN required to add | DESIGN.md actual | Match |
-|---|---|:---:|
-| Typography scale Inter 400/500/600 | All Inter, weights 400/500/600 only | ✅ |
-| `tabular-figure` modifier | Defined with `fontVariantNumeric` + `fontFeatureSettings` | ✅ |
-| `category-*` × 10–12 hues | 12 hues, named, with solid + tint variants | ✅ |
-| `accent-action` (blue per OD1) | `accent-action: #2563EB` per A1 | ✅ |
+| PLAN required to add                                  | DESIGN.md actual                                                          |            Match            |
+| ----------------------------------------------------- | ------------------------------------------------------------------------- | :-------------------------: |
+| Typography scale Inter 400/500/600                    | All Inter, weights 400/500/600 only                                       |             ✅              |
+| `tabular-figure` modifier                             | Defined with `fontVariantNumeric` + `fontFeatureSettings`                 |             ✅              |
+| `category-*` × 10–12 hues                             | 12 hues, named, with solid + tint variants                                |             ✅              |
+| `accent-action` (blue per OD1)                        | `accent-action: #2563EB` per A1                                           |             ✅              |
 | `status-success / warning / error` separate namespace | `semantic-success / warning / error` (renamed but separate from category) | ✅ (name differs from PLAN) |
-| `surface-canvas / card / hover / selected` | `canvas`, `surface`, `surface-hover`, `surface-selected` present | ✅ |
-| Dark-mode token slots reserved | `dark-mode-reserved` block present | ✅ |
-| `table-row` (comfortable / compact) | `heightComfortable: 44px`, `heightCompact: 36px` | ✅ |
-| `table-cell-label` / `table-cell-amount` | Both present | ✅ |
-| `category-pill` | Present (uses `{category.tint}` placeholder) | ⚠️ see F2 |
-| `progress-bar` (track + fill in category color) | Present | ✅ |
-| `status-dot` (paired with label rule) | Present | ✅ |
-| `sheet / drawer` | `sheet` present | ⚠️ no width spec — see F8 |
-| `toolbar` | Present | ✅ |
-| `row-hover / row-selected` states | Folded into `table-row` + `sidebar-item` | ✅ (acceptable) |
-| `filter-chip / badge-numeric / nav-row` | Only `filter-chip` present | ❌ see F9, F10 |
+| `surface-canvas / card / hover / selected`            | `canvas`, `surface`, `surface-hover`, `surface-selected` present          |             ✅              |
+| Dark-mode token slots reserved                        | `dark-mode-reserved` block present                                        |             ✅              |
+| `table-row` (comfortable / compact)                   | `heightComfortable: 44px`, `heightCompact: 36px`                          |             ✅              |
+| `table-cell-label` / `table-cell-amount`              | Both present                                                              |             ✅              |
+| `category-pill`                                       | Present (uses `{category.tint}` placeholder)                              |          ⚠️ see F2          |
+| `progress-bar` (track + fill in category color)       | Present                                                                   |             ✅              |
+| `status-dot` (paired with label rule)                 | Present                                                                   |             ✅              |
+| `sheet / drawer`                                      | `sheet` present                                                           |  ⚠️ no width spec — see F8  |
+| `toolbar`                                             | Present                                                                   |             ✅              |
+| `row-hover / row-selected` states                     | Folded into `table-row` + `sidebar-item`                                  |       ✅ (acceptable)       |
+| `filter-chip / badge-numeric / nav-row`               | Only `filter-chip` present                                                |       ❌ see F9, F10        |
 
 ---
 
@@ -83,12 +83,12 @@ It does **not** land the **completeness** target. Several tokens are dead (defin
 
 I recomputed two claims from `PHASE-0-DESIGN-DECISIONS.md` against the actual new canvas color (`#f8f7f4`, not the legacy `#f5f5f5` the doc appears to have used).
 
-| Claim | Documented | Computed on actual canvas | Status |
-|---|---:|---:|---|
-| A1 `#2563EB` vs white | 5.17:1 | 5.17:1 | ✅ |
-| A1 `#2563EB` vs canvas (`#f8f7f4`) | 4.74:1 | 4.83:1 | ✅ (slightly better than claimed) |
-| `category-housing` `#B45309` vs canvas (`#f8f7f4`) | 4.61:1 | 4.71:1 | ✅ (slightly better than claimed) |
-| `category-housing` `#B45309` vs legacy canvas (`#f5f5f5`) | 4.61:1 | 4.63:1 | ✅ (claim was computed against legacy canvas) |
+| Claim                                                     | Documented | Computed on actual canvas | Status                                        |
+| --------------------------------------------------------- | ---------: | ------------------------: | --------------------------------------------- |
+| A1 `#2563EB` vs white                                     |     5.17:1 |                    5.17:1 | ✅                                            |
+| A1 `#2563EB` vs canvas (`#f8f7f4`)                        |     4.74:1 |                    4.83:1 | ✅ (slightly better than claimed)             |
+| `category-housing` `#B45309` vs canvas (`#f8f7f4`)        |     4.61:1 |                    4.71:1 | ✅ (slightly better than claimed)             |
+| `category-housing` `#B45309` vs legacy canvas (`#f5f5f5`) |     4.61:1 |                    4.63:1 | ✅ (claim was computed against legacy canvas) |
 
 **Conclusion:** all contrast claims pass WCAG AA. The recorded numbers are slightly conservative because they were computed against the **legacy** canvas (`#f5f5f5`), not the new one (`#f8f7f4`). The error is in the user's favor — actual contrast is better than documented. Worth updating the contrast table in `PHASE-0-DESIGN-DECISIONS.md` for cleanliness, but not a blocker.
 
@@ -173,15 +173,15 @@ PLAN.md Section 13 said shared component tokens apply to both desktop and mobile
 
 The 5 visible-surface inventory from PLAN.md Section 4 — does DESIGN.md cover every component each surface needs?
 
-| Surface | Components needed | DESIGN.md covers? |
-|---|---|:---:|
-| `/budget` budget table | page-shell, sidebar, toolbar, table-header, table-row, table-cell-label, table-cell-amount, category-pill, progress-bar, button-primary | ✅ (modulo F1) |
-| `/reports` widget grid | page-shell, metric-card, chart-label, chart-value, chart-axis | ✅ |
-| `/accounts/*` account + transaction list | sidebar, toolbar, table-row, table-cell-amount, category-pill, status-dot, filter-chip | ✅ |
-| `/schedules` schedule list | sidebar, toolbar, table-row, table-cell-amount | ✅ |
-| `/bank-sync` provider UI | page-shell, card, button-primary, empty-state, badge-numeric | ❌ missing empty-state (F7) and badge-numeric (F9) |
-| Right-side detail sheet (Phase 3) | sheet | ⚠️ no width (F8) |
-| Top nav (Phase 2 Reports demotion) | nav-row + nav-item | ❌ missing (F10) |
+| Surface                                  | Components needed                                                                                                                       |                 DESIGN.md covers?                  |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------: |
+| `/budget` budget table                   | page-shell, sidebar, toolbar, table-header, table-row, table-cell-label, table-cell-amount, category-pill, progress-bar, button-primary |                   ✅ (modulo F1)                   |
+| `/reports` widget grid                   | page-shell, metric-card, chart-label, chart-value, chart-axis                                                                           |                         ✅                         |
+| `/accounts/*` account + transaction list | sidebar, toolbar, table-row, table-cell-amount, category-pill, status-dot, filter-chip                                                  |                         ✅                         |
+| `/schedules` schedule list               | sidebar, toolbar, table-row, table-cell-amount                                                                                          |                         ✅                         |
+| `/bank-sync` provider UI                 | page-shell, card, button-primary, empty-state, badge-numeric                                                                            | ❌ missing empty-state (F7) and badge-numeric (F9) |
+| Right-side detail sheet (Phase 3)        | sheet                                                                                                                                   |                  ⚠️ no width (F8)                  |
+| Top nav (Phase 2 Reports demotion)       | nav-row + nav-item                                                                                                                      |                  ❌ missing (F10)                  |
 
 ---
 

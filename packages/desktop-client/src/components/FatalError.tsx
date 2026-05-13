@@ -40,8 +40,8 @@ function RenderSimple({ error }: RenderSimpleProps) {
       <Text>
         <Trans>
           Your browser doesn't support IndexedDB in this environment, a feature
-          that Enough requires to run. This might happen if you are in
-          private browsing mode. Please try a different browser or turn off private
+          that Enough requires to run. This might happen if you are in private
+          browsing mode. Please try a different browser or turn off private
           browsing.
         </Trans>
       </Text>
@@ -54,11 +54,10 @@ function RenderSimple({ error }: RenderSimpleProps) {
     msg = (
       <Text>
         <Trans>
-          Enough requires access to <code>SharedArrayBuffer</code> in
-          order to function properly. If you're seeing this error, either your
-          browser does not support <code>SharedArrayBuffer</code>, or your
-          server is not sending the appropriate headers, or you are not using
-          HTTPS. See{' '}
+          Enough requires access to <code>SharedArrayBuffer</code> in order to
+          function properly. If you're seeing this error, either your browser
+          does not support <code>SharedArrayBuffer</code>, or your server is not
+          sending the appropriate headers, or you are not using HTTPS. See{' '}
           <Link
             variant="external"
             linkColor="muted"

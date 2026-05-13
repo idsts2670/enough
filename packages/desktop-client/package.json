@@ -120,6 +120,9 @@
     "playwright": "playwright",
     "typecheck": "tsgo -b && tsc-strict"
   },
+  "dependencies": {
+    "react-plaid-link": "^4.1.1"
+  },
   "devDependencies": {
     "@actual-app/components": "workspace:*",
     "@actual-app/core": "workspace:*",
@@ -204,8 +207,5 @@
     "vite": "^8.0.5",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.2"
-  },
-  "dependencies": {
-    "react-plaid-link": "^4.1.1"
   }
 }

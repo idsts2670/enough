@@ -116,7 +116,9 @@ function findRawTypography(): Finding[] {
   return findings;
 }
 
-function groupFindingCounts(findings: Finding[]): Map<string, Map<string, number>> {
+function groupFindingCounts(
+  findings: Finding[],
+): Map<string, Map<string, number>> {
   const counts = new Map<string, Map<string, number>>();
   for (const finding of findings) {
     const fileCounts = counts.get(finding.path) ?? new Map<string, number>();

@@ -125,7 +125,9 @@ export function CreateAccountModal({
                   <Paragraph
                     style={{ fontSize: 15, color: theme.pageTextSubdued }}
                   >
-                    <Trans>Configure Plaid and link accounts from Bank Sync.</Trans>
+                    <Trans>
+                      Configure Plaid and link accounts from Bank Sync.
+                    </Trans>
                   </Paragraph>
                 </View>
               </>

@@ -224,12 +224,15 @@ export const PlaidLinkModal = ({
         handleStoredResult();
       }
     }, 500);
-    const timeout = window.setTimeout(() => {
-      if (!stopped) {
-        setIsOpening(false);
-        setError(t('Plaid Link timed out waiting for a response.'));
-      }
-    }, 5 * 60 * 1000);
+    const timeout = window.setTimeout(
+      () => {
+        if (!stopped) {
+          setIsOpening(false);
+          setError(t('Plaid Link timed out waiting for a response.'));
+        }
+      },
+      5 * 60 * 1000,
+    );
 
     handleStoredResult();
 

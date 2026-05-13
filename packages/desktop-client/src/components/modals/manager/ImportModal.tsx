@@ -88,7 +88,9 @@ export function ImportModal() {
               </View>
             </Button>
             <Button style={itemStyle} onPress={() => onSelectType('actual')}>
-              <span style={{ fontWeight: 700 }}>Enough</span>
+              <span style={{ fontWeight: 700 }}>
+                <Trans>Enough</Trans>
+              </span>
               <View style={{ color: theme.pageTextLight }}>
                 <div>
                   <Trans>Import a file exported from Enough</Trans>

@@ -82,7 +82,9 @@ function isDefaultDashboardTipsWidget(widget: DashboardWidgetEntity) {
 }
 
 function shouldShowDashboardWidget(widget: DashboardWidgetEntity) {
-  return widget.type !== 'calendar-card' && !isDefaultDashboardTipsWidget(widget);
+  return (
+    widget.type !== 'calendar-card' && !isDefaultDashboardTipsWidget(widget)
+  );
 }
 
 type OverviewProps = {

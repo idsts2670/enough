@@ -110,10 +110,9 @@ export function SelectLinkedAccountsModal({
           .map(acc => [acc.account_id, acc.id]),
       );
 
-      const preselectedExternalAccount =
-        sortedExternalAccounts.find(
-          account => initiallyChosenAccounts[account.account_id] == null,
-        );
+      const preselectedExternalAccount = sortedExternalAccounts.find(
+        account => initiallyChosenAccounts[account.account_id] == null,
+      );
 
       if (
         upgradingAccountId &&
@@ -344,9 +343,10 @@ export function SelectLinkedAccountsModal({
               </TableHeader>
 
               <Table<ExternalAccount & { id: string }>
-                items={sortedExternalAccounts.map(
-                  acc => ({ ...acc, id: acc.account_id }),
-                )}
+                items={sortedExternalAccounts.map(acc => ({
+                  ...acc,
+                  id: acc.account_id,
+                }))}
                 style={{ backgroundColor: theme.tableHeaderBackground }}
                 renderItem={({ item }) => {
                   const chosenAccount = getChosenAccount(item.account_id);

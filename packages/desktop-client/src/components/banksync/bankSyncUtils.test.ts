@@ -5,11 +5,7 @@ import { getSyncSourceReadable, groupBankSyncAccounts } from './bankSyncUtils';
 
 describe('bankSyncUtils', () => {
   it('groups open accounts by provider and leaves unlinked last', () => {
-    const legacyGoCardlessAccount = generateAccount(
-      'GoCardless',
-      true,
-      false,
-    );
+    const legacyGoCardlessAccount = generateAccount('GoCardless', true, false);
     const pluggyAccount = {
       ...generateAccount('Pluggy', true, false),
       account_sync_source: 'pluggyai' as const,

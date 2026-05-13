@@ -27,11 +27,11 @@ Primary actions should use blue per `PLAN.md` OD1. Ink remains for text, seconda
 
 Recommended option: **A1 - Calm Blue (`#2563EB`)**.
 
-| Option | Hex | White text contrast | Canvas contrast | Rationale |
-|---|---:|---:|---:|---|
-| A1 - Calm Blue | `#2563EB` | 5.17:1 | 4.74:1 | Best balance of accessible contrast, modern app feel, and restraint. Distinct from status green/red and category palette. |
-| A2 - Deep Blue | `#1D4ED8` | 6.70:1 | 6.15:1 | Strongest accessibility. More assertive and heavier; useful if the UI still feels too soft after Phase 1. |
-| A3 - Product Blue | `#0066CC` | 5.57:1 | 5.11:1 | Familiar SaaS/action blue. Slightly more conventional; less distinctive than A1. |
+| Option            |       Hex | White text contrast | Canvas contrast | Rationale                                                                                                                 |
+| ----------------- | --------: | ------------------: | --------------: | ------------------------------------------------------------------------------------------------------------------------- |
+| A1 - Calm Blue    | `#2563EB` |              5.17:1 |          4.74:1 | Best balance of accessible contrast, modern app feel, and restraint. Distinct from status green/red and category palette. |
+| A2 - Deep Blue    | `#1D4ED8` |              6.70:1 |          6.15:1 | Strongest accessibility. More assertive and heavier; useful if the UI still feels too soft after Phase 1.                 |
+| A3 - Product Blue | `#0066CC` |              5.57:1 |          5.11:1 | Familiar SaaS/action blue. Slightly more conventional; less distinctive than A1.                                          |
 
 Approved: A1.
 
@@ -45,20 +45,20 @@ Category colors attach to category groups per `PLAN.md` OD2. Child categories in
 
 Recommended palette: **B1 - Fresh Finance Palette**.
 
-| Token | Group intent | Solid | Tint | Solid vs canvas | Ink vs tint |
-|---|---|---:|---:|---:|---:|
-| `category-housing` | Rent, mortgage, home | `#B45309` | `#FEF3C7` | 4.61:1 | 13.62:1 |
-| `category-food` | Groceries, restaurants | `#15803D` | `#DCFCE7` | 4.60:1 | 13.81:1 |
-| `category-transport` | Transit, gas, car | `#0E7490` | `#CFFAFE` | 4.91:1 | 13.55:1 |
-| `category-shopping` | Retail, discretionary shopping | `#BE123C` | `#FFE4E6` | 5.76:1 | 12.64:1 |
-| `category-bills` | Utilities, subscriptions, recurring bills | `#6D28D9` | `#EDE9FE` | 6.52:1 | 12.78:1 |
-| `category-health` | Medical, pharmacy, fitness | `#047857` | `#D1FAE5` | 5.03:1 | 13.38:1 |
-| `category-entertainment` | Media, events, hobbies | `#C2410C` | `#FFEDD5` | 4.75:1 | 13.24:1 |
-| `category-travel` | Flights, hotels, trips | `#0369A1` | `#E0F2FE` | 5.44:1 | 13.22:1 |
-| `category-income` | Income groups | `#0F766E` | `#CCFBF1` | 5.02:1 | 13.46:1 |
-| `category-debt` | Debt, loans, interest | `#B91C1C` | `#FEE2E2` | 5.93:1 | 12.42:1 |
-| `category-savings` | Savings, investments, goals if later added | `#4D7C0F` | `#ECFCCB` | 4.58:1 | 13.98:1 |
-| `category-personal` | Personal care, misc, fallback | `#7E22CE` | `#F3E8FF` | 6.41:1 | 12.86:1 |
+| Token                    | Group intent                               |     Solid |      Tint | Solid vs canvas | Ink vs tint |
+| ------------------------ | ------------------------------------------ | --------: | --------: | --------------: | ----------: |
+| `category-housing`       | Rent, mortgage, home                       | `#B45309` | `#FEF3C7` |          4.61:1 |     13.62:1 |
+| `category-food`          | Groceries, restaurants                     | `#15803D` | `#DCFCE7` |          4.60:1 |     13.81:1 |
+| `category-transport`     | Transit, gas, car                          | `#0E7490` | `#CFFAFE` |          4.91:1 |     13.55:1 |
+| `category-shopping`      | Retail, discretionary shopping             | `#BE123C` | `#FFE4E6` |          5.76:1 |     12.64:1 |
+| `category-bills`         | Utilities, subscriptions, recurring bills  | `#6D28D9` | `#EDE9FE` |          6.52:1 |     12.78:1 |
+| `category-health`        | Medical, pharmacy, fitness                 | `#047857` | `#D1FAE5` |          5.03:1 |     13.38:1 |
+| `category-entertainment` | Media, events, hobbies                     | `#C2410C` | `#FFEDD5` |          4.75:1 |     13.24:1 |
+| `category-travel`        | Flights, hotels, trips                     | `#0369A1` | `#E0F2FE` |          5.44:1 |     13.22:1 |
+| `category-income`        | Income groups                              | `#0F766E` | `#CCFBF1` |          5.02:1 |     13.46:1 |
+| `category-debt`          | Debt, loans, interest                      | `#B91C1C` | `#FEE2E2` |          5.93:1 |     12.42:1 |
+| `category-savings`       | Savings, investments, goals if later added | `#4D7C0F` | `#ECFCCB` |          4.58:1 |     13.98:1 |
+| `category-personal`      | Personal care, misc, fallback              | `#7E22CE` | `#F3E8FF` |          6.41:1 |     12.86:1 |
 
 Contrast target:
 
@@ -79,18 +79,18 @@ These are not blocked by color choice but should be reviewed with the color deci
 
 Recommended typography defaults for new `DESIGN.md`:
 
-| Token | Font | Size | Weight | Line height | Usage |
-|---|---|---:|---:|---:|---|
-| `display-2xl` | Inter Variable | 32px | 600 | 1.15 | Page hero/title on dashboard-like surfaces |
-| `display-xl` | Inter Variable | 24px | 600 | 1.2 | Section page titles |
-| `display-lg` | Inter Variable | 20px | 600 | 1.3 | Card titles |
-| `title-md` | Inter Variable | 16px | 600 | 1.35 | Group headers, row leaders |
-| `body-md` | Inter Variable | 15px | 400 | 1.45 | Default app text |
-| `body-strong` | Inter Variable | 15px | 500 | 1.45 | Emphasized app text |
-| `body-sm` | Inter Variable | 13px | 400 | 1.4 | Dense table cells and secondary text |
-| `caption` | Inter Variable | 12px | 500 | 1.35 | Labels, badges, metadata |
-| `button` | Inter Variable | 15px | 600 | 1 | Primary and secondary buttons |
-| `tabular-figure` | modifier | inherit | inherit | inherit | Amounts, balances, deltas, table numbers |
+| Token            | Font           |    Size |  Weight | Line height | Usage                                      |
+| ---------------- | -------------- | ------: | ------: | ----------: | ------------------------------------------ |
+| `display-2xl`    | Inter Variable |    32px |     600 |        1.15 | Page hero/title on dashboard-like surfaces |
+| `display-xl`     | Inter Variable |    24px |     600 |         1.2 | Section page titles                        |
+| `display-lg`     | Inter Variable |    20px |     600 |         1.3 | Card titles                                |
+| `title-md`       | Inter Variable |    16px |     600 |        1.35 | Group headers, row leaders                 |
+| `body-md`        | Inter Variable |    15px |     400 |        1.45 | Default app text                           |
+| `body-strong`    | Inter Variable |    15px |     500 |        1.45 | Emphasized app text                        |
+| `body-sm`        | Inter Variable |    13px |     400 |         1.4 | Dense table cells and secondary text       |
+| `caption`        | Inter Variable |    12px |     500 |        1.35 | Labels, badges, metadata                   |
+| `button`         | Inter Variable |    15px |     600 |           1 | Primary and secondary buttons              |
+| `tabular-figure` | modifier       | inherit | inherit |     inherit | Amounts, balances, deltas, table numbers   |
 
 Tabular figure rule:
 

@@ -115,7 +115,7 @@ export function ReportCard({
     const openReportFromKeyboard = (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        openReport();
+        void openReport();
       }
     };
 
