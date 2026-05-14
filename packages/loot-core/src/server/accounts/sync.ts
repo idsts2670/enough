@@ -119,17 +119,6 @@ function makeSplitTransaction(trans, subtransactions) {
   return [parent, ...sub];
 }
 
-function getAccountBalance(account) {
-  // Debt account types need their balance reversed
-  switch (account.type) {
-    case 'credit':
-    case 'loan':
-      return -account.balances.current;
-    default:
-      return account.balances.current;
-  }
-}
-
 async function updateAccountBalance(id: AccountEntity['id'], balance: number) {
   await db.update('accounts', { id, balance_current: balance });
 }
@@ -150,8 +139,7 @@ async function getAccountOldestTransaction(id): Promise<TransactionEntity> {
 }
 
 async function getAccountSyncStartDate(id) {
-  // Many GoCardless integrations do not support getting more than 90 days
-  // worth of data, so make that the earliest possible limit.
+  // Keep sync windows bounded so provider calls stay small and predictable.
   const dates = [monthUtils.subDays(monthUtils.currentDay(), 90)];
 
   const oldestTransaction = await getAccountOldestTransaction(id);
@@ -161,218 +149,6 @@ async function getAccountSyncStartDate(id) {
   return monthUtils.dayFromDate(
     dateFns.max(dates.map(d => monthUtils.parseDate(d))),
   );
-}
-
-export async function getGoCardlessAccounts(userId, userKey, id) {
-  const userToken = await asyncStorage.getItem('user-token');
-  if (!userToken) return;
-
-  const res = await post(
-    getServer().GOCARDLESS_SERVER + '/accounts',
-    {
-      userId,
-      key: userKey,
-      item_id: id,
-    },
-    {
-      'X-ACTUAL-TOKEN': userToken,
-    },
-  );
-
-  const { accounts } = res;
-
-  accounts.forEach(acct => {
-    acct.balances.current = getAccountBalance(acct);
-  });
-
-  return accounts;
-}
-
-async function downloadGoCardlessTransactions(
-  userId,
-  userKey,
-  acctId,
-  bankId,
-  since,
-  includeBalance = true,
-) {
-  const userToken = await asyncStorage.getItem('user-token');
-  if (!userToken) return;
-
-  logger.log('Pulling transactions from GoCardless');
-
-  const res = await post(
-    getServer().GOCARDLESS_SERVER + '/transactions',
-    {
-      userId,
-      key: userKey,
-      requisitionId: bankId,
-      accountId: acctId,
-      startDate: since,
-      includeBalance,
-    },
-    {
-      'X-ACTUAL-TOKEN': userToken,
-    },
-  );
-
-  if (res.error_code) {
-    const errorDetails = {
-      rateLimitHeaders: res.rateLimitHeaders,
-    };
-
-    throw BankSyncError(res.error_type, res.error_code, errorDetails);
-  }
-
-  if (includeBalance) {
-    const {
-      transactions: { all },
-      balances,
-      startingBalance,
-    } = res;
-
-    logger.log('Response:', res);
-
-    return {
-      transactions: all,
-      accountBalance: balances,
-      startingBalance,
-    };
-  } else {
-    logger.log('Response:', res);
-
-    return {
-      transactions: res.transactions.all,
-    };
-  }
-}
-
-async function downloadSimpleFinTransactions(
-  acctId: AccountEntity['id'] | AccountEntity['id'][],
-  since: string | string[],
-) {
-  const userToken = await asyncStorage.getItem('user-token');
-  if (!userToken) return;
-
-  const batchSync = Array.isArray(acctId);
-
-  logger.log('Pulling transactions from SimpleFin');
-
-  let res;
-  try {
-    res = await post(
-      getServer().SIMPLEFIN_SERVER + '/transactions',
-      {
-        accountId: acctId,
-        startDate: since,
-      },
-      {
-        'X-ACTUAL-TOKEN': userToken,
-      },
-      // 5 minute timeout for batch sync, one minute for individual accounts
-      Array.isArray(acctId) ? 300000 : 60000,
-    );
-  } catch (error) {
-    logger.error('Suspected timeout during bank sync:', error);
-    throw BankSyncError('TIMED_OUT', 'TIMED_OUT');
-  }
-
-  if (Object.keys(res).length === 0) {
-    throw BankSyncError('NO_DATA', 'NO_DATA');
-  }
-  if (res.error_code) {
-    throw BankSyncError(res.error_type, res.error_code);
-  }
-
-  let retVal = {};
-  if (batchSync) {
-    const batchErrors = res.errors;
-    for (const accountId of Object.keys(res)) {
-      if (accountId === 'errors') continue;
-
-      const data = res[accountId];
-      const error = batchErrors?.[accountId]?.[0];
-
-      retVal[accountId] = {
-        transactions: data?.transactions?.all,
-        accountBalance: data?.balances,
-        startingBalance: data?.startingBalance,
-      };
-
-      if (error) {
-        retVal[accountId].error_type = error.error_type;
-        retVal[accountId].error_code = error.error_code;
-      }
-    }
-
-    // Add entries for accounts that only have errors (no data in the response)
-    if (batchErrors) {
-      for (const [accountId, errorList] of Object.entries(batchErrors)) {
-        if (
-          !retVal[accountId] &&
-          Array.isArray(errorList) &&
-          errorList.length > 0
-        ) {
-          const error = errorList[0];
-          retVal[accountId] = {
-            transactions: [],
-            accountBalance: [],
-            startingBalance: 0,
-            error_type: error.error_type,
-            error_code: error.error_code,
-          };
-        }
-      }
-    }
-  } else {
-    retVal = {
-      transactions: res.transactions.all,
-      accountBalance: res.balances,
-      startingBalance: res.startingBalance,
-    };
-  }
-
-  logger.log('Response:', retVal);
-  return retVal;
-}
-
-async function downloadPluggyAiTransactions(
-  acctId: AccountEntity['id'],
-  since: string,
-) {
-  const userToken = await asyncStorage.getItem('user-token');
-  if (!userToken) return;
-
-  logger.log('Pulling transactions from Pluggy.ai');
-
-  const res = await post(
-    getServer().PLUGGYAI_SERVER + '/transactions',
-    {
-      accountId: acctId,
-      startDate: since,
-    },
-    {
-      'X-ACTUAL-TOKEN': userToken,
-    },
-    60000,
-  );
-
-  if (res.error_code) {
-    throw BankSyncError(res.error_type, res.error_code);
-  } else if ('error' in res) {
-    throw BankSyncError('Connection', res.error);
-  }
-
-  let retVal = {};
-  const singleRes = res as BankSyncResponse;
-  retVal = {
-    transactions: singleRes.transactions.all,
-    accountBalance: singleRes.balances,
-    startingBalance: singleRes.startingBalance,
-  };
-
-  logger.log('Response:', retVal);
-  return retVal;
 }
 
 async function downloadPlaidTransactions(
@@ -1127,20 +903,6 @@ async function processBankSyncDownload(
     // Use custom starting balance if provided, otherwise calculate it
     if (customStartingBalance !== undefined) {
       balanceToUse = customStartingBalance;
-    } else if (acctRow.account_sync_source === 'simpleFin') {
-      const previousBalance = transactions.reduce((total, trans) => {
-        return (
-          total - parseInt(trans.transactionAmount.amount.replace('.', ''))
-        );
-      }, currentBalance);
-      balanceToUse = previousBalance;
-    } else if (acctRow.account_sync_source === 'pluggyai') {
-      const currentBalance = download.startingBalance;
-      const previousBalance = transactions.reduce(
-        (total, trans) => total - trans.transactionAmount.amount * 100,
-        currentBalance,
-      );
-      balanceToUse = Math.round(previousBalance);
     } else if (acctRow.account_sync_source === 'plaid') {
       balanceToUse = transactions.reduce(
         (total, trans) =>
@@ -1238,24 +1000,11 @@ export async function syncAccount(
   const newAccount = oldestTransaction == null;
 
   let download;
-  if (acctRow.account_sync_source === 'simpleFin') {
-    download = await downloadSimpleFinTransactions(acctId, syncStartDate);
-  } else if (acctRow.account_sync_source === 'pluggyai') {
-    download = await downloadPluggyAiTransactions(acctId, syncStartDate);
-  } else if (acctRow.account_sync_source === 'plaid') {
+  if (acctRow.account_sync_source === 'plaid') {
     download = await downloadPlaidTransactions(acctId, syncStartDate);
-  } else if (acctRow.account_sync_source === 'goCardless') {
-    download = await downloadGoCardlessTransactions(
-      userId,
-      userKey,
-      acctId,
-      bankId,
-      syncStartDate,
-      newAccount,
-    );
   } else {
     throw new Error(
-      `Unrecognized bank-sync provider: ${acctRow.account_sync_source}`,
+      `Unsupported bank-sync provider: ${acctRow.account_sync_source}`,
     );
   }
 
@@ -1267,91 +1016,4 @@ export async function syncAccount(
     customStartingBalance,
     customStartingDate,
   );
-}
-
-export async function simpleFinBatchSync(
-  accounts: Array<Pick<AccountEntity, 'id' | 'account_id'>>,
-) {
-  const startDates = await Promise.all(
-    accounts.map(async a => getAccountSyncStartDate(a.id)),
-  );
-
-  const res = await downloadSimpleFinTransactions(
-    accounts.map(a => a.account_id),
-    startDates,
-  );
-
-  if (!res) {
-    return accounts.map(account => ({
-      accountId: account.id,
-      res: {
-        error_type: 'NO_DATA',
-        error_code: 'NO_DATA',
-      },
-    }));
-  }
-
-  const promises = [];
-  for (let i = 0; i < accounts.length; i++) {
-    const account = accounts[i];
-    const download = res[account.account_id];
-
-    if (!download || Object.keys(download).length === 0) {
-      promises.push(
-        Promise.resolve({
-          accountId: account.id,
-          res: {
-            error_type: 'ACCOUNT_MISSING',
-            error_code: 'ACCOUNT_MISSING',
-          },
-        }),
-      );
-      continue;
-    }
-
-    const acctRow = await db.select('accounts', account.id);
-    const oldestTransaction = await getAccountOldestTransaction(account.id);
-    const newAccount = oldestTransaction == null;
-
-    if (download.error_code) {
-      promises.push(
-        Promise.resolve({
-          accountId: account.id,
-          res: download,
-        }),
-      );
-
-      continue;
-    }
-
-    if (!download.transactions) {
-      promises.push(
-        Promise.resolve({
-          accountId: account.id,
-          res: {
-            error_type: 'ACCOUNT_MISSING',
-            error_code: 'ACCOUNT_MISSING',
-          },
-        }),
-      );
-      continue;
-    }
-
-    promises.push(
-      processBankSyncDownload(download, account.id, acctRow, newAccount)
-        .then(res => ({
-          accountId: account.id,
-          res,
-        }))
-        .catch(err => ({
-          accountId: account.id,
-          res: {
-            error_type: err?.category || 'INTERNAL_ERROR',
-            error_code: err?.code || 'INTERNAL_ERROR',
-          },
-        })),
-    );
-  }
-
-  return await Promise.all(promises);
 }

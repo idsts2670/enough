@@ -2,8 +2,6 @@
 import * as asyncStorage from '#platform/server/asyncStorage';
 import * as db from '#server/db';
 import { loadMappings } from '#server/db/mappings';
-import { post } from '#server/post';
-import { getServer } from '#server/server-config';
 import { handlers } from '#server/tests/mockSyncServer';
 import { insertRule, loadRules } from '#server/transactions/transaction-rules';
 import * as monthUtils from '#shared/months';
@@ -13,7 +11,6 @@ import {
   addTransactions,
   getOrCreatePlaidSuggestedCategory,
   reconcileTransactions,
-  simpleFinBatchSync,
   syncAccount,
 } from './sync';
 
@@ -52,18 +49,11 @@ async function prepareDatabase() {
     is_income: 1,
   });
 
-  const { accounts } = await post(getServer().GOCARDLESS_SERVER + '/accounts', {
-    client_id: '',
-    group_id: '',
-    item_id: '1',
-  });
-  const acct = accounts[0];
-
   const id = await db.insertAccount({
     id: 'one',
-    account_id: acct.account_id,
-    name: acct.official_name,
-    balance_current: acct.balances.current,
+    account_id: 'test-source-account',
+    name: 'Test Account',
+    balance_current: 10000,
   });
   await db.insertPayee({
     id: 'transfer-' + id,
@@ -71,7 +61,7 @@ async function prepareDatabase() {
     transfer_acct: id,
   });
 
-  return { id, account_id: acct.account_id };
+  return { id, account_id: 'test-source-account' };
 }
 
 async function getAllPayees() {
@@ -635,131 +625,6 @@ describe('Account sync', () => {
       expect(transactions[0].amount).toBe(-1239);
     },
   );
-});
-
-describe('SimpleFin batch sync', () => {
-  function mockSimpleFinTransactions(response) {
-    vi.mocked(asyncStorage.getItem).mockResolvedValue('test-token');
-    handlers['/simplefin/transactions'] = () => response;
-  }
-
-  afterEach(() => {
-    delete handlers['/simplefin/transactions'];
-  });
-
-  test('returns ACCOUNT_MISSING error when an account is not in the response', async () => {
-    const presentAccountId = 'sf-account-1';
-    const missingAccountId = 'sf-account-2';
-
-    // Mock SimpleFin response that only returns data for one of two accounts
-    mockSimpleFinTransactions({
-      [presentAccountId]: {
-        transactions: { all: [], booked: [], pending: [] },
-        balances: [],
-        startingBalance: 0,
-      },
-      errors: {},
-    });
-
-    // Insert two accounts linked to SimpleFin
-    const acct1Id = await db.insertAccount({
-      id: 'acct-1',
-      account_id: presentAccountId,
-      name: 'Account 1',
-      account_sync_source: 'simpleFin',
-    });
-    await db.insertPayee({
-      id: 'transfer-' + acct1Id,
-      name: '',
-      transfer_acct: acct1Id,
-    });
-
-    const acct2Id = await db.insertAccount({
-      id: 'acct-2',
-      account_id: missingAccountId,
-      name: 'Account 2',
-      account_sync_source: 'simpleFin',
-    });
-    await db.insertPayee({
-      id: 'transfer-' + acct2Id,
-      name: '',
-      transfer_acct: acct2Id,
-    });
-
-    const results = await simpleFinBatchSync([
-      { id: 'acct-1', account_id: presentAccountId },
-      { id: 'acct-2', account_id: missingAccountId },
-    ]);
-
-    // The present account should succeed (no error_code)
-    const presentResult = results.find(r => r.accountId === 'acct-1');
-    expect(presentResult).toBeDefined();
-    expect(presentResult.res.error_code).toBeUndefined();
-
-    // The missing account should have ACCOUNT_MISSING error
-    const missingResult = results.find(r => r.accountId === 'acct-2');
-    expect(missingResult).toBeDefined();
-    expect(missingResult.res.error_code).toBe('ACCOUNT_MISSING');
-    expect(missingResult.res.error_type).toBe('ACCOUNT_MISSING');
-  });
-
-  test('propagates ACCOUNT_MISSING error from SimpleFin response errors', async () => {
-    const presentAccountId = 'sf-account-1';
-    const missingAccountId = 'sf-account-2';
-
-    // Mock SimpleFin response with error entry for missing account
-    mockSimpleFinTransactions({
-      [presentAccountId]: {
-        transactions: { all: [], booked: [], pending: [] },
-        balances: [],
-        startingBalance: 0,
-      },
-      errors: {
-        [missingAccountId]: [
-          {
-            error_type: 'ACCOUNT_MISSING',
-            error_code: 'ACCOUNT_MISSING',
-            reason: 'Account not found',
-          },
-        ],
-      },
-    });
-
-    const acct1Id = await db.insertAccount({
-      id: 'acct-1',
-      account_id: presentAccountId,
-      name: 'Account 1',
-      account_sync_source: 'simpleFin',
-    });
-    await db.insertPayee({
-      id: 'transfer-' + acct1Id,
-      name: '',
-      transfer_acct: acct1Id,
-    });
-
-    const acct2Id = await db.insertAccount({
-      id: 'acct-2',
-      account_id: missingAccountId,
-      name: 'Account 2',
-      account_sync_source: 'simpleFin',
-    });
-    await db.insertPayee({
-      id: 'transfer-' + acct2Id,
-      name: '',
-      transfer_acct: acct2Id,
-    });
-
-    const results = await simpleFinBatchSync([
-      { id: 'acct-1', account_id: presentAccountId },
-      { id: 'acct-2', account_id: missingAccountId },
-    ]);
-
-    // The missing account should get the ACCOUNT_MISSING error from the errors map
-    const missingResult = results.find(r => r.accountId === 'acct-2');
-    expect(missingResult).toBeDefined();
-    expect(missingResult.res.error_code).toBe('ACCOUNT_MISSING');
-    expect(missingResult.res.error_type).toBe('ACCOUNT_MISSING');
-  });
 });
 
 describe('Plaid suggested categories', () => {

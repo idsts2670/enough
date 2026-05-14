@@ -270,21 +270,9 @@ handlers['api/bank-sync'] = async function (args) {
   } else {
     const accountsData = await handlers['accounts-get']();
     const accountIdsToSync = accountsData.map(a => a.id);
-    const simpleFinAccounts = accountsData.filter(
-      a => a.account_sync_source === 'simpleFin',
-    );
-    const simpleFinAccountIds = simpleFinAccounts.map(a => a.id);
-
-    if (simpleFinAccounts.length > 1) {
-      const res = await handlers['simplefin-batch-sync']({
-        ids: simpleFinAccountIds,
-      });
-
-      res.forEach(a => allErrors.push(...a.res.errors));
-    }
 
     const { errors } = await handlers['accounts-bank-sync']({
-      ids: accountIdsToSync.filter(a => !simpleFinAccountIds.includes(a)),
+      ids: accountIdsToSync,
     });
 
     allErrors.push(...errors);
