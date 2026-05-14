@@ -14,6 +14,7 @@ type ItemContentProps = {
   activeStyle: CSSProperties;
   children: ReactNode;
   forceActive?: boolean;
+  'aria-expanded'?: boolean;
 };
 
 export function ItemContent({
@@ -23,6 +24,7 @@ export function ItemContent({
   activeStyle,
   forceActive,
   children,
+  'aria-expanded': ariaExpanded,
 }: ItemContentProps) {
   return onClick ? (
     <Button
@@ -33,6 +35,7 @@ export function ItemContent({
         ...(forceActive ? activeStyle : {}),
       }}
       onPress={onClick}
+      aria-expanded={ariaExpanded}
     >
       {children}
     </Button>

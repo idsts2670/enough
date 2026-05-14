@@ -57,6 +57,7 @@ export function PrimaryButtons() {
         onClick={onToggle}
         style={{ marginBottom: isOpen ? 8 : 0 }}
         forceActive={!isOpen && isActive}
+        aria-expanded={isOpen}
       />
       {isOpen && (
         <>

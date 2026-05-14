@@ -27,6 +27,7 @@ type ItemProps = {
   onClick?: ComponentProps<typeof ItemContent>['onClick'];
   forceHover?: boolean;
   forceActive?: boolean;
+  'aria-expanded'?: boolean;
 };
 
 export function Item({
@@ -39,6 +40,7 @@ export function Item({
   indent = 0,
   forceHover = false,
   forceActive = false,
+  'aria-expanded': ariaExpanded,
 }: ItemProps) {
   const hoverStyle = {
     backgroundColor: theme.sidebarItemBackgroundHover,
@@ -84,6 +86,7 @@ export function Item({
         }}
         to={to}
         onClick={onClick}
+        aria-expanded={ariaExpanded}
       >
         {content}
       </ItemContent>
