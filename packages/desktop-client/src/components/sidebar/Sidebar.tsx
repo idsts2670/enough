@@ -116,6 +116,8 @@ export function Sidebar() {
           </BudgetName>
 
           <View
+            role="navigation"
+            aria-label={t('Main navigation')}
             style={{
               flexGrow: 1,
               '@media screen and (max-height: 480px)': {
