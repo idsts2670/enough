@@ -48,7 +48,7 @@ export class ConfigurationPage {
     return accountPage;
   }
 
-  async importBudget(type: 'YNAB4' | 'nYNAB' | 'Actual', file: string) {
+  async importBudget(type: 'YNAB4' | 'nYNAB' | 'Enough', file: string) {
     const fileChooserPromise = this.page.waitForEvent('filechooser');
     await this.page.getByRole('button', { name: 'Import my budget' }).click();
 
@@ -71,10 +71,10 @@ export class ConfigurationPage {
         await this.page.getByRole('button', { name: 'Select file...' }).click();
         break;
 
-      case 'Actual':
+      case 'Enough':
         await this.page
           .getByRole('button', {
-            name: 'Actual Import a file exported from Actual',
+            name: 'Enough Import a file exported from Enough',
           })
           .click();
         await this.page.getByRole('button', { name: 'Select file...' }).click();

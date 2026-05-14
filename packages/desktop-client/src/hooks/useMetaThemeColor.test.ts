@@ -88,7 +88,7 @@ describe('useMetaThemeColor', () => {
       renderHook(() => useMetaThemeColor('var(--color-mobileViewTheme)'));
 
       expect(getThemeColorMeta()).toBe(DEFAULT_THEME_COLOR);
-      expect(document.body.style.backgroundColor).toBe('rgb(92, 61, 187)');
+      expect(document.body.style.backgroundColor).toBe('rgb(245, 245, 245)');
     });
   });
 
