@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Web Frontend",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["/tmp/launch-actual-frontend.mjs", "--mode=browser"],
+      "port": 3001,
+      "autoPort": false
+    }
+  ]
+}
