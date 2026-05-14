@@ -605,7 +605,7 @@ function PayeeCell({
           />
           <Text
             style={{
-              ...bodySm,
+              ...bodyStrong,
               fontStyle: 'italic',
               userSelect: 'none',
               overflow: 'hidden',
@@ -927,7 +927,6 @@ const Transaction = memo(function Transaction({
   accounts,
   balance,
   dateFormat = 'MM/dd/yyyy',
-  hideFraction,
   onSave,
   onEdit,
   onDelete,
@@ -1179,7 +1178,6 @@ const Transaction = memo(function Transaction({
 
   const valueStyle = added ? bodyStrong : null;
   const backgroundFocus = focusedField === 'select';
-  const amountStyle = hideFraction ? tableCellAmount : null;
 
   const runningBalance = !isTemporaryId(id) ? balance : balance + amount;
 
@@ -1561,7 +1559,7 @@ const Transaction = memo(function Transaction({
               payee =>
                 !payee.transfer_acct || payee.transfer_acct !== accountId,
             )}
-            valueStyle={valueStyle}
+            valueStyle={bodyStrong}
             transaction={transaction}
             transferAccountsByTransaction={transferAccountsByTransaction}
             importedPayee={importedPayee}
@@ -1802,7 +1800,6 @@ const Transaction = memo(function Transaction({
           style={{
             ...(isParent && { fontStyle: 'italic' }),
             ...tableCellAmount,
-            ...amountStyle,
           }}
           inputProps={{
             value: debit === '' && credit === '' ? amountToCurrency(0) : debit,
@@ -1833,7 +1830,6 @@ const Transaction = memo(function Transaction({
           style={{
             ...(isParent && { fontStyle: 'italic' }),
             ...tableCellAmount,
-            ...amountStyle,
           }}
           inputProps={{
             value: credit,
@@ -1860,7 +1856,7 @@ const Transaction = memo(function Transaction({
                   ? theme.numberNegative
                   : theme.numberPositive,
             }}
-            style={{ ...tableCellAmount, ...amountStyle }}
+            style={tableCellAmount}
             width={103}
             textAlign="right"
             privacyFilter

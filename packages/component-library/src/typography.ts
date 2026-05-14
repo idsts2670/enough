@@ -80,7 +80,6 @@ export const buttonText: CSSProperties = {
 };
 
 export const tabularFigure: CSSProperties = {
-  fontFamily: fontFamilyApp,
   fontVariantNumeric: 'tabular-nums',
   fontFeatureSettings: '"ss01", "ss04", "tnum"',
 };
