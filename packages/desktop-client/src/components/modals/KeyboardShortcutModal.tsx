@@ -201,7 +201,7 @@ export function KeyboardShortcutModal() {
       },
       {
         id: 'budget-page',
-        name: t('Budget page'),
+        name: t('Dashboard page'),
         items: [
           {
             id: 'budget-down',
