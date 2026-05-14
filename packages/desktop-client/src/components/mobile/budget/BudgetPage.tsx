@@ -554,7 +554,7 @@ export function BudgetPage() {
               variant="bare"
               style={{ margin: 10 }}
               onPress={onOpenBudgetPageMenu}
-              aria-label={t('Budget page menu')}
+              aria-label={t('Dashboard page menu')}
             >
               <SvgLogo
                 style={{ color: theme.mobileHeaderText }}
