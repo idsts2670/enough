@@ -100,7 +100,7 @@ export function CommandBar() {
 
   const navigationItems = useMemo(
     () => [
-      { id: 'budget', name: t('Budget'), path: '/budget', Icon: SvgWallet },
+      { id: 'budget', name: t('Dashboard'), path: '/budget', Icon: SvgWallet },
       {
         id: 'reports-nav',
         name: t('Reports'),
