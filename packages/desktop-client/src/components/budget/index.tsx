@@ -28,6 +28,7 @@ import { SheetNameProvider } from '#hooks/useSheetName';
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
+import { BudgetDashboardShell } from './BudgetDashboardShell';
 import { AutoSizingBudgetTable } from './DynamicBudgetTable';
 import * as envelopeBudget from './envelope/EnvelopeBudgetComponents';
 import { EnvelopeBudgetProvider } from './envelope/EnvelopeBudgetContext';
@@ -248,7 +249,8 @@ export function Budget() {
           overflow: 'hidden',
         }}
       >
-        <View style={{ flex: 1 }}>{table}</View>
+        <BudgetDashboardShell budgetType={budgetType} startMonth={startMonth} />
+        <View style={{ flex: 1, minHeight: 0 }}>{table}</View>
       </View>
     </SheetNameProvider>
   );
