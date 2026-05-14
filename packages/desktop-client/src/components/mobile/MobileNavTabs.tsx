@@ -94,7 +94,7 @@ export function MobileNavTabs() {
 
   const navTabs = [
     {
-      name: t('Budget'),
+      name: t('Dashboard'),
       path: '/budget',
       style: navTabStyle,
       Icon: SvgWallet,
@@ -110,12 +110,6 @@ export function MobileNavTabs() {
       path: '/accounts',
       style: navTabStyle,
       Icon: SvgPiggyBank,
-    },
-    {
-      name: t('Reports'),
-      path: '/reports',
-      style: navTabStyle,
-      Icon: SvgReports,
     },
     {
       name: t('Schedules'),
@@ -134,6 +128,12 @@ export function MobileNavTabs() {
       path: '/rules',
       style: navTabStyle,
       Icon: SvgTuning,
+    },
+    {
+      name: t('Reports'),
+      path: '/reports',
+      style: navTabStyle,
+      Icon: SvgReports,
     },
     ...(isUsingServer
       ? [

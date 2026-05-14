@@ -36,6 +36,7 @@ export function PrimaryButtons() {
     '/payees',
     '/rules',
     '/bank-sync',
+    '/reports',
     '/settings',
     '/tools',
   ].some(route => location.pathname.startsWith(route));
@@ -48,8 +49,7 @@ export function PrimaryButtons() {
 
   return (
     <View style={{ flexShrink: 0 }}>
-      <Item title={t('Budget')} Icon={SvgWallet} to="/budget" />
-      <Item title={t('Reports')} Icon={SvgReports} to="/reports" />
+      <Item title={t('Dashboard')} Icon={SvgWallet} to="/budget" />
       <Item title={t('Schedules')} Icon={SvgCalendar3} to="/schedules" />
       <Item
         title={t('More')}
@@ -70,6 +70,12 @@ export function PrimaryButtons() {
             title={t('Rules')}
             Icon={SvgTuning}
             to="/rules"
+            indent={15}
+          />
+          <SecondaryItem
+            title={t('Reports')}
+            Icon={SvgReports}
+            to="/reports"
             indent={15}
           />
           {isUsingServer && (
