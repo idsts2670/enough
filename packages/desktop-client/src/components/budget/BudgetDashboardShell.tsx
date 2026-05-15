@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next';
 
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { Button } from '@actual-app/components/button';
 import {
   bodySm,
   bodyStrong,
@@ -24,7 +25,9 @@ import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import type { FormatType } from '#hooks/useFormat';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
+import { useNavigate } from '#hooks/useNavigate';
 import { useSheetValue } from '#hooks/useSheetValue';
+import { uncategorizedTransactions } from '#queries';
 import { aqlQuery } from '#queries/aqlQuery';
 import type { SheetFields } from '#spreadsheet';
 import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
@@ -71,6 +74,15 @@ type TopCategory = {
   name: string;
   amount: number;
   color: string;
+};
+
+type ReviewTransactionRow = {
+  id: string;
+  date: string;
+  amount: number;
+  importedPayee: string | null;
+  payeeName: string | null;
+  accountName: string | null;
 };
 
 type CategoryColor = {
@@ -397,8 +409,8 @@ function MonthlySpendingContent({
   const isOverBudget = remaining < 0;
   const progressColor =
     budgeted > 0 && Math.abs(spent) > budgeted
-      ? theme.categoryDebt
-      : theme.categoryFood;
+      ? theme.semanticError
+      : theme.semanticSuccess;
 
   return (
     <DashboardPanel
@@ -554,6 +566,150 @@ function useTopCategories({
   }, [categoryFallback, startMonth]);
 
   return { isLoading, topCategories };
+}
+
+function useTransactionsToReview() {
+  const [transactions, setTransactions] = useState<ReviewTransactionRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isCurrent = true;
+    setIsLoading(true);
+
+    void aqlQuery(
+      uncategorizedTransactions()
+        .options({ splits: 'none' })
+        .orderBy([{ date: 'desc' }, { id: 'desc' }])
+        .limit(5)
+        .select([
+          'id',
+          'date',
+          'amount',
+          { importedPayee: 'imported_payee' },
+          { payeeName: 'payee.name' },
+          { accountName: 'account.name' },
+        ]),
+    )
+      .then(({ data }: { data: ReviewTransactionRow[] }) => {
+        if (isCurrent) {
+          setTransactions(data);
+        }
+      })
+      .catch(() => {
+        if (isCurrent) {
+          setTransactions([]);
+        }
+      })
+      .finally(() => {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
+
+  return { isLoading, transactions };
+}
+
+function TransactionsToReviewCard({ monthLabel }: { monthLabel: string }) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const locale = useLocale();
+  const navigate = useNavigate();
+  const { isLoading, transactions } = useTransactionsToReview();
+
+  return (
+    <DashboardPanel title={<Trans>Transactions to Review</Trans>} subtitle={monthLabel}>
+      {isLoading ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>Loading</Trans>
+        </Text>
+      ) : transactions.length === 0 ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>No uncategorized transactions</Trans>
+        </Text>
+      ) : (
+        <View style={{ gap: 10 }}>
+          {transactions.map(transaction => {
+            const payee =
+              transaction.payeeName ??
+              transaction.importedPayee ??
+              t('Unknown payee');
+
+            return (
+              <Button
+                key={transaction.id}
+                variant="bare"
+                aria-label={t('Review {{payee}}', { payee })}
+                onPress={() => navigate(`/transactions/${transaction.id}`)}
+                style={{
+                  width: '100%',
+                  minHeight: 0,
+                  justifyContent: 'stretch',
+                  padding: 0,
+                  color: theme.pageText,
+                }}
+              >
+                <View
+                  style={{
+                    minWidth: 0,
+                    width: '100%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                  }}
+                >
+                  <View style={{ minWidth: 0, gap: 2 }}>
+                    <Text
+                      title={payee}
+                      style={{
+                        ...bodyStrong,
+                        minWidth: 0,
+                        color: theme.pageText,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {payee}
+                    </Text>
+                    <Text
+                      title={transaction.accountName ?? undefined}
+                      style={{
+                        ...caption,
+                        minWidth: 0,
+                        color: theme.pageTextSubdued,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {monthUtils.format(transaction.date, 'MMM d', locale)}
+                      {transaction.accountName
+                        ? ` - ${transaction.accountName}`
+                        : ''}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                    <Text style={{ ...tableCellAmount, color: theme.pageText }}>
+                      {format(Math.abs(transaction.amount), 'financial')}
+                    </Text>
+                    <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                      <Trans>Needs category</Trans>
+                    </Text>
+                  </View>
+                </View>
+              </Button>
+            );
+          })}
+        </View>
+      )}
+    </DashboardPanel>
+  );
 }
 
 function TopCategoriesCard({
@@ -770,6 +926,7 @@ export function BudgetDashboardShell({
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />
+        <TransactionsToReviewCard monthLabel={monthLabel} />
         <TopCategoriesCard
           categoryGroups={categoryGroups}
           monthLabel={monthLabel}

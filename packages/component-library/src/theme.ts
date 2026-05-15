@@ -20,6 +20,8 @@ export const theme = {
   cardBorder: 'var(--color-cardBorder)',
   cardShadow: 'var(--color-cardShadow)',
   surfaceSubtle: 'var(--color-surfaceSubtle)',
+  semanticSuccess: 'var(--color-semanticSuccess)',
+  semanticError: 'var(--color-semanticError)',
   categoryHousing: 'var(--color-categoryHousing)',
   categoryHousingTint: 'var(--color-categoryHousingTint)',
   categoryFood: 'var(--color-categoryFood)',

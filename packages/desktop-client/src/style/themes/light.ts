@@ -19,6 +19,8 @@ export const cardBackground = colorPalette.white;
 export const cardBorder = colorPalette.enoughHairline;
 export const cardShadow = 'rgba(12, 10, 9, 0.12)';
 export const surfaceSubtle = colorPalette.enoughSurfaceSubtle;
+export const semanticSuccess = colorPalette.categoryFood;
+export const semanticError = colorPalette.categoryDebt;
 
 export const categoryHousing = colorPalette.categoryHousing;
 export const categoryHousingTint = colorPalette.categoryHousingTint;
