@@ -13,6 +13,7 @@ import {
   metricTitle,
   metricValue,
   tableCellAmount,
+  tabularFigure,
 } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
@@ -44,10 +45,14 @@ type FinancialMetricValueProps =
   | {
       budgetKind: 'envelope';
       binding: SheetFields<'envelope-budget'>;
+      /** Negate the raw spreadsheet value before display (e.g. totalBudgeted
+       *  returns a negative in envelope mode; pass negate to show positive). */
+      negate?: boolean;
     }
   | {
       budgetKind: 'tracking';
       binding: SheetFields<'tracking-budget'>;
+      negate?: boolean;
     };
 
 type TopCategoryRow = {
@@ -200,7 +205,7 @@ function FinancialMetricValue(props: FinancialMetricValueProps) {
     <CellValueText
       name={name}
       type={type}
-      value={value ?? 0}
+      value={props.negate ? -(value ?? 0) : (value ?? 0)}
       style={{ ...metricValue, color: theme.pageText }}
     />
   );
@@ -291,9 +296,9 @@ function SpendingProgress({
   return (
     <View
       style={{
-        height: 8,
+        height: 6,
         overflow: 'hidden',
-        backgroundColor: theme.tableRowBackgroundHover,
+        backgroundColor: theme.pageBackgroundLineMid,
         borderRadius: 9999,
       }}
     >
@@ -330,11 +335,14 @@ function EnvelopeMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
     useSheetValue<'envelope-budget', 'total-spent'>(
       envelopeBudget.totalSpent,
     ) ?? 0;
-  const budgeted =
+  // envelope totalBudgeted is negated server-side (returns a negative number);
+  // negate again to get a positive "how much you budgeted" value.
+  const budgetedRaw =
     useSheetValue<'envelope-budget', 'total-budgeted'>(
       envelopeBudget.totalBudgeted,
     ) ?? 0;
-  const progress = budgeted > 0 ? Math.abs(spent) / Math.abs(budgeted) : 0;
+  const budgeted = -budgetedRaw;
+  const progress = budgeted > 0 ? Math.abs(spent) / budgeted : 0;
 
   return (
     <MonthlySpendingContent
@@ -342,7 +350,7 @@ function EnvelopeMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
       monthLabel={monthLabel}
       progress={progress}
       spent={spent}
-      spentDisplay={format(spent, 'financial')}
+      spentDisplay={format(Math.abs(spent), 'financial')}
     />
   );
 }
@@ -353,11 +361,12 @@ function TrackingMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
     useSheetValue<'tracking-budget', 'total-spent'>(
       trackingBudget.totalSpent,
     ) ?? 0;
+  // tracking totalBudgetedExpense (total-budgeted) is positive; no negation needed.
   const budgeted =
     useSheetValue<'tracking-budget', 'total-budgeted'>(
       trackingBudget.totalBudgetedExpense,
     ) ?? 0;
-  const progress = budgeted > 0 ? Math.abs(spent) / Math.abs(budgeted) : 0;
+  const progress = budgeted > 0 ? Math.abs(spent) / budgeted : 0;
 
   return (
     <MonthlySpendingContent
@@ -365,7 +374,7 @@ function TrackingMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
       monthLabel={monthLabel}
       progress={progress}
       spent={spent}
-      spentDisplay={format(spent, 'financial')}
+      spentDisplay={format(Math.abs(spent), 'financial')}
     />
   );
 }
@@ -417,7 +426,9 @@ function MonthlySpendingContent({
             <Text style={{ ...caption, color: theme.pageTextSubdued }}>
               <Trans>Budgeted</Trans>
             </Text>
-            <Text style={{ ...bodyStrong, color: theme.pageText }}>
+            <Text
+              style={{ ...bodyStrong, ...tabularFigure, color: theme.pageText }}
+            >
               {format(budgeted, 'financial')}
             </Text>
           </View>
@@ -429,7 +440,9 @@ function MonthlySpendingContent({
                 <Trans>Remaining</Trans>
               )}
             </Text>
-            <Text style={{ ...bodyStrong, color: theme.pageText }}>
+            <Text
+              style={{ ...bodyStrong, ...tabularFigure, color: theme.pageText }}
+            >
               {format(Math.abs(remaining), 'financial')}
             </Text>
           </View>
@@ -640,11 +653,12 @@ export function BudgetDashboardShell({
 
   return (
     <View
+      role="region"
       aria-label={t('Dashboard overview')}
       style={{
         flexShrink: 0,
         gap: 16,
-        padding: '16px 4px 0',
+        padding: '16px 0 0',
       }}
     >
       <View
@@ -699,9 +713,11 @@ export function BudgetDashboardShell({
                 binding={trackingBudget.totalBudgetedExpense}
               />
             ) : (
+              // envelope totalBudgeted is server-negated; flip to show positive
               <FinancialMetricValue
                 budgetKind="envelope"
                 binding={envelopeBudget.totalBudgeted}
+                negate
               />
             )
           }
@@ -711,14 +727,17 @@ export function BudgetDashboardShell({
           label={t('Spent')}
           value={
             isTrackingBudget ? (
+              // totalSpent is negative (expense sign); flip to show positive
               <FinancialMetricValue
                 budgetKind="tracking"
                 binding={trackingBudget.totalSpent}
+                negate
               />
             ) : (
               <FinancialMetricValue
                 budgetKind="envelope"
                 binding={envelopeBudget.totalSpent}
+                negate
               />
             )
           }
