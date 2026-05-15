@@ -19,6 +19,7 @@ export const theme = {
   cardBackground: 'var(--color-cardBackground)',
   cardBorder: 'var(--color-cardBorder)',
   cardShadow: 'var(--color-cardShadow)',
+  surfaceSubtle: 'var(--color-surfaceSubtle)',
   categoryHousing: 'var(--color-categoryHousing)',
   categoryHousingTint: 'var(--color-categoryHousingTint)',
   categoryFood: 'var(--color-categoryFood)',

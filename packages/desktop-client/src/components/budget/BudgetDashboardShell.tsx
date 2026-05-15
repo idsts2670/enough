@@ -298,7 +298,7 @@ function SpendingProgress({
       style={{
         height: 6,
         overflow: 'hidden',
-        backgroundColor: theme.pageBackgroundLineMid,
+        backgroundColor: theme.surfaceSubtle,
         borderRadius: 9999,
       }}
     >

@@ -18,6 +18,7 @@ export const pageTextLinkLight = colorPalette.purple300;
 export const cardBackground = colorPalette.gray800;
 export const cardBorder = colorPalette.purple300;
 export const cardShadow = colorPalette.gray900;
+export const surfaceSubtle = colorPalette.gray700;
 
 export const categoryHousing = colorPalette.categoryHousing;
 export const categoryHousingTint = colorPalette.categoryHousingTint;

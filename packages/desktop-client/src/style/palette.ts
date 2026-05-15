@@ -96,6 +96,7 @@ export const enoughHairlineSoft = '#f0efed';
 export const enoughHairlineStrong = '#d6d3d1';
 export const enoughCanvas = '#f5f5f5';
 export const enoughCanvasSoft = '#fafafa';
+export const enoughSurfaceSubtle = '#f3f2ef';
 export const enoughSurfaceStrong = '#f0efed';
 export const enoughSuccess = '#16a34a';
 export const enoughError = '#dc2626';
