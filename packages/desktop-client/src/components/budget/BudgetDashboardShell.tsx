@@ -362,12 +362,14 @@ function NetWorthSparkline({
     return (
       <View
         style={{
-          height: 72,
+          height: 92,
           justifyContent: 'center',
-          borderBottom: '1px solid ' + theme.surfaceSubtle,
+          alignItems: 'center',
         }}
       >
-        <SpendingProgress color={trendColor} progress={0} />
+        <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+          <Trans>Not enough data</Trans>
+        </Text>
       </View>
     );
   }
@@ -563,16 +565,16 @@ function MonthlySpendingContent({
   );
 }
 
-function NetWorthDashboardCard({ endMonth }: { endMonth: string }) {
+function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
   const locale = useLocale();
   const format = useFormat();
   const { data: accounts = [], isLoading: accountsLoading } = useAccounts();
   const [_firstDayOfWeekIdx] = useSyncedPref('firstDayOfWeekIdx');
   const firstDayOfWeekIdx = _firstDayOfWeekIdx || '0';
   const currentMonth = monthUtils.currentMonth();
-  const reportEndMonth = monthUtils.isAfter(endMonth, currentMonth)
+  const reportEndMonth = monthUtils.isAfter(budgetMonth, currentMonth)
     ? currentMonth
-    : endMonth;
+    : budgetMonth;
   const reportStartMonth = monthUtils.subMonths(reportEndMonth, 5);
   const subtitle = `${monthUtils.format(
     reportStartMonth,
@@ -605,12 +607,17 @@ function NetWorthDashboardCard({ endMonth }: { endMonth: string }) {
   const data = useReport('dashboard_net_worth', params);
   const isLoading = accountsLoading || data == null;
   const graphData = data?.graphData.data ?? [];
+  const totalChange = data?.totalChange ?? 0;
   const trendColor =
-    (data?.totalChange ?? 0) < 0 ? theme.semanticError : theme.semanticSuccess;
+    totalChange < 0
+      ? theme.semanticError
+      : totalChange > 0
+        ? theme.semanticSuccess
+        : theme.pageTextSubdued;
   const changeDisplay =
-    data && data.totalChange > 0
-      ? `+${format(data.totalChange, 'financial')}`
-      : format(data?.totalChange ?? 0, 'financial');
+    totalChange > 0
+      ? `+${format(totalChange, 'financial')}`
+      : format(totalChange, 'financial');
 
   return (
     <DashboardPanel title={<Trans>Net Worth</Trans>} subtitle={subtitle}>
@@ -630,7 +637,7 @@ function NetWorthDashboardCard({ endMonth }: { endMonth: string }) {
           >
             <View style={{ gap: 6 }}>
               <Text style={{ ...metricValue, color: theme.pageText }}>
-                {format(data.netWorth, 'financial')}
+                {format(data?.netWorth ?? 0, 'financial')}
               </Text>
               <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
                 <Trans>current net worth</Trans>
@@ -1135,7 +1142,7 @@ export function BudgetDashboardShell({
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />
-        <NetWorthDashboardCard endMonth={startMonth} />
+        <NetWorthDashboardCard budgetMonth={startMonth} />
         <TransactionsToReviewCard />
         <TopCategoriesCard
           categoryGroups={categoryGroups}
