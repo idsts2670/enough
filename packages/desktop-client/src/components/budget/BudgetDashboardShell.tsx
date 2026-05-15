@@ -19,16 +19,23 @@ import {
 import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
-import type { CategoryGroupEntity } from '@actual-app/core/types/models';
+import { getScheduledAmount } from '@actual-app/core/shared/schedules';
+import type {
+  CategoryGroupEntity,
+  ScheduleEntity,
+} from '@actual-app/core/types/models';
 
 import { createSpreadsheet as netWorthSpreadsheet } from '#components/reports/spreadsheets/net-worth-spreadsheet';
 import { useReport } from '#components/reports/useReport';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
+import { useDateFormat } from '#hooks/useDateFormat';
 import type { FormatType } from '#hooks/useFormat';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
 import { useNavigate } from '#hooks/useNavigate';
+import { usePayees } from '#hooks/usePayees';
+import { useSchedules } from '#hooks/useSchedules';
 import { useSheetValue } from '#hooks/useSheetValue';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { uncategorizedTransactions } from '#queries';
@@ -930,6 +937,160 @@ function TransactionsToReviewCard() {
   );
 }
 
+function RecurringsCard() {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const navigate = useNavigate();
+  const dateFormat = useDateFormat() || 'MM/dd/yyyy';
+  const today = monthUtils.currentDay();
+  const endDate = monthUtils.addDays(today, 14);
+  const schedulesQuery = useMemo(
+    () =>
+      q('schedules')
+        .select('*')
+        .filter({
+          $and: [
+            { next_date: { $gte: today } },
+            { next_date: { $lte: endDate } },
+            { completed: false },
+            { '_account.closed': false },
+          ],
+        })
+        .orderBy({ next_date: 'asc' })
+        .limit(5),
+    [endDate, today],
+  );
+  const { isLoading, schedules, statuses } = useSchedules({
+    query: schedulesQuery,
+  });
+  const { data: accounts = [] } = useAccounts();
+  const { data: payees = [] } = usePayees();
+  const accountNames = useMemo(
+    () => new Map(accounts.map(account => [account.id, account.name])),
+    [accounts],
+  );
+  const payeeNames = useMemo(
+    () => new Map(payees.map(payee => [payee.id, payee.name])),
+    [payees],
+  );
+
+  const formatScheduleAmount = (schedule: ScheduleEntity) => {
+    const amount = getScheduledAmount(schedule._amount);
+    const prefix =
+      schedule._amountOp === 'isapprox' || schedule._amountOp === 'isbetween'
+        ? '~'
+        : '';
+    const sign = amount > 0 ? '+' : '';
+
+    return `${prefix}${sign}${format(Math.abs(amount || 0), 'financial')}`;
+  };
+
+  return (
+    <DashboardPanel
+      title={<Trans>Recurrings</Trans>}
+      subtitle={t('Next 14 days')}
+    >
+      {isLoading ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>Loading</Trans>
+        </Text>
+      ) : schedules.length === 0 ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>No scheduled payments in the next 14 days</Trans>
+        </Text>
+      ) : (
+        <View style={{ gap: 10 }}>
+          {schedules.map(schedule => {
+            const payee =
+              payeeNames.get(schedule._payee) ??
+              schedule.name ??
+              t('Unnamed schedule');
+            const account = accountNames.get(schedule._account);
+            const status = statuses.get(schedule.id) ?? 'scheduled';
+
+            return (
+              <Button
+                key={schedule.id}
+                variant="bare"
+                aria-label={t('View schedule {{name}}', { name: payee })}
+                onPress={() => navigate('/schedules')}
+                style={{
+                  width: '100%',
+                  minHeight: 0,
+                  justifyContent: 'stretch',
+                  padding: 0,
+                  color: theme.pageText,
+                }}
+              >
+                <View
+                  style={{
+                    minWidth: 0,
+                    width: '100%',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                  }}
+                >
+                  <View style={{ minWidth: 0, gap: 2 }}>
+                    <Text
+                      title={payee}
+                      style={{
+                        ...bodyStrong,
+                        minWidth: 0,
+                        color: theme.pageText,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {payee}
+                    </Text>
+                    <Text
+                      title={account}
+                      style={{
+                        ...caption,
+                        minWidth: 0,
+                        color: theme.pageTextSubdued,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {monthUtils.format(schedule.next_date, dateFormat)}
+                      {account ? ` - ${account}` : ''}
+                    </Text>
+                  </View>
+                  <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                    <Text style={{ ...tableCellAmount, color: theme.pageText }}>
+                      {formatScheduleAmount(schedule)}
+                    </Text>
+                    <Text
+                      style={{
+                        ...caption,
+                        color:
+                          status === 'due' || status === 'missed'
+                            ? theme.warningTextDark
+                            : theme.pageTextSubdued,
+                      }}
+                    >
+                      {status === 'due' || status === 'missed' ? (
+                        <Trans>Due now</Trans>
+                      ) : (
+                        <Trans>Scheduled</Trans>
+                      )}
+                    </Text>
+                  </View>
+                </View>
+              </Button>
+            );
+          })}
+        </View>
+      )}
+    </DashboardPanel>
+  );
+}
+
 function TopCategoriesCard({
   categoryGroups,
   monthLabel,
@@ -1149,6 +1310,7 @@ export function BudgetDashboardShell({
           monthLabel={monthLabel}
           startMonth={startMonth}
         />
+        <RecurringsCard />
       </View>
     </View>
   );
