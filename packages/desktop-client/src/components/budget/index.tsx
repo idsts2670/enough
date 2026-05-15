@@ -246,7 +246,8 @@ export function Budget() {
           ...styles.page,
           paddingLeft: 8,
           paddingRight: 8,
-          overflow: 'hidden',
+          overflowX: 'hidden',
+          overflowY: 'auto',
         }}
       >
         <BudgetDashboardShell
@@ -254,7 +255,7 @@ export function Budget() {
           categoryGroups={categoryGroups}
           startMonth={startMonth}
         />
-        <View style={{ flex: 1, minHeight: 0 }}>{table}</View>
+        <View style={{ flex: '1 0 480px', minHeight: 480 }}>{table}</View>
       </View>
     </SheetNameProvider>
   );
