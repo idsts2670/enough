@@ -2,9 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
+import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import { Button } from '@actual-app/components/button';
 import {
   bodySm,
   bodyStrong,
@@ -21,12 +21,16 @@ import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
 import type { CategoryGroupEntity } from '@actual-app/core/types/models';
 
+import { createSpreadsheet as netWorthSpreadsheet } from '#components/reports/spreadsheets/net-worth-spreadsheet';
+import { useReport } from '#components/reports/useReport';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
+import { useAccounts } from '#hooks/useAccounts';
 import type { FormatType } from '#hooks/useFormat';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
 import { useNavigate } from '#hooks/useNavigate';
 import { useSheetValue } from '#hooks/useSheetValue';
+import { useSyncedPref } from '#hooks/useSyncedPref';
 import { uncategorizedTransactions } from '#queries';
 import { aqlQuery } from '#queries/aqlQuery';
 import type { SheetFields } from '#spreadsheet';
@@ -48,14 +52,16 @@ type FinancialMetricValueProps =
   | {
       budgetKind: 'envelope';
       binding: SheetFields<'envelope-budget'>;
-      /** Negate the raw spreadsheet value before display (e.g. totalBudgeted
-       *  returns a negative in envelope mode; pass negate to show positive). */
+      /** Negate the raw spreadsheet value before display. */
       negate?: boolean;
+      /** Show an amount magnitude while preserving signed values elsewhere. */
+      absolute?: boolean;
     }
   | {
       budgetKind: 'tracking';
       binding: SheetFields<'tracking-budget'>;
       negate?: boolean;
+      absolute?: boolean;
     };
 
 type TopCategoryRow = {
@@ -89,6 +95,11 @@ type ReviewTransactionRow = {
 type CategoryColor = {
   color: string;
   tint: string;
+};
+
+type NetWorthGraphPoint = {
+  x: string;
+  y: number;
 };
 
 const categoryColorTokens = [
@@ -206,6 +217,17 @@ const TrackingDashboardCellValue = <
 };
 
 function FinancialMetricValue(props: FinancialMetricValueProps) {
+  const getDisplayValue = (value: number | null) => {
+    const raw = value ?? 0;
+    const transformed = props.absolute
+      ? Math.abs(raw)
+      : props.negate
+        ? -raw
+        : raw;
+
+    return Object.is(transformed, -0) ? 0 : transformed;
+  };
+
   const metric = ({
     name,
     type,
@@ -218,7 +240,7 @@ function FinancialMetricValue(props: FinancialMetricValueProps) {
     <CellValueText
       name={name}
       type={type}
-      value={props.negate ? -(value ?? 0) : (value ?? 0)}
+      value={getDisplayValue(value)}
       style={{ ...metricValue, color: theme.pageText }}
     />
   );
@@ -299,6 +321,81 @@ function DashboardPanel({
   );
 }
 
+function NetWorthSparkline({
+  points,
+  trendColor,
+}: {
+  points: NetWorthGraphPoint[];
+  trendColor: string;
+}) {
+  const chart = useMemo(() => {
+    if (points.length < 2) {
+      return null;
+    }
+
+    const values = points.map(point => point.y);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const width = 100;
+    const height = 48;
+    const xStep = width / (points.length - 1);
+    const normalized = points.map((point, index) => {
+      const x = index * xStep;
+      const y = height - ((point.y - min) / range) * height;
+      return { x, y };
+    });
+    const linePath = normalized
+      .map(
+        (point, index) =>
+          `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(
+            2,
+          )}`,
+      )
+      .join(' ');
+    const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
+
+    return { areaPath, linePath };
+  }, [points]);
+
+  if (!chart) {
+    return (
+      <View
+        style={{
+          height: 72,
+          justifyContent: 'center',
+          borderBottom: '1px solid ' + theme.surfaceSubtle,
+        }}
+      >
+        <SpendingProgress color={trendColor} progress={0} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={{ height: 92, minWidth: 0 }}>
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        preserveAspectRatio="none"
+        viewBox="0 0 100 48"
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      >
+        <path d={chart.areaPath} fill={theme.surfaceSubtle} />
+        <path
+          d={chart.linePath}
+          fill="none"
+          stroke={trendColor}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.25"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </View>
+  );
+}
+
 function SpendingProgress({
   color,
   progress,
@@ -354,7 +451,7 @@ function EnvelopeMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
     useSheetValue<'envelope-budget', 'total-budgeted'>(
       envelopeBudget.totalBudgeted,
     ) ?? 0;
-  const budgeted = -budgetedRaw;
+  const budgeted = Math.abs(budgetedRaw);
   const progress = budgeted > 0 ? Math.abs(spent) / budgeted : 0;
 
   return (
@@ -375,10 +472,11 @@ function TrackingMonthlySpendingCard({ monthLabel }: { monthLabel: string }) {
       trackingBudget.totalSpent,
     ) ?? 0;
   // tracking totalBudgetedExpense (total-budgeted) is positive; no negation needed.
-  const budgeted =
+  const budgeted = Math.abs(
     useSheetValue<'tracking-budget', 'total-budgeted'>(
       trackingBudget.totalBudgetedExpense,
-    ) ?? 0;
+    ) ?? 0,
+  );
   const progress = budgeted > 0 ? Math.abs(spent) / budgeted : 0;
 
   return (
@@ -461,6 +559,97 @@ function MonthlySpendingContent({
           </View>
         </View>
       </View>
+    </DashboardPanel>
+  );
+}
+
+function NetWorthDashboardCard({ endMonth }: { endMonth: string }) {
+  const locale = useLocale();
+  const format = useFormat();
+  const { data: accounts = [], isLoading: accountsLoading } = useAccounts();
+  const [_firstDayOfWeekIdx] = useSyncedPref('firstDayOfWeekIdx');
+  const firstDayOfWeekIdx = _firstDayOfWeekIdx || '0';
+  const currentMonth = monthUtils.currentMonth();
+  const reportEndMonth = monthUtils.isAfter(endMonth, currentMonth)
+    ? currentMonth
+    : endMonth;
+  const reportStartMonth = monthUtils.subMonths(reportEndMonth, 5);
+  const subtitle = `${monthUtils.format(
+    reportStartMonth,
+    'MMM yyyy',
+    locale,
+  )} - ${monthUtils.format(reportEndMonth, 'MMM yyyy', locale)}`;
+
+  const params = useMemo(
+    () =>
+      netWorthSpreadsheet(
+        reportStartMonth,
+        reportEndMonth,
+        accounts,
+        [],
+        'and',
+        locale,
+        'Monthly',
+        firstDayOfWeekIdx,
+        format,
+      ),
+    [
+      accounts,
+      firstDayOfWeekIdx,
+      format,
+      locale,
+      reportEndMonth,
+      reportStartMonth,
+    ],
+  );
+  const data = useReport('dashboard_net_worth', params);
+  const isLoading = accountsLoading || data == null;
+  const graphData = data?.graphData.data ?? [];
+  const trendColor =
+    (data?.totalChange ?? 0) < 0 ? theme.semanticError : theme.semanticSuccess;
+  const changeDisplay =
+    data && data.totalChange > 0
+      ? `+${format(data.totalChange, 'financial')}`
+      : format(data?.totalChange ?? 0, 'financial');
+
+  return (
+    <DashboardPanel title={<Trans>Net Worth</Trans>} subtitle={subtitle}>
+      {isLoading ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>Loading</Trans>
+        </Text>
+      ) : (
+        <View style={{ gap: 16 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              gap: 16,
+              alignItems: 'flex-start',
+            }}
+          >
+            <View style={{ gap: 6 }}>
+              <Text style={{ ...metricValue, color: theme.pageText }}>
+                {format(data.netWorth, 'financial')}
+              </Text>
+              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+                <Trans>current net worth</Trans>
+              </Text>
+            </View>
+            <Text
+              style={{
+                ...bodyStrong,
+                ...tabularFigure,
+                color: trendColor,
+                textAlign: 'right',
+              }}
+            >
+              {changeDisplay}
+            </Text>
+          </View>
+          <NetWorthSparkline points={graphData} trendColor={trendColor} />
+        </View>
+      )}
     </DashboardPanel>
   );
 }
@@ -891,11 +1080,10 @@ export function BudgetDashboardShell({
                 binding={trackingBudget.totalBudgetedExpense}
               />
             ) : (
-              // envelope totalBudgeted is server-negated; flip to show positive
               <FinancialMetricValue
                 budgetKind="envelope"
                 binding={envelopeBudget.totalBudgeted}
-                negate
+                absolute
               />
             )
           }
@@ -905,17 +1093,16 @@ export function BudgetDashboardShell({
           label={t('Spent')}
           value={
             isTrackingBudget ? (
-              // totalSpent is negative (expense sign); flip to show positive
               <FinancialMetricValue
                 budgetKind="tracking"
                 binding={trackingBudget.totalSpent}
-                negate
+                absolute
               />
             ) : (
               <FinancialMetricValue
                 budgetKind="envelope"
                 binding={envelopeBudget.totalSpent}
-                negate
+                absolute
               />
             )
           }
@@ -948,6 +1135,7 @@ export function BudgetDashboardShell({
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />
+        <NetWorthDashboardCard endMonth={startMonth} />
         <TransactionsToReviewCard />
         <TopCategoriesCard
           categoryGroups={categoryGroups}
