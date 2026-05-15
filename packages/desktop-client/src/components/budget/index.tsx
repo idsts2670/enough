@@ -1,8 +1,8 @@
-// @ts-strict-ignore
 import React, { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import type { ComponentType } from 'react';
 
 import { styles } from '@actual-app/components/styles';
+import { tokens } from '@actual-app/components/tokens';
 import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
@@ -11,47 +11,23 @@ import type {
   CategoryGroupEntity,
 } from '@actual-app/core/types/models';
 
-import {
-  useBudgetActions,
-  useDeleteCategoryGroupMutation,
-  useDeleteCategoryMutation,
-  useReorderCategoryGroupMutation,
-  useReorderCategoryMutation,
-  useSaveCategoryGroupMutation,
-  useSaveCategoryMutation,
-} from '#budget';
 import { useCategories } from '#hooks/useCategories';
-import { useGlobalPref } from '#hooks/useGlobalPref';
 import { useLocalPref } from '#hooks/useLocalPref';
-import { useNavigate } from '#hooks/useNavigate';
 import { SheetNameProvider } from '#hooks/useSheetName';
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 
 import { BudgetDashboardShell } from './BudgetDashboardShell';
-import { AutoSizingBudgetTable } from './DynamicBudgetTable';
 import * as envelopeBudget from './envelope/EnvelopeBudgetComponents';
-import { EnvelopeBudgetProvider } from './envelope/EnvelopeBudgetContext';
 import * as trackingBudget from './tracking/TrackingBudgetComponents';
-import { TrackingBudgetProvider } from './tracking/TrackingBudgetContext';
-import { prewarmAllMonths, prewarmMonth } from './util';
+import { prewarmAllMonths } from './util';
 
 export function Budget() {
   const currentMonth = monthUtils.currentMonth();
   const spreadsheet = useSpreadsheet();
-  const navigate = useNavigate();
-  const [summaryCollapsed, setSummaryCollapsedPref] = useLocalPref(
-    'budget.summaryCollapsed',
-  );
-  const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
+  const [startMonthPref] = useLocalPref('budget.startMonth');
   const startMonth = startMonthPref || currentMonth;
-  const [bounds, setBounds] = useState({
-    start: startMonth,
-    end: startMonth,
-  });
   const [budgetType = 'envelope'] = useSyncedPref('budgetType');
-  const [maxMonthsPref] = useGlobalPref('maxMonths');
-  const maxMonths = maxMonthsPref || 1;
   const [initialized, setInitialized] = useState(false);
   const { data: { grouped: categoryGroups } = { grouped: [] } } =
     useCategories();
@@ -59,7 +35,6 @@ export function Budget() {
   const init = useEffectEvent(() => {
     async function run() {
       const { start, end } = await send('get-budget-bounds');
-      setBounds({ start, end });
 
       await prewarmAllMonths(
         budgetType,
@@ -75,179 +50,28 @@ export function Budget() {
   });
   useEffect(() => init(), []);
 
-  const loadBoundBudgets = useEffectEvent(() => {
-    void send('get-budget-bounds').then(({ start, end }) => {
-      if (bounds.start !== start || bounds.end !== end) {
-        setBounds({ start, end });
-      }
-    });
-  });
-  useEffect(() => loadBoundBudgets(), []);
-
-  const onMonthSelect = async (month, numDisplayed) => {
-    setStartMonthPref(month);
-
-    const warmingMonth = month;
-
-    // We could be smarter about this, but this is a good start. We
-    // optimize for the case where users press the left/right button
-    // to move between months. This loads the month data all at once
-    // and "prewarms" the spreadsheet cache. This uses a simple
-    // heuristic that will fail if the user clicks an arbitrary month,
-    // but it will just load in some unnecessary data.
-    if (month < startMonth) {
-      // pre-warm prev month
-      await prewarmMonth(
-        budgetType,
-        spreadsheet,
-        monthUtils.subMonths(month, 1),
-      );
-    } else if (month > startMonth) {
-      // pre-warm next month
-      await prewarmMonth(
-        budgetType,
-        spreadsheet,
-        monthUtils.addMonths(month, numDisplayed),
-      );
-    }
-
-    if (warmingMonth === month) {
-      setStartMonthPref(month);
-    }
-  };
-
-  const onToggleCollapse = () => {
-    setSummaryCollapsedPref(!summaryCollapsed);
-  };
-
-  const onApplyBudgetTemplatesInGroup = async categories => {
-    applyBudgetAction.mutate({
-      month: startMonth,
-      type: 'apply-multiple-templates',
-      args: {
-        categories,
-      },
-    });
-  };
-
-  const onShowActivity = (categoryId, month) => {
-    const filterConditions = [
-      { field: 'category', op: 'is', value: categoryId, type: 'id' },
-      {
-        field: 'date',
-        op: 'is',
-        value: month,
-        options: { month: true },
-        type: 'date',
-      },
-    ];
-    void navigate('/accounts', {
-      state: {
-        goBack: true,
-        filterConditions,
-        categoryId,
-      },
-    });
-  };
-
-  const saveCategory = useSaveCategoryMutation();
-  const onSaveCategory = category => {
-    saveCategory.mutate({ category });
-  };
-  const deleteCategory = useDeleteCategoryMutation();
-  const onDeleteCategory = id => {
-    deleteCategory.mutate({ id });
-  };
-  const reorderCategory = useReorderCategoryMutation();
-  const saveCategoryGroup = useSaveCategoryGroupMutation();
-  const onSaveCategoryGroup = group => {
-    saveCategoryGroup.mutate({ group });
-  };
-  const deleteCategoryGroup = useDeleteCategoryGroupMutation();
-  const onDeleteCategoryGroup = id => {
-    deleteCategoryGroup.mutate({ id });
-  };
-  const reorderCategoryGroup = useReorderCategoryGroupMutation();
-  const applyBudgetAction = useBudgetActions();
-
-  const onBudgetAction = (month, type, args) => {
-    applyBudgetAction.mutate({ month, type, args });
-  };
-
   if (!initialized || !categoryGroups) {
     return null;
   }
 
-  let table;
-  if (budgetType === 'tracking') {
-    table = (
-      <TrackingBudgetProvider
-        summaryCollapsed={summaryCollapsed}
-        onBudgetAction={onBudgetAction}
-        onToggleSummaryCollapse={onToggleCollapse}
-      >
-        <AutoSizingBudgetTable
-          type={budgetType}
-          prewarmStartMonth={startMonth}
-          startMonth={startMonth}
-          monthBounds={bounds}
-          maxMonths={maxMonths}
-          onMonthSelect={onMonthSelect}
-          onDeleteCategory={onDeleteCategory}
-          onDeleteGroup={onDeleteCategoryGroup}
-          onSaveCategory={onSaveCategory}
-          onSaveGroup={onSaveCategoryGroup}
-          onBudgetAction={onBudgetAction}
-          onShowActivity={onShowActivity}
-          onReorderCategory={reorderCategory.mutate}
-          onReorderGroup={reorderCategoryGroup.mutate}
-          onApplyBudgetTemplatesInGroup={onApplyBudgetTemplatesInGroup}
-        />
-      </TrackingBudgetProvider>
-    );
-  } else {
-    table = (
-      <EnvelopeBudgetProvider
-        summaryCollapsed={summaryCollapsed}
-        onBudgetAction={onBudgetAction}
-        onToggleSummaryCollapse={onToggleCollapse}
-      >
-        <AutoSizingBudgetTable
-          type={budgetType}
-          prewarmStartMonth={startMonth}
-          startMonth={startMonth}
-          monthBounds={bounds}
-          maxMonths={maxMonths}
-          onMonthSelect={onMonthSelect}
-          onDeleteCategory={onDeleteCategory}
-          onDeleteGroup={onDeleteCategoryGroup}
-          onSaveCategory={onSaveCategory}
-          onSaveGroup={onSaveCategoryGroup}
-          onBudgetAction={onBudgetAction}
-          onShowActivity={onShowActivity}
-          onReorderCategory={reorderCategory.mutate}
-          onReorderGroup={reorderCategoryGroup.mutate}
-          onApplyBudgetTemplatesInGroup={onApplyBudgetTemplatesInGroup}
-        />
-      </EnvelopeBudgetProvider>
-    );
-  }
+  const titlebarHeight = 36;
 
   return (
     <SheetNameProvider name={monthUtils.sheetForMonth(startMonth)}>
-      {/*
-        In a previous iteration, the wrapper needs `overflow: hidden` for
-        some reason. Without it at certain dimensions the width/height
-        that autosizer gives us is slightly wrong, causing scrollbars to
-        appear. We might not need it anymore?
-      */}
       <View
         style={{
           ...styles.page,
+          height: `calc(100% - ${titlebarHeight}px)`,
+          marginTop: titlebarHeight,
           paddingLeft: 8,
           paddingRight: 8,
+          paddingTop: 0,
+          paddingBottom: 24,
           overflowX: 'hidden',
           overflowY: 'auto',
+          [`@media (min-width: ${tokens.breakpoint_small})`]: {
+            paddingTop: 0,
+          },
         }}
       >
         <BudgetDashboardShell
@@ -255,7 +79,6 @@ export function Budget() {
           categoryGroups={categoryGroups}
           startMonth={startMonth}
         />
-        <View style={{ flex: '1 0 480px', minHeight: 480 }}>{table}</View>
       </View>
     </SheetNameProvider>
   );
