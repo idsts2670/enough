@@ -80,6 +80,7 @@ type ReviewTransactionRow = {
   id: string;
   date: string;
   amount: number;
+  accountId: string | null;
   importedPayee: string | null;
   payeeName: string | null;
   accountName: string | null;
@@ -585,6 +586,7 @@ function useTransactionsToReview() {
           'id',
           'date',
           'amount',
+          { accountId: 'account.id' },
           { importedPayee: 'imported_payee' },
           { payeeName: 'payee.name' },
           { accountName: 'account.name' },
@@ -614,15 +616,21 @@ function useTransactionsToReview() {
   return { isLoading, transactions };
 }
 
-function TransactionsToReviewCard({ monthLabel }: { monthLabel: string }) {
+function TransactionsToReviewCard() {
   const { t } = useTranslation();
   const format = useFormat();
   const locale = useLocale();
   const navigate = useNavigate();
   const { isLoading, transactions } = useTransactionsToReview();
+  const subtitle = isLoading
+    ? t('Pending review')
+    : t('{{count}} pending', { count: transactions.length });
 
   return (
-    <DashboardPanel title={<Trans>Transactions to Review</Trans>} subtitle={monthLabel}>
+    <DashboardPanel
+      title={<Trans>Transactions to Review</Trans>}
+      subtitle={subtitle}
+    >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
           <Trans>Loading</Trans>
@@ -644,7 +652,21 @@ function TransactionsToReviewCard({ monthLabel }: { monthLabel: string }) {
                 key={transaction.id}
                 variant="bare"
                 aria-label={t('Review {{payee}}', { payee })}
-                onPress={() => navigate(`/transactions/${transaction.id}`)}
+                onPress={() =>
+                  navigate('/accounts', {
+                    state: {
+                      goBack: true,
+                      filterConditions: [
+                        {
+                          field: 'id',
+                          op: 'is',
+                          value: transaction.id,
+                          type: 'id',
+                        },
+                      ],
+                    },
+                  })
+                }
                 style={{
                   width: '100%',
                   minHeight: 0,
@@ -696,7 +718,7 @@ function TransactionsToReviewCard({ monthLabel }: { monthLabel: string }) {
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: 2 }}>
                     <Text style={{ ...tableCellAmount, color: theme.pageText }}>
-                      {format(Math.abs(transaction.amount), 'financial')}
+                      {format(transaction.amount, 'financial')}
                     </Text>
                     <Text style={{ ...caption, color: theme.pageTextSubdued }}>
                       <Trans>Needs category</Trans>
@@ -926,7 +948,7 @@ export function BudgetDashboardShell({
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />
-        <TransactionsToReviewCard monthLabel={monthLabel} />
+        <TransactionsToReviewCard />
         <TopCategoriesCard
           categoryGroups={categoryGroups}
           monthLabel={monthLabel}
