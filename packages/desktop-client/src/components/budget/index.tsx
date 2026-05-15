@@ -249,7 +249,11 @@ export function Budget() {
           overflow: 'hidden',
         }}
       >
-        <BudgetDashboardShell budgetType={budgetType} startMonth={startMonth} />
+        <BudgetDashboardShell
+          budgetType={budgetType}
+          categoryGroups={categoryGroups}
+          startMonth={startMonth}
+        />
         <View style={{ flex: 1, minHeight: 0 }}>{table}</View>
       </View>
     </SheetNameProvider>

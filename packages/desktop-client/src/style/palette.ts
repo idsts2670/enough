@@ -106,6 +106,31 @@ export const enoughMint = '#a7e5d3';
 export const enoughRose = '#e8b8c4';
 export const enoughLavender = '#c8b8e0';
 
+export const categoryHousing = '#B45309';
+export const categoryHousingTint = '#FEF3C7';
+export const categoryFood = '#15803D';
+export const categoryFoodTint = '#DCFCE7';
+export const categoryTransport = '#0E7490';
+export const categoryTransportTint = '#CFFAFE';
+export const categoryShopping = '#BE123C';
+export const categoryShoppingTint = '#FFE4E6';
+export const categoryBills = '#6D28D9';
+export const categoryBillsTint = '#EDE9FE';
+export const categoryHealth = '#047857';
+export const categoryHealthTint = '#D1FAE5';
+export const categoryEntertainment = '#C2410C';
+export const categoryEntertainmentTint = '#FFEDD5';
+export const categoryTravel = '#0369A1';
+export const categoryTravelTint = '#E0F2FE';
+export const categoryIncome = '#0F766E';
+export const categoryIncomeTint = '#CCFBF1';
+export const categoryDebt = '#B91C1C';
+export const categoryDebtTint = '#FEE2E2';
+export const categorySavings = '#4D7C0F';
+export const categorySavingsTint = '#ECFCCB';
+export const categoryPersonal = '#7E22CE';
+export const categoryPersonalTint = '#F3E8FF';
+
 // Chart colors - Qualitative scale (9 colors)
 export const chartQual1 = '#16a34a'; // Success green
 export const chartQual2 = '#a8c8e8'; // Soft sky
