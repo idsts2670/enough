@@ -1,4 +1,5 @@
 export { Budget } from '#components/budget';
+export { Categories } from '#components/budget/CategoriesPage';
 
 export { Schedules } from '#components/schedules';
 export { Schedules as ScheduleEdit } from '#components/schedules';

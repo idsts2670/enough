@@ -11,6 +11,7 @@ import {
   SvgStoreFront,
   SvgTag,
   SvgTuning,
+  SvgViewList,
   SvgWallet,
 } from '@actual-app/components/icons/v1';
 import {
@@ -107,6 +108,12 @@ export function CommandBar() {
         name: t('Transactions'),
         path: '/transactions',
         Icon: SvgList,
+      },
+      {
+        id: 'categories',
+        name: t('Categories'),
+        path: '/categories',
+        Icon: SvgViewList,
       },
       {
         id: 'reports-nav',

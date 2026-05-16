@@ -246,6 +246,11 @@ export function FinancesApp() {
                 />
 
                 <Route
+                  path="/categories"
+                  element={<NarrowAlternate name="Categories" />}
+                />
+
+                <Route
                   path="/schedules"
                   element={<NarrowAlternate name="Schedules" />}
                 />

@@ -12,6 +12,7 @@ import {
   SvgStoreFront,
   SvgTag,
   SvgTuning,
+  SvgViewList,
   SvgWallet,
 } from '@actual-app/components/icons/v1';
 import { SvgCalendar3 } from '@actual-app/components/icons/v2';
@@ -34,6 +35,7 @@ export function PrimaryButtons() {
   const isUsingServer = syncServerStatus !== 'no-server' || isTestEnv;
 
   const isActive = [
+    '/categories',
     '/payees',
     '/rules',
     '/bank-sync',
@@ -63,6 +65,12 @@ export function PrimaryButtons() {
       />
       {isOpen && (
         <>
+          <SecondaryItem
+            title={t('Categories')}
+            Icon={SvgViewList}
+            to="/categories"
+            indent={15}
+          />
           <SecondaryItem
             title={t('Payees')}
             Icon={SvgStoreFront}
