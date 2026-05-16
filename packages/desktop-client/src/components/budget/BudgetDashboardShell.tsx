@@ -318,13 +318,11 @@ function DashboardPanel({
   title,
   subtitle,
   accentColor,
-  accentTint,
 }: {
   children: ReactNode;
   title: ReactNode;
   subtitle: string;
   accentColor?: string;
-  accentTint?: string;
 }) {
   return (
     <View
@@ -339,21 +337,6 @@ function DashboardPanel({
         boxShadow: theme.cardShadow,
       }}
     >
-      {accentColor && (
-        <View
-          aria-hidden
-          style={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            width: 52,
-            height: 52,
-            borderRadius: 9999,
-            backgroundColor: accentTint ?? theme.surfaceSubtle,
-            opacity: 0.72,
-          }}
-        />
-      )}
       <View style={{ gap: 4 }}>
         <View
           style={{
@@ -389,9 +372,11 @@ function DashboardPanel({
 function NetWorthSparkline({
   points,
   trendColor,
+  trendTint,
 }: {
   points: NetWorthGraphPoint[];
   trendColor: string;
+  trendTint: string;
 }) {
   const chart = useMemo(() => {
     if (points.length < 2) {
@@ -452,10 +437,7 @@ function NetWorthSparkline({
         viewBox="0 0 100 48"
         style={{ display: 'block', width: '100%', height: '100%' }}
       >
-        <path
-          d={chart.areaPath}
-          fill={`color-mix(in srgb, ${trendColor} 16%, transparent)`}
-        />
+        <path d={chart.areaPath} fill={trendTint} />
         <path
           d={chart.linePath}
           fill="none"
@@ -479,78 +461,57 @@ function NetWorthSparkline({
   );
 }
 
-function MonthlySpendingGraph({
+function SpendingProgress({
+  ariaLabel,
   color,
   label,
   progress,
 }: {
+  ariaLabel: string;
   color: string;
   label: ReactNode;
   progress: number;
 }) {
-  const clampedProgress = Math.min(Math.max(progress, 0), 1.2);
-  const markerX = Math.min(92, 8 + clampedProgress * 70);
-  const markerY = Math.max(10, 42 - clampedProgress * 24);
-  const linePath = `M 8 42 C 28 42, 42 ${markerY.toFixed(
-    2,
-  )}, ${markerX.toFixed(2)} ${markerY.toFixed(2)}`;
+  const clampedProgress = Math.min(Math.max(progress, 0), 1);
 
   return (
-    <View style={{ position: 'relative', height: 108, marginTop: 2 }}>
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        preserveAspectRatio="none"
-        viewBox="0 0 100 54"
-        style={{
-          display: 'block',
-          width: '100%',
-          height: '100%',
-        }}
-      >
-        <path
-          d="M 8 42 L 94 10"
-          fill="none"
-          stroke={theme.surfaceSubtle}
-          strokeDasharray="3 4"
-          strokeLinecap="round"
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
-        <path
-          d={linePath}
-          fill="none"
-          stroke={color}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="3"
-          vectorEffect="non-scaling-stroke"
-        />
-        <circle
-          cx={markerX}
-          cy={markerY}
-          fill={theme.cardBackground}
-          r="2.9"
-          stroke={color}
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
+    <View
+      aria-label={ariaLabel}
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={Math.round(clampedProgress * 100)}
+      role="meter"
+      style={{ gap: 8 }}
+    >
       <View
         style={{
-          position: 'absolute',
-          left: `${Math.min(Math.max(markerX, 18), 76)}%`,
-          top: `${Math.max(markerY - 12, 4)}%`,
-          transform: 'translateX(-50%)',
-          padding: '5px 9px',
+          alignSelf: 'flex-end',
+          padding: '4px 8px',
           borderRadius: 8,
           backgroundColor: color,
-          boxShadow: theme.cardShadow,
         }}
       >
         <Text style={{ ...caption, ...tabularFigure, color: 'white' }}>
           {label}
         </Text>
+      </View>
+      <View
+        style={{
+          height: 6,
+          overflow: 'hidden',
+          backgroundColor: theme.surfaceSubtle,
+          borderRadius: 9999,
+        }}
+      >
+        <View
+          style={{
+            width: `${clampedProgress * 100}%`,
+            minWidth: progress > 0 ? 4 : 0,
+            height: '100%',
+            backgroundColor: color,
+            borderRadius: 9999,
+          }}
+        />
       </View>
     </View>
   );
@@ -652,9 +613,6 @@ function MonthlySpendingContent({
       title={<Trans>Monthly Spending</Trans>}
       subtitle={monthLabel}
       accentColor={progressColor}
-      accentTint={
-        isOverBudget ? theme.categoryDebtTint : theme.categoryFoodTint
-      }
     >
       <View style={{ gap: 16 }}>
         <View style={{ gap: 6 }}>
@@ -665,7 +623,8 @@ function MonthlySpendingContent({
             <Trans>spent this month</Trans>
           </Text>
         </View>
-        <MonthlySpendingGraph
+        <SpendingProgress
+          ariaLabel={graphLabel}
           color={progressColor}
           label={graphLabel}
           progress={progress}
@@ -756,6 +715,12 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       : totalChange > 0
         ? theme.semanticSuccess
         : theme.pageTextSubdued;
+  const trendTint =
+    totalChange < 0
+      ? theme.semanticErrorSoft
+      : totalChange > 0
+        ? theme.semanticSuccessSoft
+        : theme.surfaceSubtle;
   const changeDisplay =
     totalChange > 0
       ? `+${format(totalChange, 'financial')}`
@@ -766,9 +731,6 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       title={<Trans>Net Worth</Trans>}
       subtitle={subtitle}
       accentColor={trendColor}
-      accentTint={
-        totalChange < 0 ? theme.categoryDebtTint : theme.categorySavingsTint
-      }
     >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
@@ -800,18 +762,17 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
                 textAlign: 'right',
                 padding: '4px 8px',
                 borderRadius: 9999,
-                backgroundColor:
-                  totalChange < 0
-                    ? theme.categoryDebtTint
-                    : totalChange > 0
-                      ? theme.categorySavingsTint
-                      : theme.surfaceSubtle,
+                backgroundColor: trendTint,
               }}
             >
               {changeDisplay}
             </Text>
           </View>
-          <NetWorthSparkline points={graphData} trendColor={trendColor} />
+          <NetWorthSparkline
+            points={graphData}
+            trendColor={trendColor}
+            trendTint={trendTint}
+          />
         </View>
       )}
     </DashboardPanel>
@@ -1035,8 +996,8 @@ function TransactionsToReviewCard() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 16,
-                    padding: '8px 10px',
-                    borderRadius: 10,
+                    padding: 8,
+                    borderRadius: 8,
                     backgroundColor: theme.surfaceSubtle,
                   }}
                 >
@@ -1057,8 +1018,8 @@ function TransactionsToReviewCard() {
                         borderRadius: 9999,
                         backgroundColor:
                           transaction.amount < 0
-                            ? theme.categoryShopping
-                            : theme.categoryIncome,
+                            ? theme.semanticError
+                            : theme.semanticSuccess,
                       }}
                     />
                     <View style={{ minWidth: 0, gap: 2 }}>
@@ -1100,10 +1061,10 @@ function TransactionsToReviewCard() {
                     <Text
                       style={{
                         ...caption,
-                        color: theme.pageTextDark,
+                        color: theme.semanticInfo,
                         padding: '2px 7px',
                         borderRadius: 9999,
-                        backgroundColor: theme.categoryPersonalTint,
+                        backgroundColor: theme.semanticInfoSoft,
                       }}
                     >
                       <Trans>Needs category</Trans>
@@ -1294,7 +1255,6 @@ function TopCategoriesCard({
       title={<Trans>Top Categories</Trans>}
       subtitle={monthLabel}
       accentColor={topCategories[0]?.color}
-      accentTint={topCategories[0]?.tint}
     >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
@@ -1311,8 +1271,8 @@ function TopCategoriesCard({
               key={category.id}
               style={{
                 gap: 8,
-                padding: '9px 10px',
-                borderRadius: 10,
+                padding: 8,
+                borderRadius: 8,
                 backgroundColor: category.tint,
               }}
             >
@@ -1334,8 +1294,8 @@ function TopCategoriesCard({
                 >
                   <View
                     style={{
-                      width: 9,
-                      height: 9,
+                      width: 7,
+                      height: 7,
                       flexShrink: 0,
                       backgroundColor: category.color,
                       borderRadius: 9999,
@@ -1361,9 +1321,9 @@ function TopCategoriesCard({
               </View>
               <View
                 style={{
-                  height: 7,
+                  height: 6,
                   overflow: 'hidden',
-                  backgroundColor: `color-mix(in srgb, ${category.color} 12%, white)`,
+                  backgroundColor: theme.surfaceSubtle,
                   borderRadius: 9999,
                 }}
               >

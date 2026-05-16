@@ -20,7 +20,13 @@ export const cardBorder = colorPalette.enoughHairline;
 export const cardShadow = 'rgba(12, 10, 9, 0.12)';
 export const surfaceSubtle = colorPalette.enoughSurfaceSubtle;
 export const semanticSuccess = colorPalette.enoughSemanticSuccess;
+export const semanticSuccessSoft = colorPalette.enoughSemanticSuccessSoft;
+export const semanticWarning = colorPalette.enoughSemanticWarning;
+export const semanticWarningSoft = colorPalette.enoughSemanticWarningSoft;
 export const semanticError = colorPalette.enoughSemanticError;
+export const semanticErrorSoft = colorPalette.enoughSemanticErrorSoft;
+export const semanticInfo = colorPalette.enoughSemanticInfo;
+export const semanticInfoSoft = colorPalette.enoughSemanticInfoSoft;
 
 export const categoryHousing = colorPalette.categoryHousing;
 export const categoryHousingTint = colorPalette.categoryHousingTint;
