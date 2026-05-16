@@ -87,6 +87,7 @@ type TopCategory = {
   name: string;
   amount: number;
   color: string;
+  tint: string;
 };
 
 type ReviewTransactionRow = {
@@ -160,7 +161,7 @@ const categoryColorTokens = [
   },
   {
     key: 'income',
-    words: ['income'],
+    words: ['income', 'transfer'],
     color: theme.categoryIncome,
     tint: theme.categoryIncomeTint,
   },
@@ -193,17 +194,35 @@ function stableHash(value: string) {
   return hash >>> 0;
 }
 
-function getCategoryColor(groupName: string): CategoryColor {
+const genericCategoryGroups = new Set([
+  'categories',
+  'general',
+  'other',
+  'plaid categories',
+  'usual expenses',
+]);
+
+function getCategoryColor(
+  groupName: string,
+  categoryName?: string | null,
+): CategoryColor {
   const normalized = groupName.toLowerCase();
+  const normalizedCategory = categoryName?.toLowerCase() ?? '';
+  const shouldPreferCategory = genericCategoryGroups.has(normalized);
+  const textToMatch = shouldPreferCategory
+    ? `${normalizedCategory} ${normalized}`
+    : `${normalized} ${normalizedCategory}`;
   const namedToken = categoryColorTokens.find(
     token =>
-      normalized.includes(token.key) ||
-      token.words.some(word => normalized.includes(word)),
+      textToMatch.includes(token.key) ||
+      token.words.some(word => textToMatch.includes(word)),
   );
 
   return (
     namedToken ??
-    categoryColorTokens[stableHash(normalized) % categoryColorTokens.length]
+    categoryColorTokens[
+      stableHash(normalizedCategory || normalized) % categoryColorTokens.length
+    ]
   );
 }
 
@@ -298,14 +317,19 @@ function DashboardPanel({
   children,
   title,
   subtitle,
+  accentColor,
+  accentTint,
 }: {
   children: ReactNode;
   title: ReactNode;
   subtitle: string;
+  accentColor?: string;
+  accentTint?: string;
 }) {
   return (
     <View
       style={{
+        position: 'relative',
         minHeight: 220,
         gap: 18,
         padding: 24,
@@ -315,10 +339,44 @@ function DashboardPanel({
         boxShadow: theme.cardShadow,
       }}
     >
+      {accentColor && (
+        <View
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            width: 52,
+            height: 52,
+            borderRadius: 9999,
+            backgroundColor: accentTint ?? theme.surfaceSubtle,
+            opacity: 0.72,
+          }}
+        />
+      )}
       <View style={{ gap: 4 }}>
-        <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
-          {title}
-        </Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          {accentColor && (
+            <View
+              aria-hidden
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: 9999,
+                backgroundColor: accentColor,
+              }}
+            />
+          )}
+          <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
+            {title}
+          </Text>
+        </View>
         <Text style={{ ...metricSubtitle, color: theme.pageTextSubdued }}>
           {subtitle}
         </Text>
@@ -362,7 +420,11 @@ function NetWorthSparkline({
       .join(' ');
     const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
 
-    return { areaPath, linePath };
+    return {
+      areaPath,
+      linePath,
+      endPoint: normalized[normalized.length - 1],
+    };
   }, [points]);
 
   if (!chart) {
@@ -390,14 +452,26 @@ function NetWorthSparkline({
         viewBox="0 0 100 48"
         style={{ display: 'block', width: '100%', height: '100%' }}
       >
-        <path d={chart.areaPath} fill={theme.surfaceSubtle} />
+        <path
+          d={chart.areaPath}
+          fill={`color-mix(in srgb, ${trendColor} 16%, transparent)`}
+        />
         <path
           d={chart.linePath}
           fill="none"
           stroke={trendColor}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="2.25"
+          strokeWidth="2.75"
+          vectorEffect="non-scaling-stroke"
+        />
+        <circle
+          cx={chart.endPoint.x}
+          cy={chart.endPoint.y}
+          fill={theme.cardBackground}
+          r="2.8"
+          stroke={trendColor}
+          strokeWidth="2"
           vectorEffect="non-scaling-stroke"
         />
       </svg>
@@ -405,31 +479,79 @@ function NetWorthSparkline({
   );
 }
 
-function SpendingProgress({
+function MonthlySpendingGraph({
   color,
+  label,
   progress,
 }: {
   color: string;
+  label: ReactNode;
   progress: number;
 }) {
+  const clampedProgress = Math.min(Math.max(progress, 0), 1.2);
+  const markerX = Math.min(92, 8 + clampedProgress * 70);
+  const markerY = Math.max(10, 42 - clampedProgress * 24);
+  const linePath = `M 8 42 C 28 42, 42 ${markerY.toFixed(
+    2,
+  )}, ${markerX.toFixed(2)} ${markerY.toFixed(2)}`;
+
   return (
-    <View
-      style={{
-        height: 6,
-        overflow: 'hidden',
-        backgroundColor: theme.surfaceSubtle,
-        borderRadius: 9999,
-      }}
-    >
+    <View style={{ position: 'relative', height: 108, marginTop: 2 }}>
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        preserveAspectRatio="none"
+        viewBox="0 0 100 54"
+        style={{
+          display: 'block',
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <path
+          d="M 8 42 L 94 10"
+          fill="none"
+          stroke={theme.surfaceSubtle}
+          strokeDasharray="3 4"
+          strokeLinecap="round"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+        <path
+          d={linePath}
+          fill="none"
+          stroke={color}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+          vectorEffect="non-scaling-stroke"
+        />
+        <circle
+          cx={markerX}
+          cy={markerY}
+          fill={theme.cardBackground}
+          r="2.9"
+          stroke={color}
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
       <View
         style={{
-          width: `${Math.min(Math.max(progress, 0), 1) * 100}%`,
-          minWidth: progress > 0 ? 4 : 0,
-          height: '100%',
+          position: 'absolute',
+          left: `${Math.min(Math.max(markerX, 18), 76)}%`,
+          top: `${Math.max(markerY - 12, 4)}%`,
+          transform: 'translateX(-50%)',
+          padding: '5px 9px',
+          borderRadius: 8,
           backgroundColor: color,
-          borderRadius: 9999,
+          boxShadow: theme.cardShadow,
         }}
-      />
+      >
+        <Text style={{ ...caption, ...tabularFigure, color: 'white' }}>
+          {label}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -512,6 +634,7 @@ function MonthlySpendingContent({
   spent: number;
   spentDisplay: string;
 }) {
+  const { t } = useTranslation();
   const format = useFormat();
   const remaining = budgeted - Math.abs(spent);
   const isOverBudget = remaining < 0;
@@ -519,11 +642,19 @@ function MonthlySpendingContent({
     budgeted > 0 && Math.abs(spent) > budgeted
       ? theme.semanticError
       : theme.semanticSuccess;
+  const remainingDisplay = format(Math.abs(remaining), 'financial');
+  const graphLabel = isOverBudget
+    ? t('{{amount}} over', { amount: remainingDisplay })
+    : t('{{amount}} left', { amount: remainingDisplay });
 
   return (
     <DashboardPanel
       title={<Trans>Monthly Spending</Trans>}
       subtitle={monthLabel}
+      accentColor={progressColor}
+      accentTint={
+        isOverBudget ? theme.categoryDebtTint : theme.categoryFoodTint
+      }
     >
       <View style={{ gap: 16 }}>
         <View style={{ gap: 6 }}>
@@ -534,7 +665,11 @@ function MonthlySpendingContent({
             <Trans>spent this month</Trans>
           </Text>
         </View>
-        <SpendingProgress color={progressColor} progress={progress} />
+        <MonthlySpendingGraph
+          color={progressColor}
+          label={graphLabel}
+          progress={progress}
+        />
         <View
           style={{
             flexDirection: 'row',
@@ -563,7 +698,7 @@ function MonthlySpendingContent({
             <Text
               style={{ ...bodyStrong, ...tabularFigure, color: theme.pageText }}
             >
-              {format(Math.abs(remaining), 'financial')}
+              {remainingDisplay}
             </Text>
           </View>
         </View>
@@ -627,7 +762,14 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       : format(totalChange, 'financial');
 
   return (
-    <DashboardPanel title={<Trans>Net Worth</Trans>} subtitle={subtitle}>
+    <DashboardPanel
+      title={<Trans>Net Worth</Trans>}
+      subtitle={subtitle}
+      accentColor={trendColor}
+      accentTint={
+        totalChange < 0 ? theme.categoryDebtTint : theme.categorySavingsTint
+      }
+    >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
           <Trans>Loading</Trans>
@@ -656,6 +798,14 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
                 ...tabularFigure,
                 color: trendColor,
                 textAlign: 'right',
+                padding: '4px 8px',
+                borderRadius: 9999,
+                backgroundColor:
+                  totalChange < 0
+                    ? theme.categoryDebtTint
+                    : totalChange > 0
+                      ? theme.categorySavingsTint
+                      : theme.surfaceSubtle,
               }}
             >
               {changeDisplay}
@@ -735,17 +885,16 @@ function useTopCategories({
             const fallback = categoryFallback.get(row.category ?? '');
             const groupName =
               row.categoryGroupName ?? fallback?.groupName ?? 'Personal';
-            const color = getCategoryColor(groupName);
+            const categoryName =
+              row.categoryName ?? fallback?.categoryName ?? row.category ?? '';
+            const color = getCategoryColor(groupName, categoryName);
 
             return {
               id: row.category ?? '',
-              name:
-                row.categoryName ??
-                fallback?.categoryName ??
-                row.category ??
-                '',
+              name: categoryName,
               amount: Math.abs(row.amount ?? 0),
               color: color.color,
+              tint: color.tint,
             };
           })
           .sort((left, right) => right.amount - left.amount)
@@ -886,44 +1035,77 @@ function TransactionsToReviewCard() {
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 16,
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    backgroundColor: theme.surfaceSubtle,
                   }}
                 >
-                  <View style={{ minWidth: 0, gap: 2 }}>
-                    <Text
-                      title={payee}
+                  <View
+                    style={{
+                      minWidth: 0,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <View
+                      aria-hidden
                       style={{
-                        ...bodyStrong,
-                        minWidth: 0,
-                        color: theme.pageText,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        width: 8,
+                        height: 8,
+                        flexShrink: 0,
+                        borderRadius: 9999,
+                        backgroundColor:
+                          transaction.amount < 0
+                            ? theme.categoryShopping
+                            : theme.categoryIncome,
                       }}
-                    >
-                      {payee}
-                    </Text>
-                    <Text
-                      title={transaction.accountName ?? undefined}
-                      style={{
-                        ...caption,
-                        minWidth: 0,
-                        color: theme.pageTextSubdued,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {monthUtils.format(transaction.date, 'MMM d', locale)}
-                      {transaction.accountName
-                        ? ` - ${transaction.accountName}`
-                        : ''}
-                    </Text>
+                    />
+                    <View style={{ minWidth: 0, gap: 2 }}>
+                      <Text
+                        title={payee}
+                        style={{
+                          ...bodyStrong,
+                          minWidth: 0,
+                          color: theme.pageText,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {payee}
+                      </Text>
+                      <Text
+                        title={transaction.accountName ?? undefined}
+                        style={{
+                          ...caption,
+                          minWidth: 0,
+                          color: theme.pageTextSubdued,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {monthUtils.format(transaction.date, 'MMM d', locale)}
+                        {transaction.accountName
+                          ? ` - ${transaction.accountName}`
+                          : ''}
+                      </Text>
+                    </View>
                   </View>
                   <View style={{ alignItems: 'flex-end', gap: 2 }}>
                     <Text style={{ ...tableCellAmount, color: theme.pageText }}>
                       {format(transaction.amount, 'financial')}
                     </Text>
-                    <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                    <Text
+                      style={{
+                        ...caption,
+                        color: theme.pageTextDark,
+                        padding: '2px 7px',
+                        borderRadius: 9999,
+                        backgroundColor: theme.categoryPersonalTint,
+                      }}
+                    >
                       <Trans>Needs category</Trans>
                     </Text>
                   </View>
@@ -1108,7 +1290,12 @@ function TopCategoriesCard({
   const maxAmount = topCategories[0]?.amount ?? 0;
 
   return (
-    <DashboardPanel title={<Trans>Top Categories</Trans>} subtitle={monthLabel}>
+    <DashboardPanel
+      title={<Trans>Top Categories</Trans>}
+      subtitle={monthLabel}
+      accentColor={topCategories[0]?.color}
+      accentTint={topCategories[0]?.tint}
+    >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
           <Trans>Loading</Trans>
@@ -1120,7 +1307,15 @@ function TopCategoriesCard({
       ) : (
         <View style={{ gap: 12 }}>
           {topCategories.map(category => (
-            <View key={category.id} style={{ gap: 6 }}>
+            <View
+              key={category.id}
+              style={{
+                gap: 8,
+                padding: '9px 10px',
+                borderRadius: 10,
+                backgroundColor: category.tint,
+              }}
+            >
               <View
                 style={{
                   flexDirection: 'row',
@@ -1139,8 +1334,8 @@ function TopCategoriesCard({
                 >
                   <View
                     style={{
-                      width: 7,
-                      height: 7,
+                      width: 9,
+                      height: 9,
                       flexShrink: 0,
                       backgroundColor: category.color,
                       borderRadius: 9999,
@@ -1164,10 +1359,26 @@ function TopCategoriesCard({
                   {format(category.amount, 'financial')}
                 </Text>
               </View>
-              <SpendingProgress
-                color={category.color}
-                progress={maxAmount > 0 ? category.amount / maxAmount : 0}
-              />
+              <View
+                style={{
+                  height: 7,
+                  overflow: 'hidden',
+                  backgroundColor: `color-mix(in srgb, ${category.color} 12%, white)`,
+                  borderRadius: 9999,
+                }}
+              >
+                <View
+                  style={{
+                    width: `${
+                      maxAmount > 0 ? (category.amount / maxAmount) * 100 : 0
+                    }%`,
+                    minWidth: category.amount > 0 ? 5 : 0,
+                    height: '100%',
+                    backgroundColor: category.color,
+                    borderRadius: 9999,
+                  }}
+                />
+              </View>
             </View>
           ))}
         </View>
