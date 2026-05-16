@@ -20,16 +20,20 @@ import { View } from '@actual-app/components/view';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
 import { getScheduledAmount } from '@actual-app/core/shared/schedules';
+import { tsToRelativeTime } from '@actual-app/core/shared/util';
 import type {
+  AccountEntity,
   CategoryGroupEntity,
   ScheduleEntity,
 } from '@actual-app/core/types/models';
+import type { Locale } from 'date-fns';
 
 import { createSpreadsheet as netWorthSpreadsheet } from '#components/reports/spreadsheets/net-worth-spreadsheet';
 import { useReport } from '#components/reports/useReport';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
 import { useDateFormat } from '#hooks/useDateFormat';
+import { useFailedAccounts } from '#hooks/useFailedAccounts';
 import type { FormatType } from '#hooks/useFormat';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
@@ -40,8 +44,13 @@ import { useSheetValue } from '#hooks/useSheetValue';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { uncategorizedTransactions } from '#queries';
 import { aqlQuery } from '#queries/aqlQuery';
+import { useSelector } from '#redux';
 import type { SheetFields } from '#spreadsheet';
-import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
+import {
+  accountBalance,
+  envelopeBudget,
+  trackingBudget,
+} from '#spreadsheet/bindings';
 
 type BudgetDashboardShellProps = {
   budgetType: string;
@@ -108,6 +117,22 @@ type CategoryColor = {
 type NetWorthGraphPoint = {
   x: string;
   y: number;
+};
+
+type AccountGroupKey =
+  | 'checking'
+  | 'savings'
+  | 'credit'
+  | 'investment'
+  | 'loan'
+  | 'other';
+
+type AccountGroup = {
+  key: AccountGroupKey;
+  title: string;
+  color: string;
+  tint: string;
+  accounts: AccountEntity[];
 };
 
 const categoryColorTokens = [
@@ -224,6 +249,159 @@ function getCategoryColor(
       stableHash(normalizedCategory || normalized) % categoryColorTokens.length
     ]
   );
+}
+
+function matchesAny(text: string, words: string[]) {
+  return words.some(word => text.includes(word));
+}
+
+function getAccountGroupKey(account: AccountEntity): AccountGroupKey {
+  const text = [
+    account.name,
+    account.official_name,
+    account.bankName,
+    account.bank,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (
+    matchesAny(text, [
+      'credit',
+      'card',
+      'visa',
+      'mastercard',
+      'amex',
+      'american express',
+      'savor',
+      'quicksilver',
+      'venture',
+      'freedom',
+      'discover',
+    ])
+  ) {
+    return 'credit';
+  }
+
+  if (
+    matchesAny(text, [
+      'saving',
+      'money market',
+      'cash reserve',
+      'high yield',
+      'hysa',
+    ])
+  ) {
+    return 'savings';
+  }
+
+  if (
+    matchesAny(text, [
+      'investment',
+      'brokerage',
+      'ira',
+      '401',
+      'roth',
+      'vanguard',
+      'fidelity',
+      'robinhood',
+      'coinbase',
+    ])
+  ) {
+    return 'investment';
+  }
+
+  if (matchesAny(text, ['loan', 'mortgage', 'student debt'])) {
+    return 'loan';
+  }
+
+  if (matchesAny(text, ['checking', 'debit', 'cash'])) {
+    return 'checking';
+  }
+
+  return account.offbudget ? 'investment' : 'checking';
+}
+
+function getAccountGroupMeta(key: AccountGroupKey, t: (key: string) => string) {
+  switch (key) {
+    case 'checking':
+      return {
+        title: t('Checking'),
+        color: theme.categoryIncome,
+        tint: theme.categoryIncomeTint,
+      };
+    case 'savings':
+      return {
+        title: t('Savings'),
+        color: theme.categorySavings,
+        tint: theme.categorySavingsTint,
+      };
+    case 'credit':
+      return {
+        title: t('Credit cards'),
+        color: theme.categoryDebt,
+        tint: theme.categoryDebtTint,
+      };
+    case 'investment':
+      return {
+        title: t('Investments'),
+        color: theme.categoryBills,
+        tint: theme.categoryBillsTint,
+      };
+    case 'loan':
+      return {
+        title: t('Loans'),
+        color: theme.categoryHousing,
+        tint: theme.categoryHousingTint,
+      };
+    default:
+      return {
+        title: t('Other accounts'),
+        color: theme.categoryPersonal,
+        tint: theme.categoryPersonalTint,
+      };
+  }
+}
+
+function groupAccounts(
+  accounts: AccountEntity[],
+  t: (key: string) => string,
+): AccountGroup[] {
+  const groups = new Map<AccountGroupKey, AccountEntity[]>();
+  const activeAccounts = accounts
+    .filter(account => !account.closed)
+    .sort((left, right) => left.sort_order - right.sort_order);
+
+  for (const account of activeAccounts) {
+    const key = getAccountGroupKey(account);
+    groups.set(key, [...(groups.get(key) ?? []), account]);
+  }
+
+  const order: AccountGroupKey[] = [
+    'checking',
+    'savings',
+    'credit',
+    'investment',
+    'loan',
+    'other',
+  ];
+
+  return order.flatMap(key => {
+    const groupedAccounts = groups.get(key);
+    if (!groupedAccounts?.length) {
+      return [];
+    }
+
+    const meta = getAccountGroupMeta(key, t);
+    return [
+      {
+        key,
+        ...meta,
+        accounts: groupedAccounts,
+      },
+    ];
+  });
 }
 
 const EnvelopeDashboardCellValue = <
@@ -1346,6 +1524,227 @@ function TopCategoriesCard({
   );
 }
 
+function AccountBalanceValue({
+  accountId,
+}: {
+  accountId: AccountEntity['id'];
+}) {
+  const format = useFormat();
+  const balance = useSheetValue<'account', 'balance'>(
+    accountBalance(accountId),
+  );
+
+  return (
+    <Text style={{ ...tableCellAmount, color: theme.pageText }}>
+      {format(balance ?? 0, 'financial')}
+    </Text>
+  );
+}
+
+function AccountSummaryRow({
+  account,
+  color,
+  failed,
+  locale,
+  syncing,
+  updated,
+}: {
+  account: AccountEntity;
+  color: string;
+  failed: boolean;
+  locale: Locale;
+  syncing: boolean;
+  updated: boolean;
+}) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const statusColor = failed
+    ? theme.semanticError
+    : syncing
+      ? theme.semanticInfo
+      : updated
+        ? theme.semanticWarning
+        : account.account_sync_source
+          ? theme.semanticSuccess
+          : theme.pageTextSubdued;
+  const statusLabel = failed
+    ? t('Sync failed')
+    : syncing
+      ? t('Syncing')
+      : updated
+        ? t('Updated')
+        : account.account_sync_source
+          ? t('Last synced {{time}}', {
+              time: tsToRelativeTime(account.last_sync, locale),
+            })
+          : t('Manual');
+
+  return (
+    <Button
+      variant="bare"
+      onPress={() => navigate(`/accounts/${account.id}`)}
+      style={{
+        width: '100%',
+        minHeight: 0,
+        justifyContent: 'stretch',
+        padding: 0,
+        color: theme.pageText,
+      }}
+    >
+      <View
+        style={{
+          width: '100%',
+          minWidth: 0,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 16,
+          padding: 8,
+          borderRadius: 8,
+          backgroundColor: theme.surfaceSubtle,
+        }}
+      >
+        <View
+          style={{
+            minWidth: 0,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <View
+            aria-hidden
+            style={{
+              width: 7,
+              height: 7,
+              flexShrink: 0,
+              backgroundColor: color,
+              borderRadius: 9999,
+            }}
+          />
+          <View style={{ minWidth: 0, gap: 2 }}>
+            <Text
+              title={account.name}
+              style={{
+                ...bodyStrong,
+                minWidth: 0,
+                color: theme.pageText,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {account.name}
+            </Text>
+            <Text
+              style={{
+                ...caption,
+                minWidth: 0,
+                color: statusColor,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {statusLabel}
+            </Text>
+          </View>
+        </View>
+        <AccountBalanceValue accountId={account.id} />
+      </View>
+    </Button>
+  );
+}
+
+function AccountsSummaryCard() {
+  const { t } = useTranslation();
+  const locale = useLocale();
+  const { data: accounts = [], isLoading } = useAccounts();
+  const failedAccounts = useFailedAccounts();
+  const syncingAccountIds = useSelector(state => state.account.accountsSyncing);
+  const updatedAccountIds = useSelector(state => state.account.updatedAccounts);
+  const groups = useMemo(() => groupAccounts(accounts, t), [accounts, t]);
+  const activeCount = groups.reduce(
+    (count, group) => count + group.accounts.length,
+    0,
+  );
+
+  return (
+    <DashboardPanel
+      title={<Trans>Accounts</Trans>}
+      subtitle={
+        isLoading ? t('Loading') : t('{{count}} active', { count: activeCount })
+      }
+      accentColor={theme.categoryIncome}
+    >
+      {isLoading ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>Loading</Trans>
+        </Text>
+      ) : activeCount === 0 ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>No active accounts</Trans>
+        </Text>
+      ) : (
+        <View style={{ gap: 12 }}>
+          {groups.map(group => (
+            <View key={group.key} style={{ gap: 8 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <View
+                    aria-hidden
+                    style={{
+                      width: 7,
+                      height: 7,
+                      flexShrink: 0,
+                      borderRadius: 9999,
+                      backgroundColor: group.color,
+                    }}
+                  />
+                  <Text style={{ ...bodyStrong, color: theme.pageText }}>
+                    {group.title}
+                  </Text>
+                </View>
+                <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                  {t('{{count}} accounts', {
+                    count: group.accounts.length,
+                  })}
+                </Text>
+              </View>
+              <View style={{ gap: 6 }}>
+                {group.accounts.map(account => (
+                  <AccountSummaryRow
+                    key={account.id}
+                    account={account}
+                    color={group.color}
+                    failed={failedAccounts.has(account.id)}
+                    locale={locale}
+                    syncing={syncingAccountIds.includes(account.id)}
+                    updated={updatedAccountIds.includes(account.id)}
+                  />
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </DashboardPanel>
+  );
+}
+
 export function BudgetDashboardShell({
   budgetType,
   categoryGroups,
@@ -1481,6 +1880,7 @@ export function BudgetDashboardShell({
           startMonth={startMonth}
         />
         <RecurringsCard />
+        <AccountsSummaryCard />
       </View>
     </View>
   );
