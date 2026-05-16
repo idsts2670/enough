@@ -896,6 +896,8 @@ class AccountInternal extends PureComponent<
 
   getAccountTitle(account?: AccountEntity, id?: string) {
     const { filterName } = this.props.location.state || {};
+    const isTransactionsSurface =
+      this.props.location.pathname === '/transactions';
 
     if (filterName) {
       return filterName;
@@ -909,7 +911,7 @@ class AccountInternal extends PureComponent<
       } else if (id === 'uncategorized') {
         return t('Uncategorized');
       } else if (!id) {
-        return t('All Accounts');
+        return isTransactionsSurface ? t('Transactions') : t('All Accounts');
       }
       return null;
     }

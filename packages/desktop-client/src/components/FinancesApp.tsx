@@ -318,6 +318,11 @@ export function FinancesApp() {
                 />
 
                 <Route
+                  path="/transactions"
+                  element={<NarrowAlternate name="Accounts" />}
+                />
+
+                <Route
                   path="/transactions/:transactionId"
                   element={
                     <WideNotSupported>
