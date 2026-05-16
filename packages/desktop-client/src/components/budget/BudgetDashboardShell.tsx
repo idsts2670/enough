@@ -320,7 +320,7 @@ function getAccountGroupKey(account: AccountEntity): AccountGroupKey {
     return 'checking';
   }
 
-  return account.offbudget ? 'investment' : 'checking';
+  return account.offbudget ? 'other' : 'checking';
 }
 
 function getAccountGroupMeta(key: AccountGroupKey, t: (key: string) => string) {
@@ -1563,7 +1563,7 @@ function AccountSummaryRow({
     : syncing
       ? theme.semanticInfo
       : updated
-        ? theme.semanticWarning
+        ? theme.semanticInfo
         : account.account_sync_source
           ? theme.semanticSuccess
           : theme.pageTextSubdued;
@@ -1572,7 +1572,7 @@ function AccountSummaryRow({
     : syncing
       ? t('Syncing')
       : updated
-        ? t('Updated')
+        ? t('New activity')
         : account.account_sync_source
           ? t('Last synced {{time}}', {
               time: tsToRelativeTime(account.last_sync, locale),
@@ -1675,7 +1675,7 @@ function AccountsSummaryCard() {
       subtitle={
         isLoading ? t('Loading') : t('{{count}} active', { count: activeCount })
       }
-      accentColor={theme.categoryIncome}
+      accentColor={theme.semanticInfo}
     >
       {isLoading ? (
         <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
@@ -1719,9 +1719,11 @@ function AccountsSummaryCard() {
                   </Text>
                 </View>
                 <Text style={{ ...caption, color: theme.pageTextSubdued }}>
-                  {t('{{count}} accounts', {
-                    count: group.accounts.length,
-                  })}
+                  {group.accounts.length === 1
+                    ? t('1 account')
+                    : t('{{count}} accounts', {
+                        count: group.accounts.length,
+                      })}
                 </Text>
               </View>
               <View style={{ gap: 6 }}>
