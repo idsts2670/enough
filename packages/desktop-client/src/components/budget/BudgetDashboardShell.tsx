@@ -327,7 +327,6 @@ function DashboardPanel({
   return (
     <View
       style={{
-        position: 'relative',
         minHeight: 220,
         gap: 18,
         padding: 24,
