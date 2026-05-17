@@ -190,34 +190,27 @@ function CategoryMonthControls({
 function CategorySummaryCard({
   label,
   value,
-  detail,
   color = theme.pageText,
 }: {
   label: ReactNode;
   value: ReactNode;
-  detail?: ReactNode;
   color?: string;
 }) {
   return (
     <View
       style={{
-        gap: 6,
+        flex: '1 1 150px',
         minWidth: 0,
-        minHeight: 96,
+        minHeight: 92,
         padding: 16,
         borderRadius: 12,
-        justifyContent: 'space-between',
-        overflow: 'hidden',
+        justifyContent: 'center',
+        gap: 8,
         backgroundColor: theme.surfaceSubtle,
       }}
     >
       <Text style={{ ...caption, color: theme.pageTextSubdued }}>{label}</Text>
       <Text style={{ ...metricValue, color }}>{value}</Text>
-      {detail ? (
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          {detail}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -253,7 +246,9 @@ function CategoryOverview({
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1.2fr) minmax(220px, 0.8fr)',
         gap: 14,
-        [`@media (max-width: ${tokens.breakpoint_small})`]: {
+        alignItems: 'stretch',
+        marginBottom: 64,
+        [`@media (max-width: ${tokens.breakpoint_medium})`]: {
           gridTemplateColumns: '1fr',
         },
       }}
@@ -261,6 +256,7 @@ function CategoryOverview({
       <View
         style={{
           padding: 24,
+          minHeight: 220,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           boxShadow: `0 18px 50px ${theme.tableBorder}`,
@@ -313,32 +309,23 @@ function CategoryOverview({
         </View>
         <View
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
             gap: 10,
           }}
         >
           <CategorySummaryCard
             label={<Trans>Spent</Trans>}
             value={format(spent, 'financial')}
-            detail={<Trans>this month</Trans>}
           />
           <CategorySummaryCard
             label={<Trans>Budgeted</Trans>}
             value={format(budgeted, 'financial')}
-            detail={<Trans>planned</Trans>}
           />
           <CategorySummaryCard
             label={remainingLabel}
             value={format(Math.abs(remaining), 'financial')}
             color={remainingColor}
-            detail={
-              remaining < 0 ? (
-                <Trans>over budget</Trans>
-              ) : (
-                <Trans>remaining</Trans>
-              )
-            }
           />
         </View>
       </View>
@@ -346,6 +333,7 @@ function CategoryOverview({
       <View
         style={{
           padding: 24,
+          minHeight: 220,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           gap: 18,
@@ -393,6 +381,21 @@ function CategoryOverview({
     </View>
   );
 }
+
+const categoryTableColumns =
+  'minmax(180px, 1.5fr) minmax(88px, 0.45fr) minmax(112px, 0.65fr) minmax(88px, 0.45fr)';
+const categoryTableCompactColumns =
+  'minmax(0, 1fr) minmax(84px, auto) minmax(84px, auto)';
+const categoryTableResponsiveStyle = {
+  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+    gridTemplateColumns: categoryTableCompactColumns,
+  },
+};
+const paceColumnResponsiveStyle = {
+  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+    display: 'none',
+  },
+};
 
 function AmountCell({
   value,
@@ -537,13 +540,13 @@ function CategoryRow({
         style={{
           width: '100%',
           display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
+          gridTemplateColumns: categoryTableColumns,
           alignItems: 'center',
           gap: 10,
           padding: '8px 10px',
           borderRadius: 8,
           backgroundColor: theme.tableBackground,
+          ...categoryTableResponsiveStyle,
         }}
       >
         <View
@@ -580,11 +583,13 @@ function CategoryRow({
           </Text>
         </View>
         <AmountCell value={spentAmount} muted={spentAmount === 0} />
-        <ProgressBar
-          color={categoryColor.color}
-          opacity={toneOpacity}
-          value={progress}
-        />
+        <View style={paceColumnResponsiveStyle}>
+          <ProgressBar
+            color={categoryColor.color}
+            opacity={toneOpacity}
+            value={progress}
+          />
+        </View>
         <AmountCell value={budgetedAmount} muted={budgetedAmount === 0} />
       </View>
     </Button>
@@ -625,20 +630,21 @@ function CategoryGroupSection({
   return (
     <View
       style={{
-        gap: 8,
-        padding: 14,
+        gap: 12,
+        padding: '12px 12px 16px',
         borderRadius: 14,
         backgroundColor: groupColor.tint,
+        overflow: 'hidden',
       }}
     >
       <View
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
+          gridTemplateColumns: categoryTableColumns,
           alignItems: 'center',
           gap: 10,
-          padding: '0 10px',
+          padding: '4px 10px 8px',
+          ...categoryTableResponsiveStyle,
         }}
       >
         <View
@@ -685,10 +691,19 @@ function CategoryGroupSection({
           </Text>
         </View>
         <AmountCell value={groupSpent} />
-        <ProgressBar color={groupColor.color} value={progress} />
+        <View style={paceColumnResponsiveStyle}>
+          <ProgressBar color={groupColor.color} value={progress} />
+        </View>
         <AmountCell value={groupBudgeted} />
       </View>
-      <View style={{ gap: 6 }}>
+      <View
+        style={{
+          gap: 8,
+          paddingBottom: 4,
+          paddingLeft: 16,
+          borderLeft: `2px solid ${groupColor.color}`,
+        }}
+      >
         {group.categories.map((category, index) => (
           <CategoryRow
             key={category.id}
@@ -718,17 +733,23 @@ function CategoryListPanel({
       style={{
         borderRadius: 16,
         backgroundColor: theme.tableBackground,
+        marginTop: 8,
         overflow: 'hidden',
+        height: 'clamp(360px, calc(100vh - 520px), 760px)',
+        minHeight: 0,
       }}
     >
       <View
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
+          gridTemplateColumns: categoryTableColumns,
           gap: 10,
           padding: '16px 26px 12px',
           backgroundColor: theme.pageBackground,
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          ...categoryTableResponsiveStyle,
         }}
       >
         <Text style={{ ...caption, color: theme.pageTextSubdued }}>
@@ -743,7 +764,13 @@ function CategoryListPanel({
         >
           <Trans>Spent</Trans>
         </Text>
-        <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+        <Text
+          style={{
+            ...caption,
+            color: theme.pageTextSubdued,
+            ...paceColumnResponsiveStyle,
+          }}
+        >
           <Trans>Pace</Trans>
         </Text>
         <Text
@@ -756,7 +783,16 @@ function CategoryListPanel({
           <Trans>Budget</Trans>
         </Text>
       </View>
-      <View style={{ gap: 10, padding: 12 }}>
+      <View
+        style={{
+          gap: 12,
+          padding: 12,
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'scroll',
+          overscrollBehavior: 'contain',
+        }}
+      >
         {groups.map(group => (
           <CategoryGroupSection
             key={group.id}
@@ -765,92 +801,6 @@ function CategoryListPanel({
             startMonth={startMonth}
           />
         ))}
-      </View>
-    </View>
-  );
-}
-
-function CategorySidePanel({
-  groups,
-  monthLabel,
-}: {
-  groups: CategoryGroupView[];
-  monthLabel: string;
-}) {
-  return (
-    <View
-      style={{
-        gap: 14,
-        padding: 22,
-        borderRadius: 16,
-        backgroundColor: theme.tableBackground,
-        alignSelf: 'start',
-        position: 'sticky',
-        top: 16,
-      }}
-    >
-      <View style={{ gap: 4 }}>
-        <Text style={{ ...displayLg, color: theme.pageText }}>
-          <Trans>Regular categories</Trans>
-        </Text>
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          {monthLabel}
-        </Text>
-      </View>
-      <View style={{ gap: 8 }}>
-        {groups.map(group => {
-          const groupColor = getCategoryColor(group.name);
-          return (
-            <View
-              key={group.id}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 6,
-                padding: '7px 10px',
-                borderRadius: 10,
-                backgroundColor: groupColor.tint,
-              }}
-            >
-              <View
-                style={{
-                  minWidth: 0,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <View
-                  aria-hidden
-                  style={{
-                    width: 7,
-                    height: 7,
-                    flexShrink: 0,
-                    borderRadius: 9999,
-                    backgroundColor: groupColor.color,
-                  }}
-                />
-                <Text
-                  title={group.name}
-                  style={{
-                    ...caption,
-                    color: groupColor.color,
-                    minWidth: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {group.name}
-                </Text>
-              </View>
-              <Text style={{ ...caption, color: groupColor.color }}>
-                {group.categories.length}
-              </Text>
-            </View>
-          );
-        })}
       </View>
     </View>
   );
@@ -930,7 +880,7 @@ export function Categories() {
           marginTop: titlebarHeight,
           padding: '24px 24px 32px',
           overflowX: 'hidden',
-          overflowY: 'auto',
+          overflowY: 'hidden',
           backgroundColor: theme.pageBackground,
           [`@media (min-width: ${tokens.breakpoint_small})`]: {
             paddingTop: 24,
@@ -941,19 +891,13 @@ export function Categories() {
           style={{
             width: '100%',
             maxWidth: 1480,
+            height: '100%',
             alignSelf: 'center',
-            gap: 16,
+            minHeight: 0,
+            gap: 24,
           }}
         >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-              gap: 20,
-              flexWrap: 'wrap',
-            }}
-          >
+          <View style={{ gap: 12 }}>
             <View style={{ gap: 4 }}>
               <Text style={{ ...display2xl, color: theme.pageTextDark }}>
                 <Trans>Categories</Trans>
@@ -962,13 +906,23 @@ export function Categories() {
                 {monthLabel}
               </Text>
             </View>
-            <CategoryMonthControls
-              startMonth={startMonth}
-              bounds={budgetBounds}
-              onMonthSelect={month => {
-                void onMonthSelect(month);
+            <View
+              style={{
+                minHeight: 44,
+                alignItems: 'flex-end',
+                [`@media (max-width: ${tokens.breakpoint_small})`]: {
+                  alignItems: 'stretch',
+                },
               }}
-            />
+            >
+              <CategoryMonthControls
+                startMonth={startMonth}
+                bounds={budgetBounds}
+                onMonthSelect={month => {
+                  void onMonthSelect(month);
+                }}
+              />
+            </View>
           </View>
 
           <CategoryOverview
@@ -978,24 +932,11 @@ export function Categories() {
             categoryCount={visibleCategoryCount}
           />
 
-          <View
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 0.34fr)',
-              gap: 16,
-              alignItems: 'start',
-              [`@media (max-width: ${tokens.breakpoint_small})`]: {
-                gridTemplateColumns: '1fr',
-              },
-            }}
-          >
-            <CategoryListPanel
-              budgetType={budgetType}
-              groups={visibleGroups}
-              startMonth={startMonth}
-            />
-            <CategorySidePanel groups={visibleGroups} monthLabel={monthLabel} />
-          </View>
+          <CategoryListPanel
+            budgetType={budgetType}
+            groups={visibleGroups}
+            startMonth={startMonth}
+          />
         </View>
       </View>
     </SheetNameProvider>
