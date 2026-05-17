@@ -237,7 +237,7 @@ function CategoryOverview({
   const { spent, budgeted, remaining } = useBudgetSummaryValues(budgetType);
   const progress =
     budgeted > 0 ? Math.min(Math.max(spent / budgeted, 0), 1) : 0;
-  const hasCircularData = spent > 0 && budgeted > 0;
+  const hasCircularData = budgeted > 0;
   const remainingColor =
     remaining < 0
       ? theme.semanticError
