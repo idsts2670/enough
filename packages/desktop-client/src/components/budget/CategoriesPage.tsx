@@ -237,8 +237,13 @@ function CategoryOverview({
   const { spent, budgeted, remaining } = useBudgetSummaryValues(budgetType);
   const progress =
     budgeted > 0 ? Math.min(Math.max(spent / budgeted, 0), 1) : 0;
+  const hasCircularData = spent > 0 && budgeted > 0;
   const remainingColor =
-    remaining < 0 ? theme.semanticError : theme.semanticSuccess;
+    remaining < 0
+      ? theme.semanticError
+      : remaining > 0
+        ? theme.semanticSuccess
+        : theme.pageTextSubdued;
   const remainingLabel =
     remaining < 0 ? <Trans>Over</Trans> : <Trans>Left</Trans>;
 
@@ -279,17 +284,32 @@ function CategoryOverview({
             </Text>
           </View>
           <View
-            aria-hidden
+            aria-hidden={hasCircularData}
             style={{
               width: 76,
               height: 76,
               borderRadius: 9999,
-              background: `conic-gradient(${theme.semanticInfo} ${
-                progress * 100
-              }%, ${theme.surfaceSubtle} 0)`,
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: hasCircularData
+                ? `conic-gradient(${theme.semanticInfo} ${
+                    progress * 100
+                  }%, ${theme.surfaceSubtle} 0)`
+                : theme.surfaceSubtle,
               boxShadow: `inset 0 0 0 16px ${theme.tableBackground}`,
             }}
-          />
+          >
+            {!hasCircularData && (
+              <Text
+                style={{
+                  ...caption,
+                  color: theme.pageTextSubdued,
+                }}
+              >
+                <Trans>No data</Trans>
+              </Text>
+            )}
+          </View>
         </View>
         <View
           style={{
