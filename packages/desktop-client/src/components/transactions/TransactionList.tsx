@@ -1,11 +1,22 @@
 // @ts-strict-ignore
 // TODO: remove strict
-import { useCallback, useLayoutEffect, useRef } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { RefObject } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
+import { Button } from '@actual-app/components/button';
+import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { bodySm, bodyStrong, caption } from '@actual-app/components/typography';
+import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
@@ -284,6 +295,199 @@ type TransactionListProps = Pick<
   ) => void;
   onRefetch: () => void;
 };
+
+type AiCategorySuggestion = Awaited<
+  ReturnType<typeof send<'ai/category-suggestions-get'>>
+>[number];
+
+function AiSuggestionReviewBar({
+  transactions,
+  onRefetch,
+}: {
+  transactions: TransactionEntity[];
+  onRefetch: () => void;
+}) {
+  const { t } = useTranslation();
+  const [suggestions, setSuggestions] = useState<AiCategorySuggestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const lastRequestKey = useRef('');
+
+  const candidateIds = useMemo(
+    () =>
+      transactions
+        .filter(
+          transaction =>
+            !transaction.category &&
+            !transaction.is_parent &&
+            !transaction.is_child &&
+            !isPreviewId(transaction.id),
+        )
+        .slice(0, 25)
+        .map(transaction => transaction.id),
+    [transactions],
+  );
+  const requestKey = candidateIds.join('|');
+
+  const refreshSuggestions = useCallback(async () => {
+    if (candidateIds.length === 0) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await send('ai/category-suggestions-run', {
+        transactionIds: candidateIds,
+        limit: 25,
+      });
+      const nextSuggestions = await send('ai/category-suggestions-get', {
+        transactionIds: candidateIds,
+        status: 'pending',
+      });
+      setSuggestions(nextSuggestions);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [candidateIds]);
+
+  useEffect(() => {
+    if (!requestKey || lastRequestKey.current === requestKey) {
+      return;
+    }
+
+    lastRequestKey.current = requestKey;
+    void refreshSuggestions();
+  }, [refreshSuggestions, requestKey]);
+
+  if (suggestions.length === 0 && !isLoading) {
+    return null;
+  }
+
+  return (
+    <View
+      role="region"
+      aria-label={t('AI categorization suggestions')}
+      style={{
+        margin: '8px 8px 0',
+        padding: 12,
+        borderRadius: 12,
+        border: `1px solid ${theme.tableBorder}`,
+        backgroundColor: theme.tableBackground,
+        gap: 10,
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          gap: 12,
+          alignItems: 'center',
+        }}
+      >
+        <View style={{ gap: 2 }}>
+          <Text style={{ ...bodyStrong, color: theme.pageText }}>
+            {t('AI suggestions')}
+          </Text>
+          <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+            {isLoading
+              ? t('Checking rules, Plaid metadata, history, and Ollama')
+              : t('{{count}} pending', { count: suggestions.length })}
+          </Text>
+        </View>
+        <Button variant="normal" onPress={refreshSuggestions}>
+          <Trans>Refresh</Trans>
+        </Button>
+      </View>
+
+      {suggestions.slice(0, 3).map(suggestion => (
+        <View
+          key={suggestion.id}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            gap: 12,
+            alignItems: 'center',
+            padding: 8,
+            borderRadius: 8,
+            backgroundColor: theme.tableRowBackgroundHover,
+          }}
+        >
+          <View style={{ minWidth: 0, gap: 3 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                minWidth: 0,
+              }}
+            >
+              <Text style={{ ...bodyStrong, color: theme.pageText }}>
+                {suggestion.normalizedPayee || t('Unknown payee')}
+              </Text>
+              <Text
+                style={{
+                  ...caption,
+                  color: theme.semanticInfo,
+                  backgroundColor: theme.semanticInfoSoft,
+                  borderRadius: 9999,
+                  padding: '3px 8px',
+                }}
+              >
+                {suggestion.categoryName}
+              </Text>
+              <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                {Math.round(suggestion.confidence * 100)}%
+              </Text>
+            </View>
+            <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+              {suggestion.reason}
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button
+              variant="normal"
+              onPress={async () => {
+                await send('ai/category-suggestion-reject', {
+                  id: suggestion.id,
+                });
+                await refreshSuggestions();
+              }}
+            >
+              <Trans>Reject</Trans>
+            </Button>
+            <Button
+              variant="primary"
+              onPress={async () => {
+                await send('ai/category-suggestion-accept', {
+                  id: suggestion.id,
+                  createRule: false,
+                });
+                onRefetch();
+                await refreshSuggestions();
+              }}
+            >
+              <Trans>Accept</Trans>
+            </Button>
+            <Button
+              variant="normal"
+              onPress={async () => {
+                await send('ai/category-suggestion-accept', {
+                  id: suggestion.id,
+                  createRule: true,
+                });
+                onRefetch();
+                await refreshSuggestions();
+              }}
+            >
+              <Trans>Create rule</Trans>
+            </Button>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export function TransactionList({
   tableRef,
@@ -725,54 +929,60 @@ export function TransactionList({
 
   return (
     <ErrorBoundary FallbackComponent={FeatureErrorFallback}>
-      <TransactionTable
-        ref={tableRef}
-        transactions={allTransactions}
-        loadMoreTransactions={loadMoreTransactions}
-        accounts={accounts}
-        categoryGroups={categoryGroups}
-        payees={payees}
-        balances={balances}
-        showBalances={showBalances}
-        showReconciled={showReconciled}
-        showCleared={showCleared}
-        showAccount={showAccount}
-        showCategory
-        currentAccountId={account && account.id}
-        currentCategoryId={category && category.id}
-        isAdding={isAdding}
-        isNew={isNew}
-        isMatched={isMatched}
-        dateFormat={dateFormat}
-        hideFraction={hideFraction}
-        renderEmpty={renderEmpty}
-        onSave={onSave}
-        onApplyRules={onApplyRules}
-        onSplit={onSplit}
-        onCloseAddTransaction={onCloseAddTransaction}
-        onAdd={onAdd}
-        onAddSplit={onAddSplit}
-        onManagePayees={onManagePayees}
-        onCreatePayee={onCreatePayee}
-        style={{ backgroundColor: theme.tableBackground }}
-        onNavigateToTransferAccount={onNavigateToTransferAccount}
-        onNavigateToSchedule={onNavigateToSchedule}
-        onNotesTagClick={onNotesTagClick}
-        onSort={onSort}
-        sortField={sortField}
-        ascDesc={ascDesc}
-        isFiltered={isFiltered}
-        onReorder={allowReorder ? onReorder : undefined}
-        onBatchDelete={onBatchDelete}
-        onBatchDuplicate={onBatchDuplicate}
-        onBatchLinkSchedule={onBatchLinkSchedule}
-        onBatchUnlinkSchedule={onBatchUnlinkSchedule}
-        onCreateRule={onCreateRule}
-        onScheduleAction={onScheduleAction}
-        onMakeAsNonSplitTransactions={onMakeAsNonSplitTransactions}
-        showSelection={showSelection}
-        allowSplitTransaction={allowSplitTransaction}
-      />
+      <View style={{ flex: 1, minHeight: 0 }}>
+        <AiSuggestionReviewBar
+          transactions={allTransactions}
+          onRefetch={onRefetch}
+        />
+        <TransactionTable
+          ref={tableRef}
+          transactions={allTransactions}
+          loadMoreTransactions={loadMoreTransactions}
+          accounts={accounts}
+          categoryGroups={categoryGroups}
+          payees={payees}
+          balances={balances}
+          showBalances={showBalances}
+          showReconciled={showReconciled}
+          showCleared={showCleared}
+          showAccount={showAccount}
+          showCategory
+          currentAccountId={account && account.id}
+          currentCategoryId={category && category.id}
+          isAdding={isAdding}
+          isNew={isNew}
+          isMatched={isMatched}
+          dateFormat={dateFormat}
+          hideFraction={hideFraction}
+          renderEmpty={renderEmpty}
+          onSave={onSave}
+          onApplyRules={onApplyRules}
+          onSplit={onSplit}
+          onCloseAddTransaction={onCloseAddTransaction}
+          onAdd={onAdd}
+          onAddSplit={onAddSplit}
+          onManagePayees={onManagePayees}
+          onCreatePayee={onCreatePayee}
+          style={{ backgroundColor: theme.tableBackground }}
+          onNavigateToTransferAccount={onNavigateToTransferAccount}
+          onNavigateToSchedule={onNavigateToSchedule}
+          onNotesTagClick={onNotesTagClick}
+          onSort={onSort}
+          sortField={sortField}
+          ascDesc={ascDesc}
+          isFiltered={isFiltered}
+          onReorder={allowReorder ? onReorder : undefined}
+          onBatchDelete={onBatchDelete}
+          onBatchDuplicate={onBatchDuplicate}
+          onBatchLinkSchedule={onBatchLinkSchedule}
+          onBatchUnlinkSchedule={onBatchUnlinkSchedule}
+          onCreateRule={onCreateRule}
+          onScheduleAction={onScheduleAction}
+          onMakeAsNonSplitTransactions={onMakeAsNonSplitTransactions}
+          showSelection={showSelection}
+          allowSplitTransaction={allowSplitTransaction}
+        />
+      </View>
     </ErrorBoundary>
   );
 }

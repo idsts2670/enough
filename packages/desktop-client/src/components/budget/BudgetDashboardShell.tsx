@@ -17,6 +17,7 @@ import {
   tabularFigure,
 } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
+import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
 import { getScheduledAmount } from '@actual-app/core/shared/schedules';
@@ -1747,6 +1748,98 @@ function AccountsSummaryCard() {
   );
 }
 
+type SavingsAdvisorData = Awaited<
+  ReturnType<typeof send<'ai/savings-advisor'>>
+>;
+
+function SavingsAdvisorCard({ month }: { month: string }) {
+  const { t } = useTranslation();
+  const [data, setData] = useState<SavingsAdvisorData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function load() {
+      setIsLoading(true);
+      try {
+        const nextData = await send('ai/savings-advisor', { month });
+        if (!isCancelled) {
+          setData(nextData);
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void load();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [month]);
+
+  return (
+    <DashboardPanel
+      title={<Trans>Savings advisor</Trans>}
+      subtitle={t('Local AI summary')}
+      accentColor={theme.semanticInfo}
+    >
+      {isLoading && !data ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>Computing metrics</Trans>
+        </Text>
+      ) : !data ? (
+        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+          <Trans>No savings insight yet</Trans>
+        </Text>
+      ) : (
+        <View style={{ gap: 12 }}>
+          <Text style={{ ...bodyStrong, color: theme.pageText }}>
+            {data.response.summary}
+          </Text>
+          {data.response.topActions.slice(0, 3).map(action => (
+            <View
+              key={`${action.title}-${action.impactEstimate}`}
+              style={{
+                gap: 4,
+                padding: 8,
+                borderRadius: 8,
+                backgroundColor: theme.surfaceSubtle,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <Text style={{ ...bodyStrong, color: theme.pageText }}>
+                  {action.title}
+                </Text>
+                <Text style={{ ...caption, color: theme.semanticSuccess }}>
+                  {action.impactEstimate}
+                </Text>
+              </View>
+              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+                {action.reason}
+              </Text>
+            </View>
+          ))}
+          {data.response.riskFlags.length > 0 && (
+            <Text style={{ ...caption, color: theme.semanticError }}>
+              {data.response.riskFlags.join(', ')}
+            </Text>
+          )}
+        </View>
+      )}
+    </DashboardPanel>
+  );
+}
+
 export function BudgetDashboardShell({
   budgetType,
   categoryGroups,
@@ -1883,6 +1976,7 @@ export function BudgetDashboardShell({
         />
         <RecurringsCard />
         <AccountsSummaryCard />
+        <SavingsAdvisorCard month={startMonth} />
       </View>
     </View>
   );
