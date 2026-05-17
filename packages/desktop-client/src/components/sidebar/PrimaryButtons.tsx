@@ -8,7 +8,6 @@ import {
   SvgCog,
   SvgCreditCard,
   SvgList,
-  SvgReports,
   SvgStoreFront,
   SvgTag,
   SvgTuning,
@@ -39,7 +38,6 @@ export function PrimaryButtons() {
     '/payees',
     '/rules',
     '/bank-sync',
-    '/reports',
     '/settings',
     '/tools',
   ].some(route => location.pathname.startsWith(route));
@@ -81,12 +79,6 @@ export function PrimaryButtons() {
             title={t('Rules')}
             Icon={SvgTuning}
             to="/rules"
-            indent={15}
-          />
-          <SecondaryItem
-            title={t('Reports')}
-            Icon={SvgReports}
-            to="/reports"
             indent={15}
           />
           {isUsingServer && (

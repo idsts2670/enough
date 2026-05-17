@@ -232,7 +232,6 @@ export { SvgRefresh } from './Refresh';
 export { SvgReload } from './Reload';
 export { SvgReplyAll } from './ReplyAll';
 export { SvgReply } from './Reply';
-export { SvgReports } from './Reports';
 export { SvgRepost } from './Repost';
 export { SvgSaveDisk } from './SaveDisk';
 export { SvgScreenFull } from './ScreenFull';

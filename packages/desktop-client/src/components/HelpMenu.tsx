@@ -18,8 +18,6 @@ const getPageDocs = (page: string) => {
   switch (page) {
     case '/budget':
       return 'https://actualbudget.org/docs/getting-started/envelope-budgeting';
-    case '/reports':
-      return 'https://actualbudget.org/docs/reports/';
     case '/schedules':
       return 'https://actualbudget.org/docs/schedules';
     case '/payees':

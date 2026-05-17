@@ -17,7 +17,6 @@ import { CategoryAutocomplete } from '#components/autocomplete/CategoryAutocompl
 import { CategoryGroupAutocomplete } from '#components/autocomplete/CategoryGroupAutocomplete';
 import { FilterAutocomplete } from '#components/autocomplete/FilterAutocomplete';
 import { PayeeAutocomplete } from '#components/autocomplete/PayeeAutocomplete';
-import { ReportAutocomplete } from '#components/autocomplete/ReportAutocomplete';
 import { Checkbox } from '#components/forms';
 import { DateSelect } from '#components/select/DateSelect';
 import { RecurringSchedulePicker } from '#components/select/RecurringSchedulePicker';
@@ -59,7 +58,7 @@ type GenericInputProps = {
       ))
   | ({
       type: 'saved';
-      field: 'saved' | 'report';
+      field: 'saved';
     } & (
       | {
           multi: true;
@@ -344,21 +343,6 @@ export const GenericInput = ({
             />
           );
           break;
-        case 'report':
-          content = (
-            <ReportAutocomplete
-              {...savedMultiProps}
-              openOnFocus
-              inputProps={{
-                ref,
-                ...(showSavedPlaceholder
-                  ? { placeholder: t('nothing') }
-                  : null),
-              }}
-            />
-          );
-          break;
-
         default:
       }
       break;

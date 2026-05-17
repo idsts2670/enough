@@ -255,14 +255,6 @@ export function BrandStyle() {
   --color-formInputBorder: #d6d3d1;
   --color-formInputBorderSelected: #292524;
   --color-formInputText: #0c0a09;
-  --color-reportsGreen: #16a34a;
-  --color-reportsRed: #dc2626;
-  --color-reportsBlue: #a8c8e8;
-  --color-reportsLabel: #0c0a09;
-  --color-reportsInnerLabel: #292524;
-  --color-reportsNumberPositive: #147d64;
-  --color-reportsNumberNegative: #dc2626;
-  --color-reportsNumberNeutral: #a8a29e;
 }
 
 html,

@@ -10,7 +10,6 @@ import {
   SvgCog,
   SvgCreditCard,
   SvgPiggyBank,
-  SvgReports,
   SvgStoreFront,
   SvgTuning,
   SvgWallet,
@@ -128,12 +127,6 @@ export function MobileNavTabs() {
       path: '/rules',
       style: navTabStyle,
       Icon: SvgTuning,
-    },
-    {
-      name: t('Reports'),
-      path: '/reports',
-      style: navTabStyle,
-      Icon: SvgReports,
     },
     ...(isUsingServer
       ? [

@@ -12,9 +12,9 @@ import { integerToCurrency } from '@actual-app/core/shared/util';
 import { eachMonthOfInterval, format, subMonths } from 'date-fns';
 import { Area, AreaChart, Tooltip as RechartsTooltip, YAxis } from 'recharts';
 
+import { useRechartsAnimation } from '#components/analytics/chart-theme';
+import { LoadingIndicator } from '#components/LoadingIndicator';
 import { PrivacyFilter } from '#components/PrivacyFilter';
-import { useRechartsAnimation } from '#components/reports/chart-theme';
-import { LoadingIndicator } from '#components/reports/LoadingIndicator';
 import { useLocale } from '#hooks/useLocale';
 import * as query from '#queries';
 import { liveQuery } from '#queries/liveQuery';

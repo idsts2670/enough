@@ -52,18 +52,6 @@
           "sizes": "150x150"
         }
       ]
-    },
-    {
-      "name": "Reports",
-      "short_name": "Reports",
-      "description": "View reports",
-      "url": "/reports",
-      "icons": [
-        {
-          "src": "/shortcut-reports.svg",
-          "sizes": "150x150"
-        }
-      ]
     }
   ],
   "screenshots": [

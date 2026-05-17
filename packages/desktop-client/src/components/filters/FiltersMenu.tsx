@@ -573,7 +573,7 @@ function shouldShowFilterField(
 }
 
 /**
- * Shared filter picker used by reports to choose and apply filter conditions.
+ * Shared filter picker used to choose and apply filter conditions.
  */
 export function FilterButton<T extends RuleConditionEntity>({
   onApply,

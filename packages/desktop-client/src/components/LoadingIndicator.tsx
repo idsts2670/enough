@@ -4,6 +4,7 @@ import { Block } from '@actual-app/components/block';
 import { AnimatedLoading } from '@actual-app/components/icons/AnimatedLoading';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
+import { displayLg } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 type LoadingIndicatorProps = {
@@ -22,7 +23,7 @@ export const LoadingIndicator = ({ message }: LoadingIndicatorProps) => {
       }}
     >
       {message && (
-        <Block style={{ marginBottom: 20, fontSize: 18 }}>{message}</Block>
+        <Block style={{ marginBottom: 20, ...displayLg }}>{message}</Block>
       )}
       <AnimatedLoading
         style={{ width: 25, height: 25, color: theme.pageTextDark }}

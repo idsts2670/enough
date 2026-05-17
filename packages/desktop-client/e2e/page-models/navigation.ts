@@ -3,7 +3,6 @@ import type { Locator, Page } from '@playwright/test';
 import { AccountPage } from './account-page';
 import { BankSyncPage } from './bank-sync-page';
 import { PayeesPage } from './payees-page';
-import { ReportsPage } from './reports-page';
 import { RulesPage } from './rules-page';
 import { SchedulesPage } from './schedules-page';
 import { SettingsPage } from './settings-page';
@@ -76,12 +75,6 @@ export class Navigation {
       .click();
 
     return new AccountPage(this.page);
-  }
-
-  async goToReportsPage() {
-    await this.page.getByRole('link', { name: 'Reports' }).click();
-
-    return new ReportsPage(this.page);
   }
 
   async goToSchedulesPage() {

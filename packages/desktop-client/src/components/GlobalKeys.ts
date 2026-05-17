@@ -18,7 +18,7 @@ export function GlobalKeys() {
             void navigate('/budget');
             break;
           case '2':
-            void navigate('/reports');
+            void navigate('/transactions');
             break;
           case '3':
             void navigate('/accounts');

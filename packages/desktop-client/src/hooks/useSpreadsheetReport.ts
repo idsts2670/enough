@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
 
-export function useReport<T>(
+export function useSpreadsheetReport<T>(
   sheetName: string,
   getData: (
     spreadsheet: ReturnType<typeof useSpreadsheet>,

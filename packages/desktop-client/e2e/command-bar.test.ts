@@ -20,8 +20,7 @@ test.describe('Command bar', () => {
     await page.mouse.move(0, 0);
 
     // ensure page is loaded
-    await expect(page.getByTestId('budget-table')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Add group' })).toBeVisible({
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({
       timeout: 10000,
     });
   });
@@ -55,13 +54,10 @@ test.describe('Command bar', () => {
     await expect(commandBar).toBeVisible();
     await expect(commandBar).toHaveValue('');
 
-    // Search and navigate to reports
-    await commandBar.fill('reports');
+    // Search and navigate to transactions
+    await commandBar.fill('transactions');
     await page.keyboard.press('Enter');
-    await expect(page.getByTestId('reports-page')).toBeVisible();
-    await expect(page.getByText('Loading reports...')).not.toBeVisible({
-      timeout: 10000, // Wait for 10 seconds max for reports to load
-    }); // wait for screen to load
+    await expect(page).toHaveURL(/\/transactions$/);
 
     // Navigate to schedule page
     await page.keyboard.press('ControlOrMeta+k');

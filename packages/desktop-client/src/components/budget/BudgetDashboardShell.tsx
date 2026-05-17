@@ -29,8 +29,7 @@ import type {
 } from '@actual-app/core/types/models';
 import type { Locale } from 'date-fns';
 
-import { createSpreadsheet as netWorthSpreadsheet } from '#components/reports/spreadsheets/net-worth-spreadsheet';
-import { useReport } from '#components/reports/useReport';
+import { createSpreadsheet as netWorthSpreadsheet } from '#components/analytics/net-worth-spreadsheet';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
 import { useDateFormat } from '#hooks/useDateFormat';
@@ -42,6 +41,7 @@ import { useNavigate } from '#hooks/useNavigate';
 import { usePayees } from '#hooks/usePayees';
 import { useSchedules } from '#hooks/useSchedules';
 import { useSheetValue } from '#hooks/useSheetValue';
+import { useSpreadsheetReport } from '#hooks/useSpreadsheetReport';
 import { useSyncedPref } from '#hooks/useSyncedPref';
 import { uncategorizedTransactions } from '#queries';
 import { aqlQuery } from '#queries/aqlQuery';
@@ -52,6 +52,8 @@ import {
   envelopeBudget,
   trackingBudget,
 } from '#spreadsheet/bindings';
+
+import { getCategoryColor } from './categoryColors';
 
 type BudgetDashboardShellProps = {
   budgetType: string;
@@ -110,11 +112,6 @@ type ReviewTransactionRow = {
   accountName: string | null;
 };
 
-type CategoryColor = {
-  color: string;
-  tint: string;
-};
-
 type NetWorthGraphPoint = {
   x: string;
   y: number;
@@ -135,122 +132,6 @@ type AccountGroup = {
   tint: string;
   accounts: AccountEntity[];
 };
-
-const categoryColorTokens = [
-  {
-    key: 'housing',
-    words: ['housing', 'home', 'rent', 'mortgage'],
-    color: theme.categoryHousing,
-    tint: theme.categoryHousingTint,
-  },
-  {
-    key: 'food',
-    words: ['food', 'drink', 'grocery', 'restaurant'],
-    color: theme.categoryFood,
-    tint: theme.categoryFoodTint,
-  },
-  {
-    key: 'transport',
-    words: ['transport', 'car', 'transit', 'gas'],
-    color: theme.categoryTransport,
-    tint: theme.categoryTransportTint,
-  },
-  {
-    key: 'shopping',
-    words: ['shopping', 'retail'],
-    color: theme.categoryShopping,
-    tint: theme.categoryShoppingTint,
-  },
-  {
-    key: 'bills',
-    words: ['bill', 'subscription', 'utility'],
-    color: theme.categoryBills,
-    tint: theme.categoryBillsTint,
-  },
-  {
-    key: 'health',
-    words: ['health', 'medical', 'fitness', 'pharmacy'],
-    color: theme.categoryHealth,
-    tint: theme.categoryHealthTint,
-  },
-  {
-    key: 'entertainment',
-    words: ['entertainment', 'hobby', 'media'],
-    color: theme.categoryEntertainment,
-    tint: theme.categoryEntertainmentTint,
-  },
-  {
-    key: 'travel',
-    words: ['travel', 'flight', 'hotel'],
-    color: theme.categoryTravel,
-    tint: theme.categoryTravelTint,
-  },
-  {
-    key: 'income',
-    words: ['income', 'transfer'],
-    color: theme.categoryIncome,
-    tint: theme.categoryIncomeTint,
-  },
-  {
-    key: 'debt',
-    words: ['debt', 'loan', 'payment'],
-    color: theme.categoryDebt,
-    tint: theme.categoryDebtTint,
-  },
-  {
-    key: 'savings',
-    words: ['saving', 'investment'],
-    color: theme.categorySavings,
-    tint: theme.categorySavingsTint,
-  },
-  {
-    key: 'personal',
-    words: ['personal'],
-    color: theme.categoryPersonal,
-    tint: theme.categoryPersonalTint,
-  },
-];
-
-function stableHash(value: string) {
-  let hash = 2166136261;
-  for (const char of value) {
-    hash ^= char.charCodeAt(0);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-const genericCategoryGroups = new Set([
-  'categories',
-  'general',
-  'other',
-  'plaid categories',
-  'usual expenses',
-]);
-
-function getCategoryColor(
-  groupName: string,
-  categoryName?: string | null,
-): CategoryColor {
-  const normalized = groupName.toLowerCase();
-  const normalizedCategory = categoryName?.toLowerCase() ?? '';
-  const shouldPreferCategory = genericCategoryGroups.has(normalized);
-  const textToMatch = shouldPreferCategory
-    ? `${normalizedCategory} ${normalized}`
-    : `${normalized} ${normalizedCategory}`;
-  const namedToken = categoryColorTokens.find(
-    token =>
-      textToMatch.includes(token.key) ||
-      token.words.some(word => textToMatch.includes(word)),
-  );
-
-  return (
-    namedToken ??
-    categoryColorTokens[
-      stableHash(normalizedCategory || normalized) % categoryColorTokens.length
-    ]
-  );
-}
 
 function matchesAny(text: string, words: string[]) {
   return words.some(word => text.includes(word));
@@ -883,7 +764,7 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       reportStartMonth,
     ],
   );
-  const data = useReport('dashboard_net_worth', params);
+  const data = useSpreadsheetReport('dashboard_net_worth', params);
   const isLoading = accountsLoading || data == null;
   const graphData = data?.graphData.data ?? [];
   const totalChange = data?.totalChange ?? 0;

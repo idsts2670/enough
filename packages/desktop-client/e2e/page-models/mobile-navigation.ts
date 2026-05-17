@@ -5,7 +5,6 @@ import { MobileAccountsPage } from './mobile-accounts-page';
 import { MobileBankSyncPage } from './mobile-bank-sync-page';
 import { MobileBudgetPage } from './mobile-budget-page';
 import { MobilePayeesPage } from './mobile-payees-page';
-import { MobileReportsPage } from './mobile-reports-page';
 import { MobileRulesPage } from './mobile-rules-page';
 import { MobileSchedulesPage } from './mobile-schedules-page';
 import { MobileTransactionEntryPage } from './mobile-transaction-entry-page';
@@ -13,7 +12,6 @@ import { SettingsPage } from './settings-page';
 
 const NAVBAR_ROWS = 3;
 const NAV_LINKS_HIDDEN_BY_DEFAULT = [
-  'Reports',
   'Schedules',
   'Payees',
   'Rules',
@@ -24,7 +22,6 @@ const ROUTES_BY_PAGE = {
   Budget: '/budget',
   Accounts: '/accounts',
   Transaction: '/transactions/new',
-  Reports: '/reports',
   Schedules: '/schedules',
   Payees: '/payees',
   Rules: '/rules',
@@ -169,13 +166,6 @@ export class MobileNavigation {
     return await this.navigateToPage(
       'Transaction',
       () => new MobileTransactionEntryPage(this.page),
-    );
-  }
-
-  async goToReportsPage() {
-    return await this.navigateToPage(
-      'Reports',
-      () => new MobileReportsPage(this.page),
     );
   }
 

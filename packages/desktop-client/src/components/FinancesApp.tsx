@@ -26,12 +26,11 @@ import { BankSyncStatus } from './BankSyncStatus';
 import { CommandBar } from './CommandBar';
 import { FeatureErrorFallback } from './FeatureErrorFallback';
 import { GlobalKeys } from './GlobalKeys';
+import { LoadingIndicator } from './LoadingIndicator';
 import { MobileBankSyncAccountEditPage } from './mobile/banksync/MobileBankSyncAccountEditPage';
 import { MobileNavTabs } from './mobile/MobileNavTabs';
 import { TransactionEdit } from './mobile/transactions/TransactionEdit';
 import { Notifications } from './Notifications';
-import { Reports } from './reports';
-import { LoadingIndicator } from './reports/LoadingIndicator';
 import { NarrowAlternate } from './responsive';
 import { UserDirectoryPage } from './responsive/wide';
 import { useMultiuserEnabled } from './ServerContext';
@@ -238,7 +237,10 @@ export function FinancesApp() {
                   }
                 />
 
-                <Route path="/reports/*" element={<Reports />} />
+                <Route
+                  path="/reports/*"
+                  element={<Navigate to="/budget" replace />}
+                />
 
                 <Route
                   path="/budget"
@@ -372,8 +374,6 @@ export function FinancesApp() {
               <Route path="/budget" element={<MobileNavTabs />} />
               <Route path="/accounts" element={<MobileNavTabs />} />
               <Route path="/settings" element={<MobileNavTabs />} />
-              <Route path="/reports" element={<MobileNavTabs />} />
-              <Route path="/reports/:dashboardId" element={<MobileNavTabs />} />
               <Route path="/bank-sync" element={<MobileNavTabs />} />
               <Route path="/rules" element={<MobileNavTabs />} />
               <Route path="/payees" element={<MobileNavTabs />} />

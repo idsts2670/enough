@@ -529,12 +529,6 @@ export type Modal =
       };
     }
   | {
-      name: 'copy-widget-to-dashboard';
-      options: {
-        onSelect: (dashboardId: string) => void;
-      };
-    }
-  | {
       name: 'edit-user';
       options: {
         user: UserEntity | NewUserEntity;

@@ -7,17 +7,13 @@ import {
   SvgLibrary,
   SvgList,
   SvgPiggyBank,
-  SvgReports,
   SvgStoreFront,
   SvgTag,
   SvgTuning,
   SvgViewList,
   SvgWallet,
 } from '@actual-app/components/icons/v1';
-import {
-  SvgCalendar3,
-  SvgNotesPaperText,
-} from '@actual-app/components/icons/v2';
+import { SvgCalendar3 } from '@actual-app/components/icons/v2';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { View } from '@actual-app/components/view';
@@ -25,11 +21,9 @@ import { css } from '@emotion/css';
 import { Command } from 'cmdk';
 
 import { useAccounts } from '#hooks/useAccounts';
-import { useDashboardPages } from '#hooks/useDashboardPages';
 import { useMetadataPref } from '#hooks/useMetadataPref';
 import { useModalState } from '#hooks/useModalState';
 import { useNavigate } from '#hooks/useNavigate';
-import { useReports } from '#hooks/useReports';
 import type { Binding, SheetFields, SheetNames } from '#spreadsheet';
 import {
   accountBalance,
@@ -116,12 +110,6 @@ export function CommandBar() {
         Icon: SvgViewList,
       },
       {
-        id: 'reports-nav',
-        name: t('Reports'),
-        path: '/reports',
-        Icon: SvgReports,
-      },
-      {
         id: 'schedules',
         name: t('Schedules'),
         path: '/schedules',
@@ -153,8 +141,6 @@ export function CommandBar() {
   }, [open]);
 
   const { data: allAccounts = [] } = useAccounts();
-  const { data: customReports = [] } = useReports();
-  const { data: dashboardPages = [] } = useDashboardPages();
 
   const accounts = allAccounts.filter(acc => !acc.closed);
 
@@ -231,24 +217,6 @@ export function CommandBar() {
         })),
       ],
       onSelect: ({ id }) => handleNavigate(`/accounts/${id}`),
-    },
-    {
-      key: 'reports',
-      heading: t('Reports'),
-      items: dashboardPages.map(dashboardPage => ({
-        ...dashboardPage,
-        Icon: SvgReports,
-      })),
-      onSelect: ({ id }) => handleNavigate(`/reports/${id}`),
-    },
-    {
-      key: 'reports-custom',
-      heading: t('Custom Reports'),
-      items: customReports.map(report => ({
-        ...report,
-        Icon: SvgNotesPaperText,
-      })),
-      onSelect: ({ id }) => handleNavigate(`/reports/custom/${id}`),
     },
   ];
 

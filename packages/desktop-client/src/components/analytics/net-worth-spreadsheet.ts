@@ -9,10 +9,16 @@ import * as d from 'date-fns';
 import type { Locale } from 'date-fns';
 import keyBy from 'lodash/keyBy';
 
-import { ReportOptions } from '#components/reports/ReportOptions';
 import type { FormatType } from '#hooks/useFormat';
 import type { useSpreadsheet } from '#hooks/useSpreadsheet';
 import { aqlQuery } from '#queries/aqlQuery';
+
+const intervalFormats = new Map([
+  ['Daily', 'yy-MM-dd'],
+  ['Weekly', 'yy-MM-dd'],
+  ['Monthly', "MMM ''yy"],
+  ['Yearly', 'yyyy'],
+]);
 
 type Balance = {
   date: string;
@@ -282,8 +288,7 @@ function recalculate(
     endNetWorth = total;
 
     // Use standardized format from ReportOptions
-    const displayFormat =
-      ReportOptions.intervalFormat.get(interval) ?? "MMM ''yy";
+    const displayFormat = intervalFormats.get(interval) ?? "MMM ''yy";
 
     const tooltipFormat =
       interval === 'Daily'

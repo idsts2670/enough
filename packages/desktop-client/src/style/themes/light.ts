@@ -240,17 +240,6 @@ export const pillTextSelected = colorPalette.white;
 export const pillBorderSelected = colorPalette.enoughPrimary;
 export const pillTextSubdued = colorPalette.enoughMutedSoft;
 
-export const reportsRed = colorPalette.enoughError;
-export const reportsBlue = colorPalette.enoughSky;
-export const reportsGreen = colorPalette.enoughSuccess;
-export const reportsGray = colorPalette.gray400;
-export const reportsLabel = colorPalette.enoughInk;
-export const reportsInnerLabel = colorPalette.enoughPrimary;
-export const reportsNumberPositive = numberPositive;
-export const reportsNumberNegative = numberNegative;
-export const reportsNumberNeutral = numberNeutral;
-export const reportsChartFill = reportsNumberPositive;
-
 export const noteTagBackground = colorPalette.enoughSurfaceStrong;
 export const noteTagBackgroundHover = colorPalette.enoughHairline;
 export const noteTagDefault = colorPalette.enoughSurfaceStrong;
