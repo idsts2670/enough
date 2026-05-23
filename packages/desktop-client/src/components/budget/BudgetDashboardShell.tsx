@@ -5,6 +5,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { tokens } from '@actual-app/components/tokens';
 import {
   bodySm,
   bodyStrong,
@@ -28,7 +29,13 @@ import type {
   ScheduleEntity,
 } from '@actual-app/core/types/models';
 import type { Locale } from 'date-fns';
+import { Area, AreaChart, Tooltip as RechartsTooltip } from 'recharts';
 
+import {
+  buildGradientId,
+  useRechartsAnimation,
+} from '#components/analytics/chart-theme';
+import { ChartContainer } from '#components/analytics/ChartContainer';
 import { createSpreadsheet as netWorthSpreadsheet } from '#components/analytics/net-worth-spreadsheet';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
@@ -115,6 +122,11 @@ type ReviewTransactionRow = {
 type NetWorthGraphPoint = {
   x: string;
   y: number;
+  date?: string;
+  networth?: string;
+  assets?: string;
+  debt?: string;
+  change?: string;
 };
 
 type AccountGroupKey =
@@ -431,51 +443,22 @@ function DashboardPanel({
 function NetWorthSparkline({
   points,
   trendColor,
-  trendTint,
+  onHover,
+  onMouseLeave,
 }: {
   points: NetWorthGraphPoint[];
   trendColor: string;
-  trendTint: string;
+  onHover: (point: NetWorthGraphPoint) => void;
+  onMouseLeave: () => void;
 }) {
-  const chart = useMemo(() => {
-    if (points.length < 2) {
-      return null;
-    }
+  const animProps = useRechartsAnimation();
+  const gradId = buildGradientId('dashboard-networth', 'neutral');
 
-    const values = points.map(point => point.y);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-    const width = 100;
-    const height = 48;
-    const xStep = width / (points.length - 1);
-    const normalized = points.map((point, index) => {
-      const x = index * xStep;
-      const y = height - ((point.y - min) / range) * height;
-      return { x, y };
-    });
-    const linePath = normalized
-      .map(
-        (point, index) =>
-          `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(
-            2,
-          )}`,
-      )
-      .join(' ');
-    const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
-
-    return {
-      areaPath,
-      linePath,
-      endPoint: normalized[normalized.length - 1],
-    };
-  }, [points]);
-
-  if (!chart) {
+  if (points.length < 2) {
     return (
       <View
         style={{
-          height: 92,
+          height: 120,
           justifyContent: 'center',
           alignItems: 'center',
         }}
@@ -488,36 +471,54 @@ function NetWorthSparkline({
   }
 
   return (
-    <View style={{ height: 92, minWidth: 0 }}>
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        overflow="visible"
-        preserveAspectRatio="none"
-        viewBox="0 0 100 48"
-        style={{ display: 'block', width: '100%', height: '100%' }}
-      >
-        <path d={chart.areaPath} fill={trendTint} />
-        <path
-          d={chart.linePath}
-          fill="none"
-          stroke={trendColor}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2.75"
-          vectorEffect="non-scaling-stroke"
-        />
-        <circle
-          cx={chart.endPoint.x}
-          cy={chart.endPoint.y}
-          fill={theme.cardBackground}
-          r="2.8"
-          stroke={trendColor}
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-    </View>
+    <ChartContainer minHeight={120}>
+      {({ width, height }) => (
+        <AreaChart
+          width={width}
+          height={height}
+          data={points}
+          onMouseLeave={onMouseLeave}
+          margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+        >
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={trendColor} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="y"
+            stroke={trendColor}
+            strokeWidth={2}
+            fill={`url(#${gradId})`}
+            dot={false}
+            activeDot={{
+              r: 4,
+              fill: trendColor,
+              stroke: theme.cardBackground,
+              strokeWidth: 2,
+            }}
+            {...animProps}
+          />
+          <RechartsTooltip
+            contentStyle={{ display: 'none' }}
+            isAnimationActive={false}
+            cursor={{
+              stroke: trendColor,
+              strokeWidth: 1,
+              strokeDasharray: '3 3',
+              strokeOpacity: 0.4,
+            }}
+            labelFormatter={(label, items) => {
+              const point = items[0]?.payload as NetWorthGraphPoint | undefined;
+              if (point) onHover(point);
+              return '';
+            }}
+          />
+        </AreaChart>
+      )}
+    </ChartContainer>
   );
 }
 
@@ -774,16 +775,41 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       : totalChange > 0
         ? theme.semanticSuccess
         : theme.pageTextSubdued;
-  const trendTint =
-    totalChange < 0
+
+  const [hovered, setHovered] = useState<NetWorthGraphPoint | null>(null);
+
+  const displayNetWorthStr = hovered?.networth
+    ? hovered.networth
+    : format(data?.netWorth ?? 0, 'financial');
+
+  const displayDate = hovered?.date ?? null;
+
+  const displayChange = hovered
+    ? hovered.y - (graphData[0]?.y ?? 0)
+    : totalChange;
+
+  const displayTrendColor =
+    displayChange < 0
+      ? theme.semanticError
+      : displayChange > 0
+        ? theme.semanticSuccess
+        : theme.pageTextSubdued;
+
+  const displayTrendTint =
+    displayChange < 0
       ? theme.semanticErrorSoft
-      : totalChange > 0
+      : displayChange > 0
         ? theme.semanticSuccessSoft
         : theme.surfaceSubtle;
+
   const changeDisplay =
-    totalChange > 0
-      ? `+${format(totalChange, 'financial')}`
-      : format(totalChange, 'financial');
+    displayChange > 0
+      ? `+${format(displayChange, 'financial')}`
+      : format(displayChange, 'financial');
+
+  // Point shown in assets/debt breakdown — hovered point or latest
+  const displayPoint =
+    hovered ?? (graphData.length > 0 ? graphData[graphData.length - 1] : null);
 
   return (
     <DashboardPanel
@@ -796,7 +822,8 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
           <Trans>Loading</Trans>
         </Text>
       ) : (
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 12 }}>
+          {/* Metric row: large net worth + change badge */}
           <View
             style={{
               flexDirection: 'row',
@@ -805,33 +832,78 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
               alignItems: 'flex-start',
             }}
           >
-            <View style={{ gap: 6 }}>
+            <View style={{ gap: 2 }}>
               <Text style={{ ...metricValue, color: theme.pageText }}>
-                {format(data?.netWorth ?? 0, 'financial')}
+                {displayNetWorthStr}
               </Text>
-              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                <Trans>current net worth</Trans>
+              <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                {displayDate ?? <Trans>current net worth</Trans>}
               </Text>
             </View>
             <Text
               style={{
                 ...bodyStrong,
                 ...tabularFigure,
-                color: trendColor,
+                color: displayTrendColor,
                 textAlign: 'right',
-                padding: '4px 8px',
+                padding: '3px 8px',
                 borderRadius: 9999,
-                backgroundColor: trendTint,
+                backgroundColor: displayTrendTint,
+                flexShrink: 0,
               }}
             >
               {changeDisplay}
             </Text>
           </View>
+
+          {/* Recharts area chart */}
           <NetWorthSparkline
             points={graphData}
             trendColor={trendColor}
-            trendTint={trendTint}
+            onHover={setHovered}
+            onMouseLeave={() => setHovered(null)}
           />
+
+          {/* Assets / Debt breakdown */}
+          {displayPoint?.assets && (
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 16,
+                paddingTop: 8,
+                borderTop: `1px solid ${theme.tableBorder}`,
+              }}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                  <Trans>Assets</Trans>
+                </Text>
+                <Text
+                  style={{
+                    ...bodySm,
+                    color: theme.semanticSuccess,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {displayPoint.assets}
+                </Text>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                  <Trans>Debt</Trans>
+                </Text>
+                <Text
+                  style={{
+                    ...bodySm,
+                    color: theme.semanticError,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {displayPoint.debt}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       )}
     </DashboardPanel>
@@ -1765,6 +1837,9 @@ export function BudgetDashboardShell({
           display: 'grid',
           gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           gap: 12,
+          [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          },
         }}
       >
         <MetricCard
@@ -1845,6 +1920,9 @@ export function BudgetDashboardShell({
           display: 'grid',
           gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
           gap: 12,
+          [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+            gridTemplateColumns: '1fr',
+          },
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />

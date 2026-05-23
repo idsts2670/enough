@@ -37,6 +37,7 @@
     "#components/banksync/BuiltInProviders": "./src/components/banksync/BuiltInProviders.tsx",
     "#components/banksync/useBuiltInBankSyncProviders": "./src/components/banksync/useBuiltInBankSyncProviders.ts",
     "#components/banksync/useBankSyncAccountSettings": "./src/components/banksync/useBankSyncAccountSettings.ts",
+    "#components/analytics/ChartContainer": "./src/components/analytics/ChartContainer.tsx",
     "#components/analytics/*": "./src/components/analytics/*.ts",
     "#components/budget": "./src/components/budget/index.tsx",
     "#components/budget/goals/actions": "./src/components/budget/goals/actions.ts",
