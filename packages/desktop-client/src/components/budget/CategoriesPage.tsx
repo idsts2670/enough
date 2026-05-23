@@ -327,8 +327,22 @@ function CategoryOverview({
         </View>
         <View
           style={{
+            flexShrink: 0,
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            // auto-fit with minmax reflows based on container width, not
+            // viewport width. At ~294px content (sidebar present at 768px)
+            // this shows 1 column; at ≥440px it shows all 3. The explicit
+            // mobile breakpoint stacks to 1-col at ≤512px viewport as a
+            // safety net for very small screens.
+            //
+            // flexShrink: 0 prevents the outer flex column (the left card)
+            // from squeezing this grid below its natural height (~296px for
+            // 3 stacked cards). Without it, align-items:stretch on the
+            // parent 2-col grid constrains the left card to the right card's
+            // height (~276px), compressing the metrics grid to 164px and
+            // hiding the third summary card.
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
             gap: 10,
             [`@media (max-width: ${tokens.breakpoint_small})`]: {
               gridTemplateColumns: '1fr',
@@ -407,13 +421,19 @@ const categoryTableColumns =
   'minmax(0, 1fr) minmax(72px, 88px) minmax(120px, 0.5fr) minmax(72px, 88px)';
 const categoryTableCompactColumns =
   'minmax(0, 1fr) minmax(72px, 88px) minmax(72px, 88px)';
+// The Pace column is hidden and the table switches to compact columns when
+// the viewport is narrow. breakpoint_medium (730px) doesn't account for the
+// ~240px sidebar; at 768px the content area is only ~528px, which squeezes
+// the category-name column to single letters. 900px gives the Pace column
+// enough room (content ≥ 660px → category column ≥ 268px) before it appears.
+const tablePaceBreakpoint = '900px';
 const categoryTableResponsiveStyle = {
-  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+  [`@media (max-width: ${tablePaceBreakpoint})`]: {
     gridTemplateColumns: categoryTableCompactColumns,
   },
 };
 const paceColumnResponsiveStyle = {
-  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+  [`@media (max-width: ${tablePaceBreakpoint})`]: {
     display: 'none',
   },
 };
