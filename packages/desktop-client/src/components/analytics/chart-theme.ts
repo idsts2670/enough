@@ -35,3 +35,10 @@ export function useRechartsAnimation(defaults?: {
     animationDuration: defaults?.animationDuration,
   };
 }
+
+export function buildGradientId(
+  prefix: string,
+  variant: 'positive' | 'negative' | 'neutral' = 'positive',
+): string {
+  return `${prefix}-${variant}`;
+}
