@@ -1,6 +1,7 @@
 # Chart Conventions
 
 ## Stack (enforced)
+
 - Recharts v3 (`recharts@^3.8.1`) — already installed in packages/desktop-client
 - NO shadcn/ui, NO Tailwind, NO ResponsiveContainer
 - Styling: Emotion CSS via `style={}` objects + `View`/`Text` from `@actual-app/components`
@@ -28,6 +29,7 @@ import { ChartContainer } from '#components/analytics/ChartContainer';
 ```
 
 ## Colors
+
 - Line/area: `theme.semanticSuccess` (positive) or `theme.semanticError` (negative)
 - Multi-series: `getColorScale('qualitative')[N]` from `#components/analytics/chart-theme`
   - Returns CSS custom property strings like `'var(--color-chartQual1)'` — do NOT use `theme.chartQualN` (that key does not exist)
@@ -47,7 +49,7 @@ const [hovered, setHovered] = useState<Point | null>(null);
     if (data) setHovered(data);
     return '';
   }}
-/>
+/>;
 ```
 
 Reset on `onMouseLeave` of outer container: `setHovered(null)` (or reset to last data point).
@@ -55,6 +57,7 @@ Reset on `onMouseLeave` of outer container: `setHovered(null)` (or reset to last
 Render date + value in a `View`/`Text` block OUTSIDE the chart — this is the pattern used in `BalanceHistoryGraph.tsx`.
 
 ## Financial Formatting
+
 - `const format = useFormat()` then `format(value, 'financial')`
 - Pre-formatted strings on each data point (`networth`, `assets`, `debt`) — use them directly in tooltip display
 
@@ -88,9 +91,11 @@ const gradId = buildGradientId('netWorth', 'positive');
 ```
 
 ## Reference Implementation
+
 `packages/desktop-client/src/components/accounts/BalanceHistoryGraph.tsx`
 
 **Read this FIRST before writing any new chart code.** It is the only production Recharts component in the codebase and demonstrates:
+
 - AutoSizer sizing pattern
 - `contentStyle={{ display: 'none' }}` + `labelFormatter` → `setHoveredValue` hover scrubbing
 - Rendering hovered data outside the chart in `View`/`Text`
@@ -99,6 +104,7 @@ const gradId = buildGradientId('netWorth', 'positive');
 ## Net Worth Data Shape
 
 Each point from `net-worth-spreadsheet.ts` has:
+
 ```ts
 {
   x: string,      // formatted date label (e.g. "Jan '25")
@@ -113,6 +119,7 @@ Each point from `net-worth-spreadsheet.ts` has:
 ```
 
 ## Common Pitfalls
+
 - Never use `ResponsiveContainer` — it causes infinite resize loops with the app's layout
 - Never hardcode hex colors — always use `theme.*` tokens
 - Never import from `recharts` v2 memory (no `<Area dot={false} />` style guessing) — check BalanceHistoryGraph.tsx for real v3 API

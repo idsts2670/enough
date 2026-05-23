@@ -1,12 +1,11 @@
-import type { ReactNode } from 'react';
-
+import type { CSSProperties, ReactNode } from 'react';
 import { AutoSizer } from 'react-virtualized-auto-sizer';
 
 import { View } from '@actual-app/components/view';
 
 type ChartContainerProps = {
   minHeight?: number;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   children: (size: { width: number; height: number }) => ReactNode;
 };
 

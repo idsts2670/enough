@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -28,7 +28,13 @@ import type {
   ScheduleEntity,
 } from '@actual-app/core/types/models';
 import type { Locale } from 'date-fns';
+import { Area, AreaChart, Tooltip as RechartsTooltip } from 'recharts';
 
+import {
+  buildGradientId,
+  useRechartsAnimation,
+} from '#components/analytics/chart-theme';
+import { ChartContainer } from '#components/analytics/ChartContainer';
 import { createSpreadsheet as netWorthSpreadsheet } from '#components/analytics/net-worth-spreadsheet';
 import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
@@ -117,6 +123,9 @@ type NetWorthGraphPoint = {
   y: number;
   date?: string;
   networth?: string;
+  assets?: string;
+  debt?: string;
+  change?: string;
 };
 
 type AccountGroupKey =
@@ -433,71 +442,22 @@ function DashboardPanel({
 function NetWorthSparkline({
   points,
   trendColor,
-  trendTint,
-  hoverIndex,
-  onHoverChange,
+  onHover,
+  onMouseLeave,
 }: {
   points: NetWorthGraphPoint[];
   trendColor: string;
-  trendTint: string;
-  hoverIndex: number | null;
-  onHoverChange: (index: number | null) => void;
+  onHover: (point: NetWorthGraphPoint) => void;
+  onMouseLeave: () => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const animProps = useRechartsAnimation();
+  const gradId = buildGradientId('dashboard-networth', 'neutral');
 
-  const chart = useMemo(() => {
-    if (points.length < 2) {
-      return null;
-    }
-
-    const values = points.map(point => point.y);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const range = max - min || 1;
-    const width = 100;
-    const height = 60;
-    const xStep = width / (points.length - 1);
-    const normalized = points.map((point, index) => ({
-      x: index * xStep,
-      y: height - ((point.y - min) / range) * height,
-    }));
-    const linePath = normalized
-      .map(
-        (point, index) =>
-          `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
-      )
-      .join(' ');
-    const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
-
-    return {
-      areaPath,
-      linePath,
-      normalized,
-      endPoint: normalized[normalized.length - 1],
-      height,
-    };
-  }, [points]);
-
-  const onMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!containerRef.current || !chart) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const relX = (e.clientX - rect.left) / rect.width;
-      const idx = Math.round(relX * (points.length - 1));
-      onHoverChange(Math.min(Math.max(idx, 0), points.length - 1));
-    },
-    [chart, onHoverChange, points.length],
-  );
-
-  const onMouseLeave = useCallback(() => {
-    onHoverChange(null);
-  }, [onHoverChange]);
-
-  if (!chart) {
+  if (points.length < 2) {
     return (
       <View
         style={{
-          height: 140,
+          height: 120,
           justifyContent: 'center',
           alignItems: 'center',
         }}
@@ -509,78 +469,55 @@ function NetWorthSparkline({
     );
   }
 
-  const hoveredNorm =
-    hoverIndex !== null ? chart.normalized[hoverIndex] : null;
-  const isLastHovered = hoverIndex === points.length - 1;
-
   return (
-    <View
-      innerRef={containerRef}
-      style={{ height: 140, minWidth: 0, cursor: 'crosshair' }}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-    >
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        overflow="visible"
-        preserveAspectRatio="none"
-        viewBox={`0 0 100 ${chart.height}`}
-        style={{ display: 'block', width: '100%', height: '100%' }}
-      >
-        <path d={chart.areaPath} fill={trendTint} />
-        <path
-          d={chart.linePath}
-          fill="none"
-          stroke={trendColor}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2.5"
-          vectorEffect="non-scaling-stroke"
-        />
-
-        {/* Vertical crosshair at hover position */}
-        {hoveredNorm && (
-          <line
-            x1={hoveredNorm.x}
-            y1={0}
-            x2={hoveredNorm.x}
-            y2={chart.height}
+    <ChartContainer minHeight={120}>
+      {({ width, height }) => (
+        <AreaChart
+          width={width}
+          height={height}
+          data={points}
+          onMouseLeave={onMouseLeave}
+          margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+        >
+          <defs>
+            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={trendColor} stopOpacity={0.2} />
+              <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area
+            type="monotone"
+            dataKey="y"
             stroke={trendColor}
-            strokeWidth="1"
-            strokeDasharray="3 3"
-            opacity={0.35}
-            vectorEffect="non-scaling-stroke"
+            strokeWidth={2}
+            fill={`url(#${gradId})`}
+            dot={false}
+            activeDot={{
+              r: 4,
+              fill: trendColor,
+              stroke: theme.cardBackground,
+              strokeWidth: 2,
+            }}
+            {...animProps}
           />
-        )}
-
-        {/* Endpoint dot — filled; hidden while hovering that same point */}
-        {!isLastHovered && (
-          <circle
-            cx={chart.endPoint.x}
-            cy={chart.endPoint.y}
-            fill={trendColor}
-            r="3.5"
-            stroke={theme.cardBackground}
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
+          <RechartsTooltip
+            contentStyle={{ display: 'none' }}
+            isAnimationActive={false}
+            cursor={{
+              stroke: trendColor,
+              strokeWidth: 1,
+              strokeDasharray: '3 3',
+              strokeOpacity: 0.4,
+            }}
+            labelFormatter={(label, items) => {
+              const point = items[0]?.payload as NetWorthGraphPoint | undefined;
+              if (point) onHover(point);
+              return '';
+            }}
           />
-        )}
-
-        {/* Active dot at hovered position — slightly larger */}
-        {hoveredNorm && (
-          <circle
-            cx={hoveredNorm.x}
-            cy={hoveredNorm.y}
-            fill={trendColor}
-            r="4.5"
-            stroke={theme.cardBackground}
-            strokeWidth="2.5"
-            vectorEffect="non-scaling-stroke"
-          />
-        )}
-      </svg>
-    </View>
+        </AreaChart>
+      )}
+    </ChartContainer>
   );
 }
 
@@ -837,30 +774,41 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       : totalChange > 0
         ? theme.semanticSuccess
         : theme.pageTextSubdued;
-  const trendTint =
-    totalChange < 0
+
+  const [hovered, setHovered] = useState<NetWorthGraphPoint | null>(null);
+
+  const displayNetWorthStr = hovered?.networth
+    ? hovered.networth
+    : format(data?.netWorth ?? 0, 'financial');
+
+  const displayDate = hovered?.date ?? null;
+
+  const displayChange = hovered
+    ? hovered.y - (graphData[0]?.y ?? 0)
+    : totalChange;
+
+  const displayTrendColor =
+    displayChange < 0
+      ? theme.semanticError
+      : displayChange > 0
+        ? theme.semanticSuccess
+        : theme.pageTextSubdued;
+
+  const displayTrendTint =
+    displayChange < 0
       ? theme.semanticErrorSoft
-      : totalChange > 0
+      : displayChange > 0
         ? theme.semanticSuccessSoft
         : theme.surfaceSubtle;
 
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const hoveredPoint =
-    hoverIndex !== null ? (graphData[hoverIndex] ?? null) : null;
-
-  const displayNetWorthStr = hoveredPoint?.networth
-    ? hoveredPoint.networth
-    : format(data?.netWorth ?? 0, 'financial');
-
-  const displaySubtitle = hoveredPoint?.date ?? null;
-
-  const displayChange = hoveredPoint
-    ? hoveredPoint.y - (graphData[0]?.y ?? 0)
-    : totalChange;
   const changeDisplay =
     displayChange > 0
       ? `+${format(displayChange, 'financial')}`
       : format(displayChange, 'financial');
+
+  // Point shown in assets/debt breakdown — hovered point or latest
+  const displayPoint =
+    hovered ?? (graphData.length > 0 ? graphData[graphData.length - 1] : null);
 
   return (
     <DashboardPanel
@@ -874,6 +822,7 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
         </Text>
       ) : (
         <View style={{ gap: 12 }}>
+          {/* Metric row: large net worth + change badge */}
           <View
             style={{
               flexDirection: 'row',
@@ -882,35 +831,78 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
               alignItems: 'flex-start',
             }}
           >
-            <View style={{ gap: 4 }}>
+            <View style={{ gap: 2 }}>
               <Text style={{ ...metricValue, color: theme.pageText }}>
                 {displayNetWorthStr}
               </Text>
-              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                {displaySubtitle ?? <Trans>current net worth</Trans>}
+              <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                {displayDate ?? <Trans>current net worth</Trans>}
               </Text>
             </View>
             <Text
               style={{
                 ...bodyStrong,
                 ...tabularFigure,
-                color: trendColor,
+                color: displayTrendColor,
                 textAlign: 'right',
-                padding: '4px 8px',
+                padding: '3px 8px',
                 borderRadius: 9999,
-                backgroundColor: trendTint,
+                backgroundColor: displayTrendTint,
+                flexShrink: 0,
               }}
             >
               {changeDisplay}
             </Text>
           </View>
+
+          {/* Recharts area chart */}
           <NetWorthSparkline
             points={graphData}
             trendColor={trendColor}
-            trendTint={trendTint}
-            hoverIndex={hoverIndex}
-            onHoverChange={setHoverIndex}
+            onHover={setHovered}
+            onMouseLeave={() => setHovered(null)}
           />
+
+          {/* Assets / Debt breakdown */}
+          {displayPoint?.assets && (
+            <View
+              style={{
+                flexDirection: 'row',
+                gap: 16,
+                paddingTop: 8,
+                borderTop: `1px solid ${theme.tableBorder}`,
+              }}
+            >
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                  <Trans>Assets</Trans>
+                </Text>
+                <Text
+                  style={{
+                    ...bodySm,
+                    color: theme.semanticSuccess,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {displayPoint.assets}
+                </Text>
+              </View>
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                  <Trans>Debt</Trans>
+                </Text>
+                <Text
+                  style={{
+                    ...bodySm,
+                    color: theme.semanticError,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {displayPoint.debt}
+                </Text>
+              </View>
+            </View>
+          )}
         </View>
       )}
     </DashboardPanel>
