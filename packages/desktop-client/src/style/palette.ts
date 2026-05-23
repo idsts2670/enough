@@ -84,8 +84,8 @@ export const hover = '#fafafa';
 export const border = '#e8ecf0';
 export const selected = '#b3d9ff';
 
-// Enough brand tokens, adapted from the installed ElevenLabs-inspired
-// DESIGN.md: off-white editorial canvas, warm ink, subtle hairlines.
+// Enough brand tokens aligned to the current app-ui DESIGN.md.
+// Warm canvas, ink-first text, subtle hairlines.
 export const enoughInk = '#0c0a09';
 export const enoughPrimary = '#292524';
 export const enoughBody = '#4e4e4e';
@@ -94,8 +94,8 @@ export const enoughMutedSoft = '#a8a29e';
 export const enoughHairline = '#e7e5e4';
 export const enoughHairlineSoft = '#f0efed';
 export const enoughHairlineStrong = '#d6d3d1';
-export const enoughCanvas = '#f5f5f5';
-export const enoughCanvasSoft = '#fafafa';
+export const enoughCanvas = '#f8f7f4';
+export const enoughCanvasSoft = '#fbfaf8';
 export const enoughSurfaceSubtle = '#f3f2ef';
 export const enoughSurfaceStrong = '#f0efed';
 export const enoughSemanticSuccess = '#15803D';

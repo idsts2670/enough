@@ -1,27 +1,36 @@
 // @ts-strict-ignore
-import React, { useEffect, useEffectEvent, useMemo, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import {
+  SvgAdd,
   SvgCalendar,
+  SvgCheveronDown,
   SvgCheveronLeft,
   SvgCheveronRight,
+  SvgDotsHorizontalTriple,
 } from '@actual-app/components/icons/v1';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { tokens } from '@actual-app/components/tokens';
 import {
+  bodyMd,
   bodySm,
   bodyStrong,
   caption,
-  display2xl,
   displayLg,
   metricValue,
   tableCellAmount,
-  titleMd,
 } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
@@ -29,8 +38,18 @@ import * as monthUtils from '@actual-app/core/shared/months';
 import type {
   CategoryEntity,
   CategoryGroupEntity,
+  NoteEntity,
 } from '@actual-app/core/types/models';
 
+import {
+  useBudgetActions,
+  useCreateCategoryGroupMutation,
+  useCreateCategoryMutation,
+  useDeleteCategoryGroupMutation,
+  useDeleteCategoryMutation,
+  useSaveCategoryGroupMutation,
+  useSaveCategoryMutation,
+} from '#budget';
 import { useCategories } from '#hooks/useCategories';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
@@ -40,6 +59,8 @@ import { SheetNameProvider } from '#hooks/useSheetName';
 import { useSheetValue } from '#hooks/useSheetValue';
 import { useSpreadsheet } from '#hooks/useSpreadsheet';
 import { useSyncedPref } from '#hooks/useSyncedPref';
+import { collapseModals, pushModal } from '#modals/modalsSlice';
+import { useDispatch } from '#redux';
 import type { SheetFields } from '#spreadsheet';
 import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
 
@@ -63,8 +84,7 @@ function getVisibleCategories(group: CategoryGroupEntity): CategoryEntity[] {
 function getVisibleGroups(groups: CategoryGroupEntity[]): CategoryGroupView[] {
   return groups
     .filter(group => !group.hidden && !group.tombstone)
-    .map(group => ({ ...group, categories: getVisibleCategories(group) }))
-    .filter(group => group.categories.length > 0);
+    .map(group => ({ ...group, categories: getVisibleCategories(group) }));
 }
 
 function formatMonthRange(startMonth: string, locale) {
@@ -190,34 +210,26 @@ function CategoryMonthControls({
 function CategorySummaryCard({
   label,
   value,
-  detail,
   color = theme.pageText,
 }: {
   label: ReactNode;
   value: ReactNode;
-  detail?: ReactNode;
   color?: string;
 }) {
   return (
     <View
       style={{
-        gap: 6,
         minWidth: 0,
-        minHeight: 96,
+        minHeight: 92,
         padding: 16,
         borderRadius: 12,
-        justifyContent: 'space-between',
-        overflow: 'hidden',
+        justifyContent: 'center',
+        gap: 8,
         backgroundColor: theme.surfaceSubtle,
       }}
     >
       <Text style={{ ...caption, color: theme.pageTextSubdued }}>{label}</Text>
       <Text style={{ ...metricValue, color }}>{value}</Text>
-      {detail ? (
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          {detail}
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -253,7 +265,8 @@ function CategoryOverview({
         display: 'grid',
         gridTemplateColumns: 'minmax(0, 1.2fr) minmax(220px, 0.8fr)',
         gap: 14,
-        [`@media (max-width: ${tokens.breakpoint_small})`]: {
+        alignItems: 'stretch',
+        [`@media (max-width: ${tokens.breakpoint_medium})`]: {
           gridTemplateColumns: '1fr',
         },
       }}
@@ -261,6 +274,7 @@ function CategoryOverview({
       <View
         style={{
           padding: 24,
+          minHeight: 220,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           boxShadow: `0 18px 50px ${theme.tableBorder}`,
@@ -314,31 +328,23 @@ function CategoryOverview({
         <View
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gridTemplateColumns:
+              'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
             gap: 10,
           }}
         >
           <CategorySummaryCard
             label={<Trans>Spent</Trans>}
             value={format(spent, 'financial')}
-            detail={<Trans>this month</Trans>}
           />
           <CategorySummaryCard
             label={<Trans>Budgeted</Trans>}
             value={format(budgeted, 'financial')}
-            detail={<Trans>planned</Trans>}
           />
           <CategorySummaryCard
             label={remainingLabel}
             value={format(Math.abs(remaining), 'financial')}
             color={remainingColor}
-            detail={
-              remaining < 0 ? (
-                <Trans>over budget</Trans>
-              ) : (
-                <Trans>remaining</Trans>
-              )
-            }
           />
         </View>
       </View>
@@ -346,6 +352,7 @@ function CategoryOverview({
       <View
         style={{
           padding: 24,
+          minHeight: 220,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           gap: 18,
@@ -394,85 +401,212 @@ function CategoryOverview({
   );
 }
 
+const categoryTableColumns =
+  'minmax(0, 1fr) minmax(72px, 88px) minmax(120px, 0.5fr) minmax(72px, 88px)';
+const categoryTableCompactColumns =
+  'minmax(0, 1fr) minmax(72px, 88px) minmax(72px, 88px)';
+const categoryTableResponsiveStyle = {
+  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+    gridTemplateColumns: categoryTableCompactColumns,
+  },
+};
+const paceColumnResponsiveStyle = {
+  [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+    display: 'none',
+  },
+};
+
 function AmountCell({
   value,
   muted = false,
   color,
+  role = 'cell',
+  showDash = false,
 }: {
   value: number;
   muted?: boolean;
   color?: string;
+  role?: 'cell' | 'columnheader';
+  showDash?: boolean;
 }) {
   const format = useFormat();
 
   return (
     <Text
+      role={role}
       style={{
         ...tableCellAmount,
+        minWidth: 72,
         color: color ?? (muted ? theme.pageTextSubdued : theme.pageText),
+        textAlign: 'right',
+        whiteSpace: 'nowrap',
       }}
     >
-      {format(Math.abs(value), 'financial')}
+      {showDash ? '-' : format(Math.abs(value), 'financial')}
     </Text>
   );
 }
 
-function ProgressBar({
+function PaceCell({
   color,
-  opacity = 1,
   value,
+  show = true,
 }: {
   color: string;
-  opacity?: number;
   value: number;
+  show?: boolean;
 }) {
-  const width = `${Math.min(Math.max(value, 0), 1) * 100}%`;
+  const clampedValue = Math.min(Math.max(value, 0), 1);
+  const percentage = Math.round(value * 100);
+  const ariaValue = Math.max(0, percentage);
 
   return (
     <View
-      role="meter"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={Math.round(Math.min(Math.max(value, 0), 1) * 100)}
+      role="cell"
       style={{
-        height: 6,
         minWidth: 80,
-        flex: 1,
-        borderRadius: 9999,
-        backgroundColor: theme.surfaceSubtle,
-        overflow: 'hidden',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: 8,
       }}
     >
-      <View
-        style={{
-          width,
-          height: '100%',
-          borderRadius: 9999,
-          backgroundColor: color,
-          opacity,
-        }}
-      />
+      {show ? (
+        <>
+          <View
+            role="meter"
+            aria-valuemin={0}
+            aria-valuemax={Math.max(100, ariaValue)}
+            aria-valuenow={ariaValue}
+            aria-valuetext={`${percentage}%`}
+            style={{
+              height: 6,
+              minWidth: 44,
+              flex: 1,
+              borderRadius: 9999,
+              backgroundColor: theme.surfaceSubtle,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: `${clampedValue * 100}%`,
+                height: '100%',
+                borderRadius: 9999,
+                backgroundColor: color,
+              }}
+            />
+          </View>
+          <Text
+            style={{
+              ...caption,
+              minWidth: 36,
+              color: theme.pageTextSubdued,
+              textAlign: 'right',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {percentage}%
+          </Text>
+        </>
+      ) : null}
     </View>
   );
 }
 
-const categoryToneOpacities = [0.72, 0.84, 0.96, 1];
+function CategoryColorDot({
+  color,
+  size = 8,
+}: {
+  color: string;
+  size?: number;
+}) {
+  return (
+    <View
+      aria-hidden
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        borderRadius: 9999,
+        backgroundColor: color,
+      }}
+    />
+  );
+}
 
-function getCategoryTone(index: number) {
-  return categoryToneOpacities[index % categoryToneOpacities.length];
+function RowGrid({
+  children,
+  role = 'row',
+  style,
+}: {
+  children: ReactNode;
+  role?: 'row';
+  style?: Record<string, unknown>;
+}) {
+  return (
+    <View
+      role={role}
+      style={{
+        width: '100%',
+        display: 'grid',
+        gridTemplateColumns: categoryTableColumns,
+        alignItems: 'center',
+        columnGap: 16,
+        minHeight: 44,
+        padding: '0 24px',
+        borderBottom: `1px solid ${theme.tableBorder}`,
+        [`@media (max-width: ${tokens.breakpoint_small})`]: {
+          columnGap: 10,
+          padding: '0 12px',
+        },
+        ...categoryTableResponsiveStyle,
+        ...style,
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+
+function RowActionButton({
+  label,
+  children,
+  onPress,
+}: {
+  label: string;
+  children: ReactNode;
+  onPress: () => void;
+}) {
+  return (
+    <Button
+      variant="bare"
+      aria-label={label}
+      onPress={onPress}
+      style={{
+        width: 28,
+        height: 28,
+        minHeight: 0,
+        padding: 4,
+        color: theme.pageTextSubdued,
+      }}
+    >
+      {children}
+    </Button>
+  );
 }
 
 function CategoryRow({
   budgetType,
   category,
   groupName,
-  index,
+  onOpenCategoryMenu,
   startMonth,
 }: {
   budgetType: BudgetType;
   category: CategoryEntity;
   groupName: string;
-  index: number;
+  onOpenCategoryMenu: (categoryId: CategoryEntity['id']) => void;
   startMonth: string;
 }) {
   const navigate = useNavigate();
@@ -489,86 +623,72 @@ function CategoryRow({
   );
   const budgetedAmount = Math.abs(budgeted ?? 0);
   const spentAmount = Math.abs(spent ?? 0);
-  const progress =
-    budgetedAmount > 0
-      ? Math.min(Math.max(spentAmount / budgetedAmount, 0), 1)
-      : spentAmount > 0
-        ? 1
-        : 0;
+  const hasBudget = budgetedAmount > 0;
+  const isOverspent = hasBudget && spentAmount > budgetedAmount;
+  const progress = hasBudget
+    ? Math.min(Math.max(spentAmount / budgetedAmount, 0), 1)
+    : 0;
   const categoryColor = getCategoryColor(groupName);
-  const toneOpacity = getCategoryTone(index);
 
   return (
-    <Button
-      variant="bare"
-      aria-label={t('View {{name}} activity', { name: category.name })}
-      onPress={() =>
-        navigate('/accounts', {
-          state: {
-            goBack: true,
-            filterConditions: [
-              {
-                field: 'category',
-                op: 'is',
-                value: category.id,
-                type: 'id',
-              },
-              {
-                field: 'date',
-                op: 'is',
-                value: startMonth,
-                options: { month: true },
-                type: 'date',
-              },
-            ],
-            categoryId: category.id,
-          },
-        })
-      }
+    <RowGrid
       style={{
-        width: '100%',
-        minHeight: 0,
-        justifyContent: 'stretch',
-        padding: 0,
-        color: theme.pageText,
+        backgroundColor: theme.tableBackground,
       }}
     >
       <View
+        role="cell"
         style={{
-          width: '100%',
-          display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
+          minWidth: 0,
+          flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
-          padding: '8px 10px',
-          borderRadius: 8,
-          backgroundColor: theme.tableBackground,
+          paddingLeft: 20,
+          [`@media (max-width: ${tokens.breakpoint_small})`]: {
+            gap: 8,
+            paddingLeft: 12,
+          },
         }}
       >
-        <View
+        <CategoryColorDot color={categoryColor.color} size={7} />
+        <Button
+          variant="bare"
+          aria-label={t('View {{name}} activity', { name: category.name })}
+          onPress={() =>
+            navigate('/accounts', {
+              state: {
+                goBack: true,
+                filterConditions: [
+                  {
+                    field: 'category',
+                    op: 'is',
+                    value: category.id,
+                    type: 'id',
+                  },
+                  {
+                    field: 'date',
+                    op: 'is',
+                    value: startMonth,
+                    options: { month: true },
+                    type: 'date',
+                  },
+                ],
+                categoryId: category.id,
+              },
+            })
+          }
           style={{
+            flex: 1,
             minWidth: 0,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
+            justifyContent: 'flex-start',
+            padding: 0,
+            color: theme.pageText,
           }}
         >
-          <View
-            aria-hidden
-            style={{
-              width: 7,
-              height: 7,
-              flexShrink: 0,
-              borderRadius: 9999,
-              backgroundColor: categoryColor.color,
-              opacity: toneOpacity,
-            }}
-          />
           <Text
             title={category.name}
             style={{
-              ...bodyStrong,
+              ...bodyMd,
               minWidth: 0,
               color: theme.pageText,
               overflow: 'hidden',
@@ -578,28 +698,49 @@ function CategoryRow({
           >
             {category.name}
           </Text>
-        </View>
-        <AmountCell value={spentAmount} muted={spentAmount === 0} />
-        <ProgressBar
-          color={categoryColor.color}
-          opacity={toneOpacity}
-          value={progress}
-        />
-        <AmountCell value={budgetedAmount} muted={budgetedAmount === 0} />
+        </Button>
+        <RowActionButton
+          label={t('Manage {{name}} category', { name: category.name })}
+          onPress={() => onOpenCategoryMenu(category.id)}
+        >
+          <SvgDotsHorizontalTriple width={14} height={14} />
+        </RowActionButton>
       </View>
-    </Button>
+      <AmountCell
+        value={spentAmount}
+        muted={spentAmount === 0}
+        color={isOverspent ? theme.semanticError : undefined}
+      />
+      <View style={paceColumnResponsiveStyle}>
+        <PaceCell
+          color={isOverspent ? theme.semanticError : theme.semanticSuccess}
+          value={progress}
+          show={hasBudget}
+        />
+      </View>
+      <AmountCell
+        value={budgetedAmount}
+        muted={!hasBudget}
+        showDash={!hasBudget}
+      />
+    </RowGrid>
   );
 }
 
-function CategoryGroupSection({
+function CategoryGroupRow({
   budgetType,
   group,
-  startMonth,
+  isCollapsed,
+  onOpenCategoryGroupMenu,
+  onToggle,
 }: {
   budgetType: BudgetType;
   group: CategoryGroupView;
-  startMonth: string;
+  isCollapsed: boolean;
+  onOpenCategoryGroupMenu: (groupId: CategoryGroupEntity['id']) => void;
+  onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const groupColor = getCategoryColor(group.name);
   const groupBudgeted = Math.abs(
     useBudgetValue(
@@ -615,126 +756,171 @@ function CategoryGroupSection({
       trackingBudget.groupSumAmount(group.id),
     ) ?? 0,
   );
-  const progress =
-    groupBudgeted > 0
-      ? Math.min(Math.max(groupSpent / groupBudgeted, 0), 1)
-      : groupSpent > 0
-        ? 1
-        : 0;
+  const hasBudget = groupBudgeted > 0;
+  const isOverspent = hasBudget && groupSpent > groupBudgeted;
+  const progress = hasBudget
+    ? Math.min(Math.max(groupSpent / groupBudgeted, 0), 1)
+    : 0;
 
   return (
-    <View
+    <RowGrid
       style={{
-        gap: 8,
-        padding: 14,
-        borderRadius: 14,
-        backgroundColor: groupColor.tint,
+        backgroundColor: theme.surfaceSubtle,
       }}
     >
       <View
+        role="rowheader"
         style={{
-          display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
+          minWidth: 0,
+          flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
-          padding: '0 10px',
         }}
       >
-        <View
+        <Button
+          variant="bare"
+          aria-expanded={!isCollapsed}
+          aria-label={t('Toggle {{name}} categories', { name: group.name })}
+          onPress={onToggle}
           style={{
-            minWidth: 0,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
+            width: 20,
+            height: 28,
+            minHeight: 0,
+            padding: 0,
+            color: theme.pageTextSubdued,
           }}
         >
-          <View
-            aria-hidden
-            style={{
-              width: 7,
-              height: 7,
-              flexShrink: 0,
-              borderRadius: 9999,
-              backgroundColor: groupColor.color,
-            }}
-          />
-          <Text
-            title={group.name}
-            style={{
-              ...titleMd,
-              minWidth: 0,
-              color: theme.pageText,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {group.name}
-          </Text>
-          <Text
-            style={{
-              ...caption,
-              color: groupColor.color,
-              padding: '2px 7px',
-              borderRadius: 9999,
-              backgroundColor: theme.tableBackground,
-            }}
-          >
-            {group.categories.length}
-          </Text>
-        </View>
-        <AmountCell value={groupSpent} />
-        <ProgressBar color={groupColor.color} value={progress} />
-        <AmountCell value={groupBudgeted} />
+          {isCollapsed ? (
+            <SvgCheveronRight
+              width={12}
+              height={12}
+              style={{ color: theme.pageTextSubdued }}
+            />
+          ) : (
+            <SvgCheveronDown
+              width={12}
+              height={12}
+              style={{ color: theme.pageTextSubdued }}
+            />
+          )}
+        </Button>
+        <CategoryColorDot color={groupColor.color} />
+        <Text
+          title={group.name}
+          style={{
+            ...bodyStrong,
+            minWidth: 0,
+            color: theme.pageText,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {group.name}
+        </Text>
+        <Text
+          style={{
+            ...caption,
+            color: groupColor.color,
+            padding: '2px 7px',
+            borderRadius: 9999,
+            backgroundColor: theme.tableBackground,
+          }}
+        >
+          {group.categories.length}
+        </Text>
+        <RowActionButton
+          label={t('Manage {{name}} category group', { name: group.name })}
+          onPress={() => onOpenCategoryGroupMenu(group.id)}
+        >
+          <SvgDotsHorizontalTriple width={14} height={14} />
+        </RowActionButton>
       </View>
-      <View style={{ gap: 6 }}>
-        {group.categories.map((category, index) => (
-          <CategoryRow
-            key={category.id}
-            budgetType={budgetType}
-            category={category}
-            groupName={group.name}
-            index={index}
-            startMonth={startMonth}
-          />
-        ))}
+      <AmountCell
+        value={groupSpent}
+        color={isOverspent ? theme.semanticError : undefined}
+      />
+      <View style={paceColumnResponsiveStyle}>
+        <PaceCell
+          color={isOverspent ? theme.semanticError : theme.semanticSuccess}
+          value={progress}
+          show={hasBudget}
+        />
       </View>
-    </View>
+      <AmountCell
+        value={groupBudgeted}
+        muted={!hasBudget}
+        showDash={!hasBudget}
+      />
+    </RowGrid>
   );
 }
 
 function CategoryListPanel({
   budgetType,
   groups,
+  onAddCategoryGroup,
+  onOpenCategoryGroupMenu,
+  onOpenCategoryMenu,
   startMonth,
 }: {
   budgetType: BudgetType;
   groups: CategoryGroupView[];
+  onAddCategoryGroup: () => void;
+  onOpenCategoryGroupMenu: (groupId: CategoryGroupEntity['id']) => void;
+  onOpenCategoryMenu: (categoryId: CategoryEntity['id']) => void;
   startMonth: string;
 }) {
+  const [collapsedGroupIds = [], setCollapsedGroupIdsPref] =
+    useLocalPref('budget.collapsed');
+
+  function onToggleGroup(groupId: string) {
+    setCollapsedGroupIdsPref(
+      collapsedGroupIds.includes(groupId)
+        ? collapsedGroupIds.filter(id => id !== groupId)
+        : [...collapsedGroupIds, groupId],
+    );
+  }
+
   return (
     <View
+      role="table"
       style={{
         borderRadius: 16,
         backgroundColor: theme.tableBackground,
-        overflow: 'hidden',
+        marginTop: 8,
+        overflow: 'visible',
+        border: `1px solid ${theme.tableBorder}`,
       }}
     >
       <View
+        role="row"
         style={{
           display: 'grid',
-          gridTemplateColumns:
-            'minmax(150px, 1.4fr) minmax(72px, 0.4fr) minmax(104px, 0.8fr) minmax(72px, 0.4fr)',
-          gap: 10,
-          padding: '16px 26px 12px',
-          backgroundColor: theme.pageBackground,
+          gridTemplateColumns: categoryTableColumns,
+          columnGap: 16,
+          minHeight: 44,
+          padding: '0 24px',
+          alignItems: 'center',
+          backgroundColor: theme.tableBackground,
+          position: 'sticky',
+          top: 48,
+          zIndex: 2,
+          borderBottom: `1px solid ${theme.tableBorder}`,
+          [`@media (max-width: ${tokens.breakpoint_small})`]: {
+            position: 'static',
+          },
+          ...categoryTableResponsiveStyle,
         }}
       >
-        <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+        <Text
+          role="columnheader"
+          style={{ ...caption, color: theme.pageTextSubdued }}
+        >
           <Trans>Category</Trans>
         </Text>
         <Text
+          role="columnheader"
           style={{
             ...caption,
             color: theme.pageTextSubdued,
@@ -743,10 +929,18 @@ function CategoryListPanel({
         >
           <Trans>Spent</Trans>
         </Text>
-        <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+        <Text
+          role="columnheader"
+          style={{
+            ...caption,
+            color: theme.pageTextSubdued,
+            ...paceColumnResponsiveStyle,
+          }}
+        >
           <Trans>Pace</Trans>
         </Text>
         <Text
+          role="columnheader"
           style={{
             ...caption,
             color: theme.pageTextSubdued,
@@ -756,109 +950,73 @@ function CategoryListPanel({
           <Trans>Budget</Trans>
         </Text>
       </View>
-      <View style={{ gap: 10, padding: 12 }}>
-        {groups.map(group => (
-          <CategoryGroupSection
-            key={group.id}
-            budgetType={budgetType}
-            group={group}
-            startMonth={startMonth}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
+      <View
+        style={{
+          width: '100%',
+        }}
+      >
+        {groups.length === 0 ? (
+          <View
+            style={{
+              minHeight: 220,
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 16,
+              padding: 24,
+            }}
+          >
+            <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+              <Trans>No categories yet</Trans>
+            </Text>
+            <Button variant="primary" onPress={onAddCategoryGroup}>
+              <Trans>Add group</Trans>
+            </Button>
+          </View>
+        ) : (
+          groups.map(group => {
+            const isCollapsed = collapsedGroupIds.includes(group.id);
 
-function CategorySidePanel({
-  groups,
-  monthLabel,
-}: {
-  groups: CategoryGroupView[];
-  monthLabel: string;
-}) {
-  return (
-    <View
-      style={{
-        gap: 14,
-        padding: 22,
-        borderRadius: 16,
-        backgroundColor: theme.tableBackground,
-        alignSelf: 'start',
-        position: 'sticky',
-        top: 16,
-      }}
-    >
-      <View style={{ gap: 4 }}>
-        <Text style={{ ...displayLg, color: theme.pageText }}>
-          <Trans>Regular categories</Trans>
-        </Text>
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          {monthLabel}
-        </Text>
-      </View>
-      <View style={{ gap: 8 }}>
-        {groups.map(group => {
-          const groupColor = getCategoryColor(group.name);
-          return (
-            <View
-              key={group.id}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 6,
-                padding: '7px 10px',
-                borderRadius: 10,
-                backgroundColor: groupColor.tint,
-              }}
-            >
-              <View
-                style={{
-                  minWidth: 0,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <View
-                  aria-hidden
-                  style={{
-                    width: 7,
-                    height: 7,
-                    flexShrink: 0,
-                    borderRadius: 9999,
-                    backgroundColor: groupColor.color,
-                  }}
+            return (
+              <Fragment key={group.id}>
+                <CategoryGroupRow
+                  budgetType={budgetType}
+                  group={group}
+                  isCollapsed={isCollapsed}
+                  onOpenCategoryGroupMenu={onOpenCategoryGroupMenu}
+                  onToggle={() => onToggleGroup(group.id)}
                 />
-                <Text
-                  title={group.name}
-                  style={{
-                    ...caption,
-                    color: groupColor.color,
-                    minWidth: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {group.name}
-                </Text>
-              </View>
-              <Text style={{ ...caption, color: groupColor.color }}>
-                {group.categories.length}
-              </Text>
-            </View>
-          );
-        })}
+                {!isCollapsed &&
+                  group.categories.map(category => (
+                    <CategoryRow
+                      key={category.id}
+                      budgetType={budgetType}
+                      category={category}
+                      groupName={group.name}
+                      onOpenCategoryMenu={onOpenCategoryMenu}
+                      startMonth={startMonth}
+                    />
+                  ))}
+              </Fragment>
+            );
+          })
+        )}
       </View>
     </View>
   );
 }
 
 export function Categories() {
+  const { t } = useTranslation();
   const currentMonth = monthUtils.currentMonth();
+  const dispatch = useDispatch();
   const spreadsheet = useSpreadsheet();
+  const applyBudgetAction = useBudgetActions();
+  const createCategoryGroup = useCreateCategoryGroupMutation();
+  const createCategory = useCreateCategoryMutation();
+  const saveCategoryGroup = useSaveCategoryGroupMutation();
+  const saveCategory = useSaveCategoryMutation();
+  const deleteCategoryGroup = useDeleteCategoryGroupMutation();
+  const deleteCategory = useDeleteCategoryMutation();
   const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
   const startMonth = startMonthPref || currentMonth;
   const [budgetTypePref = 'envelope'] = useSyncedPref('budgetType');
@@ -868,8 +1026,12 @@ export function Categories() {
     start: string;
     end: string;
   } | null>(null);
-  const { data: { grouped: categoryGroups } = { grouped: [] } } =
-    useCategories();
+  const {
+    data: { list: categories, grouped: categoryGroups } = {
+      list: [],
+      grouped: [],
+    },
+  } = useCategories();
   const locale = useLocale();
   const monthLabel = formatMonthRange(startMonth, locale);
 
@@ -880,6 +1042,246 @@ export function Categories() {
   const visibleCategoryCount = visibleGroups.reduce(
     (count, group) => count + group.categories.length,
     0,
+  );
+
+  const onOpenNewCategoryGroupModal = useCallback(() => {
+    dispatch(
+      pushModal({
+        modal: {
+          name: 'new-category-group',
+          options: {
+            onValidate: name => (!name ? t('Name is required.') : null),
+            onSubmit: async name => {
+              createCategoryGroup.mutate({ name });
+            },
+          },
+        },
+      }),
+    );
+  }, [createCategoryGroup, dispatch, t]);
+
+  const onOpenNewCategoryModal = useCallback(
+    (
+      groupId: CategoryGroupEntity['id'],
+      isIncome: CategoryGroupEntity['is_income'],
+    ) => {
+      dispatch(
+        pushModal({
+          modal: {
+            name: 'new-category',
+            options: {
+              onValidate: name => (!name ? t('Name is required.') : null),
+              onSubmit: async name => {
+                createCategory.mutate(
+                  {
+                    name,
+                    groupId,
+                    isIncome,
+                    isHidden: false,
+                  },
+                  {
+                    onSettled: () => {
+                      dispatch(
+                        collapseModals({
+                          rootModalName: 'category-group-menu',
+                        }),
+                      );
+                    },
+                  },
+                );
+              },
+            },
+          },
+        }),
+      );
+    },
+    [createCategory, dispatch, t],
+  );
+
+  const onSaveGroup = useCallback(
+    (group: CategoryGroupEntity) => {
+      saveCategoryGroup.mutate({ group });
+    },
+    [saveCategoryGroup],
+  );
+
+  const onDeleteGroup = useCallback(
+    (groupId: CategoryGroupEntity['id']) => {
+      deleteCategoryGroup.mutate(
+        { id: groupId },
+        {
+          onSettled: () => {
+            dispatch(collapseModals({ rootModalName: 'category-group-menu' }));
+          },
+        },
+      );
+    },
+    [deleteCategoryGroup, dispatch],
+  );
+
+  const onToggleGroupVisibility = useCallback(
+    (groupId: CategoryGroupEntity['id']) => {
+      const group = categoryGroups.find(g => g.id === groupId);
+      if (!group) {
+        return;
+      }
+      onSaveGroup({ ...group, hidden: !group.hidden });
+      dispatch(collapseModals({ rootModalName: 'category-group-menu' }));
+    },
+    [categoryGroups, dispatch, onSaveGroup],
+  );
+
+  const onSaveCategory = useCallback(
+    (category: CategoryEntity) => {
+      saveCategory.mutate({ category });
+    },
+    [saveCategory],
+  );
+
+  const onDeleteCategory = useCallback(
+    (categoryId: CategoryEntity['id']) => {
+      deleteCategory.mutate(
+        { id: categoryId },
+        {
+          onSettled: () => {
+            dispatch(collapseModals({ rootModalName: 'category-menu' }));
+          },
+        },
+      );
+    },
+    [deleteCategory, dispatch],
+  );
+
+  const onToggleCategoryVisibility = useCallback(
+    (categoryId: CategoryEntity['id']) => {
+      const category = categories.find(c => c.id === categoryId);
+      if (!category) {
+        return;
+      }
+      onSaveCategory({ ...category, hidden: !category.hidden });
+      dispatch(collapseModals({ rootModalName: 'category-menu' }));
+    },
+    [categories, dispatch, onSaveCategory],
+  );
+
+  const onSaveNotes = useCallback(
+    async (id: NoteEntity['id'], notes: string) => {
+      await send('notes-save', { id, note: notes });
+    },
+    [],
+  );
+
+  const onOpenCategoryGroupNotesModal = useCallback(
+    (id: NoteEntity['id']) => {
+      const group = categoryGroups.find(g => g.id === id);
+      if (!group) {
+        return;
+      }
+      dispatch(
+        pushModal({
+          modal: {
+            name: 'notes',
+            options: {
+              id,
+              name: group.name,
+              onSave: onSaveNotes,
+            },
+          },
+        }),
+      );
+    },
+    [categoryGroups, dispatch, onSaveNotes],
+  );
+
+  const onOpenCategoryNotesModal = useCallback(
+    (id: NoteEntity['id']) => {
+      const category = categories.find(c => c.id === id);
+      if (!category) {
+        return;
+      }
+      dispatch(
+        pushModal({
+          modal: {
+            name: 'notes',
+            options: {
+              id,
+              name: category.name,
+              onSave: onSaveNotes,
+            },
+          },
+        }),
+      );
+    },
+    [categories, dispatch, onSaveNotes],
+  );
+
+  const onApplyBudgetTemplatesInGroup = useCallback(
+    async (categoryIds: CategoryEntity['id'][]) => {
+      applyBudgetAction.mutate({
+        month: startMonth,
+        type: 'apply-multiple-templates',
+        args: {
+          categories: categoryIds,
+        },
+      });
+    },
+    [applyBudgetAction, startMonth],
+  );
+
+  const onOpenCategoryGroupMenuModal = useCallback(
+    (groupId: CategoryGroupEntity['id']) => {
+      dispatch(
+        pushModal({
+          modal: {
+            name: 'category-group-menu',
+            options: {
+              groupId,
+              onSave: onSaveGroup,
+              onAddCategory: onOpenNewCategoryModal,
+              onEditNotes: onOpenCategoryGroupNotesModal,
+              onDelete: onDeleteGroup,
+              onToggleVisibility: onToggleGroupVisibility,
+              onApplyBudgetTemplatesInGroup,
+            },
+          },
+        }),
+      );
+    },
+    [
+      dispatch,
+      onApplyBudgetTemplatesInGroup,
+      onDeleteGroup,
+      onOpenCategoryGroupNotesModal,
+      onOpenNewCategoryModal,
+      onSaveGroup,
+      onToggleGroupVisibility,
+    ],
+  );
+
+  const onOpenCategoryMenuModal = useCallback(
+    (categoryId: CategoryEntity['id']) => {
+      dispatch(
+        pushModal({
+          modal: {
+            name: 'category-menu',
+            options: {
+              categoryId,
+              onSave: onSaveCategory,
+              onEditNotes: onOpenCategoryNotesModal,
+              onDelete: onDeleteCategory,
+              onToggleVisibility: onToggleCategoryVisibility,
+            },
+          },
+        }),
+      );
+    },
+    [
+      dispatch,
+      onDeleteCategory,
+      onOpenCategoryNotesModal,
+      onSaveCategory,
+      onToggleCategoryVisibility,
+    ],
   );
 
   const init = useEffectEvent(() => {
@@ -942,33 +1344,68 @@ export function Categories() {
             width: '100%',
             maxWidth: 1480,
             alignSelf: 'center',
-            gap: 16,
+            gap: 24,
           }}
         >
           <View
             style={{
+              minHeight: 48,
               flexDirection: 'row',
-              alignItems: 'flex-end',
+              alignItems: 'center',
               justifyContent: 'space-between',
-              gap: 20,
-              flexWrap: 'wrap',
+              gap: 16,
+              position: 'sticky',
+              top: 0,
+              zIndex: 3,
+              backgroundColor: theme.pageBackground,
+              [`@media (max-width: ${tokens.breakpoint_small})`]: {
+                alignItems: 'stretch',
+                flexDirection: 'column',
+              },
             }}
           >
-            <View style={{ gap: 4 }}>
-              <Text style={{ ...display2xl, color: theme.pageTextDark }}>
-                <Trans>Categories</Trans>
-              </Text>
-              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                {monthLabel}
-              </Text>
-            </View>
-            <CategoryMonthControls
-              startMonth={startMonth}
-              bounds={budgetBounds}
-              onMonthSelect={month => {
-                void onMonthSelect(month);
+            <Text style={{ ...displayLg, color: theme.pageTextDark }}>
+              <Trans>Categories</Trans>
+            </Text>
+            <View
+              style={{
+                alignItems: 'flex-end',
+                [`@media (max-width: ${tokens.breakpoint_small})`]: {
+                  alignItems: 'stretch',
+                },
               }}
-            />
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 10,
+                  [`@media (max-width: ${tokens.breakpoint_small})`]: {
+                    alignItems: 'stretch',
+                    flexDirection: 'column',
+                  },
+                }}
+              >
+                <CategoryMonthControls
+                  startMonth={startMonth}
+                  bounds={budgetBounds}
+                  onMonthSelect={month => {
+                    void onMonthSelect(month);
+                  }}
+                />
+                <Button
+                  variant="primary"
+                  aria-label={t('Add category group')}
+                  onPress={onOpenNewCategoryGroupModal}
+                  style={{
+                    gap: 8,
+                  }}
+                >
+                  <SvgAdd width={12} height={12} />
+                  <Trans>Add group</Trans>
+                </Button>
+              </View>
+            </View>
           </View>
 
           <CategoryOverview
@@ -978,24 +1415,14 @@ export function Categories() {
             categoryCount={visibleCategoryCount}
           />
 
-          <View
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(320px, 0.34fr)',
-              gap: 16,
-              alignItems: 'start',
-              [`@media (max-width: ${tokens.breakpoint_small})`]: {
-                gridTemplateColumns: '1fr',
-              },
-            }}
-          >
-            <CategoryListPanel
-              budgetType={budgetType}
-              groups={visibleGroups}
-              startMonth={startMonth}
-            />
-            <CategorySidePanel groups={visibleGroups} monthLabel={monthLabel} />
-          </View>
+          <CategoryListPanel
+            budgetType={budgetType}
+            groups={visibleGroups}
+            onAddCategoryGroup={onOpenNewCategoryGroupModal}
+            onOpenCategoryGroupMenu={onOpenCategoryGroupMenuModal}
+            onOpenCategoryMenu={onOpenCategoryMenuModal}
+            startMonth={startMonth}
+          />
         </View>
       </View>
     </SheetNameProvider>
