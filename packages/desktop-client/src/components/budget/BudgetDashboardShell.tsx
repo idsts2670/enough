@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -115,6 +115,8 @@ type ReviewTransactionRow = {
 type NetWorthGraphPoint = {
   x: string;
   y: number;
+  date?: string;
+  networth?: string;
 };
 
 type AccountGroupKey =
@@ -432,11 +434,17 @@ function NetWorthSparkline({
   points,
   trendColor,
   trendTint,
+  hoverIndex,
+  onHoverChange,
 }: {
   points: NetWorthGraphPoint[];
   trendColor: string;
   trendTint: string;
+  hoverIndex: number | null;
+  onHoverChange: (index: number | null) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const chart = useMemo(() => {
     if (points.length < 2) {
       return null;
@@ -447,19 +455,16 @@ function NetWorthSparkline({
     const max = Math.max(...values);
     const range = max - min || 1;
     const width = 100;
-    const height = 48;
+    const height = 60;
     const xStep = width / (points.length - 1);
-    const normalized = points.map((point, index) => {
-      const x = index * xStep;
-      const y = height - ((point.y - min) / range) * height;
-      return { x, y };
-    });
+    const normalized = points.map((point, index) => ({
+      x: index * xStep,
+      y: height - ((point.y - min) / range) * height,
+    }));
     const linePath = normalized
       .map(
         (point, index) =>
-          `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(
-            2,
-          )}`,
+          `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
       )
       .join(' ');
     const areaPath = `${linePath} L ${width} ${height} L 0 ${height} Z`;
@@ -467,15 +472,32 @@ function NetWorthSparkline({
     return {
       areaPath,
       linePath,
+      normalized,
       endPoint: normalized[normalized.length - 1],
+      height,
     };
   }, [points]);
+
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!containerRef.current || !chart) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const relX = (e.clientX - rect.left) / rect.width;
+      const idx = Math.round(relX * (points.length - 1));
+      onHoverChange(Math.min(Math.max(idx, 0), points.length - 1));
+    },
+    [chart, onHoverChange, points.length],
+  );
+
+  const onMouseLeave = useCallback(() => {
+    onHoverChange(null);
+  }, [onHoverChange]);
 
   if (!chart) {
     return (
       <View
         style={{
-          height: 92,
+          height: 140,
           justifyContent: 'center',
           alignItems: 'center',
         }}
@@ -487,14 +509,23 @@ function NetWorthSparkline({
     );
   }
 
+  const hoveredNorm =
+    hoverIndex !== null ? chart.normalized[hoverIndex] : null;
+  const isLastHovered = hoverIndex === points.length - 1;
+
   return (
-    <View style={{ height: 92, minWidth: 0 }}>
+    <View
+      innerRef={containerRef}
+      style={{ height: 140, minWidth: 0, cursor: 'crosshair' }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+    >
       <svg
         aria-hidden="true"
         focusable="false"
         overflow="visible"
         preserveAspectRatio="none"
-        viewBox="0 0 100 48"
+        viewBox={`0 0 100 ${chart.height}`}
         style={{ display: 'block', width: '100%', height: '100%' }}
       >
         <path d={chart.areaPath} fill={trendTint} />
@@ -504,18 +535,50 @@ function NetWorthSparkline({
           stroke={trendColor}
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth="2.75"
+          strokeWidth="2.5"
           vectorEffect="non-scaling-stroke"
         />
-        <circle
-          cx={chart.endPoint.x}
-          cy={chart.endPoint.y}
-          fill={theme.cardBackground}
-          r="2.8"
-          stroke={trendColor}
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
+
+        {/* Vertical crosshair at hover position */}
+        {hoveredNorm && (
+          <line
+            x1={hoveredNorm.x}
+            y1={0}
+            x2={hoveredNorm.x}
+            y2={chart.height}
+            stroke={trendColor}
+            strokeWidth="1"
+            strokeDasharray="3 3"
+            opacity={0.35}
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+
+        {/* Endpoint dot — filled; hidden while hovering that same point */}
+        {!isLastHovered && (
+          <circle
+            cx={chart.endPoint.x}
+            cy={chart.endPoint.y}
+            fill={trendColor}
+            r="3.5"
+            stroke={theme.cardBackground}
+            strokeWidth="2"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
+
+        {/* Active dot at hovered position — slightly larger */}
+        {hoveredNorm && (
+          <circle
+            cx={hoveredNorm.x}
+            cy={hoveredNorm.y}
+            fill={trendColor}
+            r="4.5"
+            stroke={theme.cardBackground}
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        )}
       </svg>
     </View>
   );
@@ -780,10 +843,24 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
       : totalChange > 0
         ? theme.semanticSuccessSoft
         : theme.surfaceSubtle;
+
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const hoveredPoint =
+    hoverIndex !== null ? (graphData[hoverIndex] ?? null) : null;
+
+  const displayNetWorthStr = hoveredPoint?.networth
+    ? hoveredPoint.networth
+    : format(data?.netWorth ?? 0, 'financial');
+
+  const displaySubtitle = hoveredPoint?.date ?? null;
+
+  const displayChange = hoveredPoint
+    ? hoveredPoint.y - (graphData[0]?.y ?? 0)
+    : totalChange;
   const changeDisplay =
-    totalChange > 0
-      ? `+${format(totalChange, 'financial')}`
-      : format(totalChange, 'financial');
+    displayChange > 0
+      ? `+${format(displayChange, 'financial')}`
+      : format(displayChange, 'financial');
 
   return (
     <DashboardPanel
@@ -796,7 +873,7 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
           <Trans>Loading</Trans>
         </Text>
       ) : (
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 12 }}>
           <View
             style={{
               flexDirection: 'row',
@@ -805,12 +882,12 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
               alignItems: 'flex-start',
             }}
           >
-            <View style={{ gap: 6 }}>
+            <View style={{ gap: 4 }}>
               <Text style={{ ...metricValue, color: theme.pageText }}>
-                {format(data?.netWorth ?? 0, 'financial')}
+                {displayNetWorthStr}
               </Text>
               <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                <Trans>current net worth</Trans>
+                {displaySubtitle ?? <Trans>current net worth</Trans>}
               </Text>
             </View>
             <Text
@@ -831,6 +908,8 @@ function NetWorthDashboardCard({ budgetMonth }: { budgetMonth: string }) {
             points={graphData}
             trendColor={trendColor}
             trendTint={trendTint}
+            hoverIndex={hoverIndex}
+            onHoverChange={setHoverIndex}
           />
         </View>
       )}
