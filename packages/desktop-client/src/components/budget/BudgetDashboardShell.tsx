@@ -5,6 +5,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import { tokens } from '@actual-app/components/tokens';
 import {
   bodySm,
   bodyStrong,
@@ -1836,6 +1837,9 @@ export function BudgetDashboardShell({
           display: 'grid',
           gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           gap: 12,
+          [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          },
         }}
       >
         <MetricCard
@@ -1916,6 +1920,9 @@ export function BudgetDashboardShell({
           display: 'grid',
           gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
           gap: 12,
+          [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+            gridTemplateColumns: '1fr',
+          },
         }}
       >
         <MonthlySpendingCard budgetType={budgetType} monthLabel={monthLabel} />
