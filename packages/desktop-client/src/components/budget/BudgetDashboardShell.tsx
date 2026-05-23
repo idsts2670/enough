@@ -492,6 +492,7 @@ function NetWorthSparkline({
       <svg
         aria-hidden="true"
         focusable="false"
+        overflow="visible"
         preserveAspectRatio="none"
         viewBox="0 0 100 48"
         style={{ display: 'block', width: '100%', height: '100%' }}
@@ -658,10 +659,9 @@ function MonthlySpendingContent({
   const format = useFormat();
   const remaining = budgeted - Math.abs(spent);
   const isOverBudget = remaining < 0;
-  const progressColor =
-    budgeted > 0 && Math.abs(spent) > budgeted
-      ? theme.semanticError
-      : theme.semanticSuccess;
+  const progressColor = isOverBudget
+    ? theme.semanticError
+    : theme.semanticSuccess;
   const remainingDisplay = format(Math.abs(remaining), 'financial');
   const graphLabel = isOverBudget
     ? t('{{amount}} over', { amount: remainingDisplay })
