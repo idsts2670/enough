@@ -328,8 +328,7 @@ function CategoryOverview({
         <View
           style={{
             display: 'grid',
-            gridTemplateColumns:
-              'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: 10,
           }}
         >
