@@ -330,6 +330,9 @@ function CategoryOverview({
             display: 'grid',
             gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: 10,
+            [`@media (max-width: ${tokens.breakpoint_small})`]: {
+              gridTemplateColumns: '1fr',
+            },
           }}
         >
           <CategorySummaryCard
@@ -903,7 +906,10 @@ function CategoryListPanel({
           alignItems: 'center',
           backgroundColor: theme.tableBackground,
           position: 'sticky',
-          top: 48,
+          // 48px sticky title bar + 24px gap = 72px; the extra 24px ensures the
+          // header doesn't start sticking while the overview cards are still
+          // visible (which caused them to be visually covered during scroll).
+          top: 72,
           zIndex: 2,
           borderBottom: `1px solid ${theme.tableBorder}`,
           [`@media (max-width: ${tokens.breakpoint_small})`]: {
@@ -1335,6 +1341,17 @@ export function Categories() {
           backgroundColor: theme.pageBackground,
           [`@media (min-width: ${tokens.breakpoint_small})`]: {
             paddingTop: 24,
+          },
+          // styles.page sets minHeight:700 at max-height:550px to "ensure
+          // scrollability on small screens". On this page that backfires:
+          // a 700px container in a <700px viewport creates two nested scroll
+          // contexts, breaking position:sticky. We already have overflowY:auto
+          // so the internal scroll is sufficient — override the minHeight.
+          '@media (max-height: 550px)': {
+            minHeight: 0,
+          },
+          [`@media (max-width: ${tokens.breakpoint_small})`]: {
+            padding: '16px 16px 24px',
           },
         }}
       >
