@@ -6,7 +6,7 @@ Status: approved and transcribed into `DESIGN.md`. F1–F4 patch applied 2026-05
 
 ## Changelog vs PLAN.md spec (recorded after design-review)
 
-- **Canvas color.** PLAN.md spec said keep legacy `#f5f5f5`. New `DESIGN.md` uses `#f8f7f4` (slightly warmer). All contrast tables in this file were computed against the legacy `#f5f5f5`; the new canvas yields equal or higher contrast (improves accessibility, no regression).
+- **Canvas color.** PLAN.md spec said keep legacy `#f5f5f5`. New `DESIGN.md` uses `#f8f7f4` (slightly warmer). The shipped palette is now aligned to `#f8f7f4` / `#fbfaf8`. All contrast tables in this file were originally computed against the legacy `#f5f5f5`; the warmer canvas yields equal or higher contrast (improves accessibility, no regression).
 - **Spacing scale.** Added `xxxl: 48px` (PLAN.md spec required it; was missing in first draft). Removed `xxxs: 2px` (unused). Added semantic aliases `page: 32px` (= xxl) and `section: 48px` (= xxxl).
 - **Dead tokens removed.** `surface-raised` (duplicate of `surface`).
 - **Dead tokens activated.** `display-2xl` is now used by the new `page-header` component. `ink-strong` is now referenced from `page-header`.
