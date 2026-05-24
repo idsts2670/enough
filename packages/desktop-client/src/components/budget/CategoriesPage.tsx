@@ -262,17 +262,32 @@ function CategoryOverview({
   return (
     <View
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.2fr) minmax(220px, 0.8fr)',
+        // Use flex-row instead of CSS Grid: a CSS Grid container inside a
+        // flex column has a browser quirk where its own track height (220 px)
+        // is ignored when the flex parent computes item sizes, collapsing the
+        // grid to the right card's content height (~149 px) and letting the
+        // left card overflow into the table below. Flex-row propagates item
+        // heights correctly in all cases.
+        //
+        // flexShrink: 0 prevents the outer flex column (the page-level
+        // content stack) from compressing this overview section below its
+        // natural height. Without it the outer column distributes any
+        // height-deficit across items here, pushing the left card's metrics
+        // down into the table.
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'row',
         gap: 14,
         alignItems: 'stretch',
         [`@media (max-width: ${tokens.breakpoint_medium})`]: {
-          gridTemplateColumns: '1fr',
+          flexDirection: 'column',
         },
       }}
     >
       <View
         style={{
+          flex: '1.2 1 0',
+          minWidth: 0,
           padding: 24,
           minHeight: 220,
           borderRadius: 16,
@@ -327,20 +342,16 @@ function CategoryOverview({
         </View>
         <View
           style={{
+            // flexShrink: 0 prevents this inner grid from being compressed
+            // when the left card is stretched taller than its natural content
+            // height (e.g., when align-items:stretch forces it to match the
+            // right card). Without it the flex column distributes excess
+            // height by shrinking this grid.
             flexShrink: 0,
             display: 'grid',
             // auto-fit with minmax reflows based on container width, not
-            // viewport width. At ~294px content (sidebar present at 768px)
-            // this shows 1 column; at ≥440px it shows all 3. The explicit
-            // mobile breakpoint stacks to 1-col at ≤512px viewport as a
-            // safety net for very small screens.
-            //
-            // flexShrink: 0 prevents the outer flex column (the left card)
-            // from squeezing this grid below its natural height (~296px for
-            // 3 stacked cards). Without it, align-items:stretch on the
-            // parent 2-col grid constrains the left card to the right card's
-            // height (~276px), compressing the metrics grid to 164px and
-            // hiding the third summary card.
+            // viewport width. At ~294px (sidebar present at 768 px viewport)
+            // this shows 1 column; at ≥440 px it shows all 3.
             gridTemplateColumns:
               'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
             gap: 10,
@@ -367,6 +378,8 @@ function CategoryOverview({
 
       <View
         style={{
+          flex: '0.8 1 0',
+          minWidth: 220,
           padding: 24,
           minHeight: 220,
           borderRadius: 16,
