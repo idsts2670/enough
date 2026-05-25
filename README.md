@@ -43,6 +43,91 @@ When prompted for a server URL, enter `http://localhost:5006`.
 
 See `.env.example` for all available options.
 
+## Always-on via macOS launchd (optional)
+
+Instead of running `yarn personal:start` every time, you can register the production server as a macOS login item. It starts silently on login, restarts on crash, and serves the app at `http://localhost:5006` — no terminal window needed.
+
+**One-time build** (run once, and again after pulling updates):
+
+```bash
+yarn workspace @actual-app/sync-server build
+yarn build:browser
+```
+
+**Create the plist** at `~/Library/LaunchAgents/com.enough.budget.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.enough.budget</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/node</string>
+    <string>/ABSOLUTE/PATH/TO/enough/packages/sync-server/build/app.js</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NODE_ENV</key>        <string>production</string>
+    <key>PLAID_CLIENT_ID</key> <string>YOUR_PLAID_CLIENT_ID</string>
+    <key>PLAID_SECRET</key>    <string>YOUR_PLAID_SECRET</string>
+    <key>PLAID_ENV</key>       <string>production</string>
+  </dict>
+
+  <key>RunAtLoad</key>  <true/>
+  <key>KeepAlive</key>  <true/>
+  <key>ThrottleInterval</key> <integer>10</integer>
+
+  <key>StandardOutPath</key> <string>/tmp/enough-server.log</string>
+  <key>StandardErrorPath</key> <string>/tmp/enough-server.err</string>
+</dict>
+</plist>
+```
+
+Replace `/ABSOLUTE/PATH/TO/enough` with the real path (e.g. `$(pwd)` from the repo root).
+
+> **Security note:** The plist stores your Plaid credentials in plaintext. Lock it down:
+> ```bash
+> chmod 600 ~/Library/LaunchAgents/com.enough.budget.plist
+> ```
+> Never commit or share this file.
+
+**Load it:**
+
+```bash
+plutil ~/Library/LaunchAgents/com.enough.budget.plist   # validate
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.enough.budget.plist
+```
+
+**Verify:**
+
+```bash
+curl http://localhost:5006/health   # should return {"status":"UP"}
+```
+
+**Day-to-day commands:**
+
+```bash
+# View logs
+tail -f /tmp/enough-server.log
+
+# Stop / start manually
+launchctl stop  com.enough.budget
+launchctl start com.enough.budget
+
+# After pulling updates and rebuilding
+launchctl kickstart -k gui/$(id -u)/com.enough.budget
+
+# Remove the daemon entirely
+launchctl bootout gui/$(id -u)/com.enough.budget
+rm ~/Library/LaunchAgents/com.enough.budget.plist
+```
+
 ## Development
 
 ```bash

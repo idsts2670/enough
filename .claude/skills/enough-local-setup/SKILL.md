@@ -77,6 +77,67 @@ PLAID_ENV=production
 
 The script also accepts an outer workspace `.env` at `../.env`, which is useful when this repo lives under `money-tracker/`.
 
+## Always-on Daemon (macOS launchd)
+
+The production server can run as a login-item daemon instead of via `yarn personal:start`. When set up, the app is always available at `http://localhost:5006` without any terminal window.
+
+### Plist location
+
+```
+~/Library/LaunchAgents/com.enough.budget.plist
+```
+
+The plist calls `/opt/homebrew/bin/node` directly with `NODE_ENV=production` and the three Plaid env vars embedded. It is `chmod 600` — never print or log its contents.
+
+### Build before starting the daemon
+
+The daemon runs the compiled output, not the dev server. Rebuild whenever code changes:
+
+```bash
+yarn workspace @actual-app/sync-server build   # compiles to packages/sync-server/build/
+yarn build:browser                             # compiles to packages/desktop-client/build/
+```
+
+The sync-server resolves `@actual-app/web/build` automatically via the Yarn workspace symlink, so both builds are picked up without any extra config.
+
+### Managing the daemon
+
+```bash
+# Health check
+curl http://localhost:5006/health   # → {"status":"UP"}
+
+# Logs
+tail -f /tmp/enough-server.log
+tail -f /tmp/enough-server.err
+
+# Stop / start without unloading
+launchctl stop  com.enough.budget
+launchctl start com.enough.budget
+
+# Force-restart after a rebuild (kills the running process and relaunches)
+launchctl kickstart -k gui/$(id -u)/com.enough.budget
+
+# Check state and last exit code
+launchctl print gui/$(id -u)/com.enough.budget | grep -E "state|pid|last exit"
+
+# Remove the daemon entirely
+launchctl bootout gui/$(id -u)/com.enough.budget
+rm ~/Library/LaunchAgents/com.enough.budget.plist
+```
+
+### When to rebuild and restart
+
+| Situation | Action |
+|---|---|
+| Pulled new sync-server code | `yarn workspace @actual-app/sync-server build` + kickstart |
+| Pulled new UI code | `yarn build:browser` + kickstart |
+| Changed Plaid credentials | Edit plist (never commit it), then kickstart |
+| Daemon not responding | Check `enough-server.err`, then kickstart |
+
+### macOS TCC note
+
+launchd agents cannot read files in `~/Documents/` without Full Disk Access. That is why the plist uses `EnvironmentVariables` directly (lives in `~/Library/LaunchAgents/`, outside TCC) rather than sourcing the `.env` file at runtime.
+
 ## Troubleshooting
 
 If Enough shows a `SharedArrayBuffer` fatal error in an embedded browser but works in Chrome, Chrome is the source of truth.
