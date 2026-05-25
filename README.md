@@ -35,11 +35,11 @@ When prompted for a server URL, enter `http://localhost:5006`.
 
 ## Environment
 
-| Key | Description |
-|-----|-------------|
-| `PLAID_CLIENT_ID` | Your Plaid app client ID |
-| `PLAID_SECRET` | Plaid secret for the target environment |
-| `PLAID_ENV` | `sandbox`, `development`, or `production` |
+| Key               | Description                               |
+| ----------------- | ----------------------------------------- |
+| `PLAID_CLIENT_ID` | Your Plaid app client ID                  |
+| `PLAID_SECRET`    | Plaid secret for the target environment   |
+| `PLAID_ENV`       | `sandbox`, `development`, or `production` |
 
 See `.env.example` for all available options.
 
@@ -56,13 +56,13 @@ All yarn commands must run from the repository root.
 
 ## Tech Stack
 
-| Layer | Tech |
-|-------|------|
-| UI | React + TypeScript, Emotion CSS |
-| Build | Vite, Yarn 4 workspaces, lage |
-| Storage | SQLite via better-sqlite3 |
-| Sync | Custom CRDT sync server (Express) |
-| Bank data | Plaid API |
+| Layer     | Tech                              |
+| --------- | --------------------------------- |
+| UI        | React + TypeScript, Emotion CSS   |
+| Build     | Vite, Yarn 4 workspaces, lage     |
+| Storage   | SQLite via better-sqlite3         |
+| Sync      | Custom CRDT sync server (Express) |
+| Bank data | Plaid API                         |
 
 ## Notes
 
