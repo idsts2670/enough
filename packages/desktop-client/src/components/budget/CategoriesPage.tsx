@@ -5,6 +5,7 @@ import {
   useEffect,
   useEffectEvent,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
@@ -67,7 +68,6 @@ import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
 
 import { getCategoryColor } from './categoryColors';
 import { CategorySpendingDonut } from './CategorySpendingDonut';
-import type { GroupForDonut } from './CategorySpendingDonut';
 import { prewarmAllMonths, prewarmMonth } from './util';
 
 type BudgetType = 'envelope' | 'tracking';
@@ -76,6 +76,19 @@ type TrackingBudgetField = SheetFields<'tracking-budget'>;
 
 type CategoryGroupView = CategoryGroupEntity & {
   categories: CategoryEntity[];
+};
+
+type BudgetSuggestion = {
+  categoryId: CategoryEntity['id'];
+  categoryName: CategoryEntity['name'];
+  groupName: CategoryGroupEntity['name'];
+  spent: number;
+  budgeted: number;
+};
+
+type BudgetSuggestionApplication = {
+  categoryId: CategoryEntity['id'];
+  amount: number;
 };
 
 function getVisibleCategories(group: CategoryGroupEntity): CategoryEntity[] {
@@ -128,6 +141,45 @@ function useBudgetSummaryValues(budgetType: BudgetType) {
     budgeted,
     remaining: budgeted - spent,
   };
+}
+
+function BudgetSuggestionCollector({
+  budgetType,
+  category,
+  groupName,
+  onReport,
+}: {
+  budgetType: BudgetType;
+  category: CategoryEntity;
+  groupName: string;
+  onReport: (suggestion: BudgetSuggestion) => void;
+}) {
+  const rawBudgeted = useBudgetValue(
+    budgetType,
+    envelopeBudget.catBudgeted(category.id),
+    trackingBudget.catBudgeted(category.id),
+  );
+  const rawSpent = useBudgetValue(
+    budgetType,
+    envelopeBudget.catSumAmount(category.id),
+    trackingBudget.catSumAmount(category.id),
+  );
+  const budgeted = Math.abs(rawBudgeted ?? 0);
+  const spent = Math.abs(rawSpent ?? 0);
+  const onReportRef = useRef(onReport);
+  onReportRef.current = onReport;
+
+  useEffect(() => {
+    onReportRef.current({
+      categoryId: category.id,
+      categoryName: category.name,
+      groupName,
+      spent,
+      budgeted,
+    });
+  }, [budgeted, category.id, category.name, groupName, spent]);
+
+  return null;
 }
 
 function CategoryMonthControls({
@@ -244,16 +296,61 @@ function CategoryOverview({
   categoryCount,
   visibleGroups,
   excludedGroupIds,
+  isApplyingBudgetSuggestions,
+  onApplyBudgetSuggestions,
 }: {
   budgetType: BudgetType;
   monthLabel: string;
   groupCount: number;
   categoryCount: number;
-  visibleGroups: GroupForDonut[];
+  visibleGroups: CategoryGroupView[];
   excludedGroupIds: string[];
+  isApplyingBudgetSuggestions: boolean;
+  onApplyBudgetSuggestions: (
+    suggestions: BudgetSuggestionApplication[],
+  ) => void;
 }) {
   const format = useFormat();
   const { spent, budgeted, remaining } = useBudgetSummaryValues(budgetType);
+  const [suggestionMap, setSuggestionMap] = useState<
+    Record<string, BudgetSuggestion>
+  >({});
+  const reportSuggestion = useCallback((suggestion: BudgetSuggestion) => {
+    setSuggestionMap(prev => {
+      const current = prev[suggestion.categoryId];
+      if (
+        current &&
+        current.spent === suggestion.spent &&
+        current.budgeted === suggestion.budgeted &&
+        current.categoryName === suggestion.categoryName &&
+        current.groupName === suggestion.groupName
+      ) {
+        return prev;
+      }
+
+      return { ...prev, [suggestion.categoryId]: suggestion };
+    });
+  }, []);
+  const budgetSuggestions = useMemo(() => {
+    return visibleGroups
+      .filter(group => !group.is_income)
+      .flatMap(group =>
+        group.categories
+          .map(category => suggestionMap[category.id])
+          .filter(
+            (suggestion): suggestion is BudgetSuggestion =>
+              suggestion != null &&
+              suggestion.spent > 0 &&
+              suggestion.budgeted === 0,
+          ),
+      )
+      .sort((left, right) => right.spent - left.spent);
+  }, [suggestionMap, visibleGroups]);
+  const suggestedBudgetTotal = budgetSuggestions.reduce(
+    (sum, suggestion) => sum + suggestion.spent,
+    0,
+  );
+  const largestSuggestion = budgetSuggestions[0];
   const remainingColor =
     remaining < 0
       ? theme.semanticError
@@ -288,32 +385,78 @@ function CategoryOverview({
         },
       }}
     >
+      {visibleGroups.flatMap(group =>
+        group.categories.map(category => (
+          <BudgetSuggestionCollector
+            key={category.id}
+            budgetType={budgetType}
+            category={category}
+            groupName={group.name}
+            onReport={reportSuggestion}
+          />
+        )),
+      )}
       <View
         style={{
-          flex: '1.2 1 0',
+          flex: '1.35 1 0',
           minWidth: 0,
           padding: 24,
-          minHeight: 220,
+          minHeight: 260,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           boxShadow: `0 18px 50px ${theme.tableBorder}`,
-          gap: 22,
+          gap: 20,
         }}
       >
-        <View style={{ gap: 4 }}>
-          <Text style={{ ...displayLg, color: theme.pageText }}>
-            <Trans>Category plan</Trans>
-          </Text>
-          <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-            {monthLabel}
-          </Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 24,
+            [`@media (max-width: ${tokens.breakpoint_small})`]: {
+              flexDirection: 'column',
+              alignItems: 'stretch',
+            },
+          }}
+        >
+          <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
+            <View style={{ gap: 4 }}>
+              <Text style={{ ...displayLg, color: theme.pageText }}>
+                <Trans>Category plan</Trans>
+              </Text>
+              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+                {monthLabel}
+              </Text>
+            </View>
+            <View style={{ gap: 2 }}>
+              <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+                <Trans>Suggested budget</Trans>
+              </Text>
+              <Text style={{ ...metricValue, color: theme.pageText }}>
+                {format(suggestedBudgetTotal, 'financial')}
+              </Text>
+              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+                {budgetSuggestions.length > 0 ? (
+                  <Trans>
+                    Based on categories with spending and no budget target.
+                  </Trans>
+                ) : (
+                  <Trans>
+                    Active spending categories already have targets.
+                  </Trans>
+                )}
+              </Text>
+            </View>
+          </View>
+
+          <CategorySpendingDonut
+            budgetType={budgetType}
+            groups={visibleGroups}
+            excludedGroupIds={excludedGroupIds}
+          />
         </View>
 
-        <CategorySpendingDonut
-          budgetType={budgetType}
-          groups={visibleGroups}
-          excludedGroupIds={excludedGroupIds}
-        />
         <View
           style={{
             // flexShrink: 0 prevents this inner grid from being compressed
@@ -325,7 +468,7 @@ function CategoryOverview({
             display: 'grid',
             // auto-fit with minmax reflows based on container width, not
             // viewport width. At ~294px (sidebar present at 768 px viewport)
-            // this shows 1 column; at ≥440 px it shows all 3.
+            // this shows 1 column; at >=440 px it shows all 3.
             gridTemplateColumns:
               'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
             gap: 10,
@@ -348,14 +491,71 @@ function CategoryOverview({
             color={remainingColor}
           />
         </View>
+
+        <View
+          style={{
+            flexShrink: 0,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            padding: 14,
+            borderRadius: 8,
+            border: `1px solid ${theme.tableBorder}`,
+            backgroundColor: theme.surfaceSubtle,
+            [`@media (max-width: ${tokens.breakpoint_small})`]: {
+              alignItems: 'stretch',
+              flexDirection: 'column',
+            },
+          }}
+        >
+          <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+            <Text style={{ ...bodyStrong, color: theme.pageText }}>
+              <Trans>Budget setup</Trans>
+            </Text>
+            <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+              {budgetSuggestions.length > 0 && largestSuggestion ? (
+                <>
+                  {budgetSuggestions.length}{' '}
+                  <Trans>active categories need targets.</Trans>{' '}
+                  <Trans>Largest:</Trans> {largestSuggestion.categoryName}
+                </>
+              ) : (
+                <Trans>
+                  No active spending category needs a suggested target.
+                </Trans>
+              )}
+            </Text>
+          </View>
+          <Button
+            variant="primary"
+            isDisabled={
+              budgetSuggestions.length === 0 || isApplyingBudgetSuggestions
+            }
+            onPress={() =>
+              onApplyBudgetSuggestions(
+                budgetSuggestions.map(suggestion => ({
+                  categoryId: suggestion.categoryId,
+                  amount: suggestion.spent,
+                })),
+              )
+            }
+          >
+            {isApplyingBudgetSuggestions ? (
+              <Trans>Applying</Trans>
+            ) : (
+              <Trans>Apply suggestions</Trans>
+            )}
+          </Button>
+        </View>
       </View>
 
       <View
         style={{
-          flex: '0.8 1 0',
+          flex: '0.65 1 0',
           minWidth: 220,
           padding: 24,
-          minHeight: 220,
+          minHeight: 260,
           borderRadius: 16,
           backgroundColor: theme.tableBackground,
           gap: 18,
@@ -396,6 +596,20 @@ function CategoryOverview({
             </Text>
             <Text style={{ ...metricValue, color: theme.pageText }}>
               {categoryCount}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ ...bodyStrong, color: theme.pageTextSubdued }}>
+              <Trans>Needs targets</Trans>
+            </Text>
+            <Text style={{ ...metricValue, color: theme.pageText }}>
+              {budgetSuggestions.length}
             </Text>
           </View>
         </View>
@@ -637,7 +851,7 @@ function CategoryRow({
   const progress = hasBudget
     ? Math.min(Math.max(spentAmount / budgetedAmount, 0), 1)
     : 0;
-  const categoryColor = getCategoryColor(groupName);
+  const categoryColor = getCategoryColor(groupName, category.name);
 
   return (
     <RowGrid
@@ -1286,6 +1500,24 @@ export function Categories() {
     [applyBudgetAction, startMonth],
   );
 
+  const onApplyBudgetSuggestions = useCallback(
+    (suggestions: BudgetSuggestionApplication[]) => {
+      void (async () => {
+        for (const suggestion of suggestions) {
+          await applyBudgetAction.mutateAsync({
+            month: startMonth,
+            type: 'budget-amount',
+            args: {
+              category: suggestion.categoryId,
+              amount: suggestion.amount,
+            },
+          });
+        }
+      })();
+    },
+    [applyBudgetAction, startMonth],
+  );
+
   const onOpenCategoryGroupMenuModal = useCallback(
     (groupId: CategoryGroupEntity['id']) => {
       dispatch(
@@ -1491,6 +1723,8 @@ export function Categories() {
             categoryCount={visibleCategoryCount}
             visibleGroups={visibleGroups}
             excludedGroupIds={excludedFromChart}
+            isApplyingBudgetSuggestions={applyBudgetAction.isPending}
+            onApplyBudgetSuggestions={onApplyBudgetSuggestions}
           />
 
           <CategoryListPanel

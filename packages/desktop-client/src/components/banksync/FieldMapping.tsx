@@ -7,7 +7,11 @@ import { Select } from '@actual-app/components/select';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import { bodyStrong, tableCellLabel } from '@actual-app/components/typography';
+import {
+  bodyStrong,
+  caption,
+  tableCellLabel,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 
 import { Cell, Row, TableHeader } from '#components/table';
@@ -33,6 +37,10 @@ const useTransactionDirectionOptions = () => {
 
   return { transactionDirectionOptions };
 };
+
+function isTransactionDirection(value: string): value is TransactionDirection {
+  return value === 'payment' || value === 'deposit';
+}
 
 type FieldMappingProps = {
   transactionDirection: TransactionDirection;
@@ -87,16 +95,18 @@ export function FieldMapping({
         aria-label={t('Transaction direction')}
         options={transactionDirectionOptions.map(x => [x.value, x.label])}
         value={transactionDirection}
-        onChange={newValue =>
-          setTransactionDirection(newValue as TransactionDirection)
-        }
+        onChange={newValue => {
+          if (isTransactionDirection(newValue)) {
+            setTransactionDirection(newValue);
+          }
+        }}
         style={{
           width: '25%',
           margin: '0.5em 0',
           minWidth: '100px',
           padding: '3px 10px',
           minHeight: 0,
-          fontSize: 12,
+          ...caption,
         }}
       />
 
@@ -195,7 +205,7 @@ export function FieldMapping({
                       width: '100%',
                       padding: '3px 8px',
                       minHeight: 0,
-                      fontSize: 12,
+                      ...caption,
                     }}
                     onChange={newValue => {
                       if (newValue) setMapping(field.actualField, newValue);

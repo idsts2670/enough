@@ -72,6 +72,9 @@ bundle.mobile.js.map
 .claude/worktrees/*
 .claude/settings.local.json
 
+# Local AI handoff notes
+docs/codex-handoff-*.md
+
 # Misc
 .#*
 

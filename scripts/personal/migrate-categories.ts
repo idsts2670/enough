@@ -1,4 +1,7 @@
 // @ts-strict-ignore
+// oxlint-disable-next-line actual/enforce-boundaries -- personal script runs from repo root and types the compiled API entrypoint below
+import type * as ActualApi from '../../packages/api/index';
+
 /**
  * Category Restructuring & Auto-Categorization Rules
  *
@@ -17,15 +20,14 @@
 
 // Import from the compiled dist output to avoid tsx trying to transpile
 // .pegjs grammar files deep in loot-core's source dependency chain.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const api = require('../../packages/api/dist/index.js') as typeof import('../../packages/api/index');
+// oxlint-disable-next-line typescript/no-var-requires, actual/enforce-boundaries, typescript/no-unsafe-type-assertion -- deliberate compiled API entrypoint for this personal script
+const api = require('../../packages/api/dist/index.js') as typeof ActualApi;
 
 // ─── Flags ────────────────────────────────────────────────────────────────────
 
 const DRY_RUN = process.argv.includes('--dry-run');
 const PART_ARG =
   process.argv.find(a => a.startsWith('--part='))?.split('=')[1] ?? 'all';
-const RUN_PART_A = DRY_RUN || PART_ARG === 'a' || PART_ARG === 'all';
 const RUN_PART_B = !DRY_RUN && (PART_ARG === 'b' || PART_ARG === 'all');
 
 // ─── Connection config ────────────────────────────────────────────────────────
@@ -39,8 +41,7 @@ const SERVER_PASSWORD = process.env.ACTUAL_SERVER_PASSWORD ?? '';
  * Override with ACTUAL_BUDGET_SYNC_ID env var if the file has a different name.
  */
 const BUDGET_SYNC_ID =
-  process.env.ACTUAL_BUDGET_SYNC_ID ??
-  'a39fd6ee-bec8-4fa5-b426-c9c5ddd265fd';
+  process.env.ACTUAL_BUDGET_SYNC_ID ?? 'a39fd6ee-bec8-4fa5-b426-c9c5ddd265fd';
 
 // ─── Target structure ─────────────────────────────────────────────────────────
 
@@ -201,18 +202,6 @@ async function buildCategoryNameMap(
   return map;
 }
 
-/**
- * Build a map of "group name" → id from all current groups.
- */
-async function buildGroupNameMap(): Promise<Map<string, string>> {
-  const groups = await api.getCategoryGroups();
-  const map = new Map<string, string>();
-  for (const group of groups) {
-    map.set(group.name, group.id);
-  }
-  return map;
-}
-
 // ─── Connection ───────────────────────────────────────────────────────────────
 
 const DATA_DIR = '/tmp/actual-migration';
@@ -315,7 +304,10 @@ async function partA() {
   const refreshedGroups = await api.getCategoryGroups();
   const existingCatsByGroup = new Map<string, Set<string>>();
   for (const g of refreshedGroups) {
-    existingCatsByGroup.set(g.name, new Set(g.categories?.map(c => c.name) ?? []));
+    existingCatsByGroup.set(
+      g.name,
+      new Set(g.categories?.map(c => c.name) ?? []),
+    );
   }
 
   for (const targetGroup of TARGET_GROUPS) {
@@ -345,7 +337,9 @@ async function partA() {
   // "Personal Care"), we always resolve to the new copy, never back to the old
   // one being deleted.
   const targetGroupNames = new Set(TARGET_GROUPS.map(g => g.name));
-  const catNameToId = await buildCategoryNameMap(TARGET_GROUPS.map(g => g.name));
+  const catNameToId = await buildCategoryNameMap(
+    TARGET_GROUPS.map(g => g.name),
+  );
 
   // Refresh groups again to find old categories
   const currentGroups = await api.getCategoryGroups();
@@ -419,20 +413,26 @@ async function partA() {
   // the CRDT system (the proper durable path).
   const BROKEN_MAPPING_REPAIR: Record<string, string> = {
     // tombstonedId → correct target category name
-    '04b078de-c737-4322-82af-06ae0338ca9d': 'Shopping',       // old Fun/Shopping
-    '77f47f04-2309-4417-9ca9-096a44af27eb': 'Entertainment',  // old Fun/Entertainment
-    'd798ae29-70c4-4852-9dea-ad781ddd1288': 'Personal Care',  // old Fun/Personal Care
+    '04b078de-c737-4322-82af-06ae0338ca9d': 'Shopping', // old Fun/Shopping
+    '77f47f04-2309-4417-9ca9-096a44af27eb': 'Entertainment', // old Fun/Entertainment
+    'd798ae29-70c4-4852-9dea-ad781ddd1288': 'Personal Care', // old Fun/Personal Care
   };
 
   // Re-read catNameToId — by now the missing categories have been re-created.
-  const repairCatMap = await buildCategoryNameMap(TARGET_GROUPS.map(g => g.name));
+  const repairCatMap = await buildCategoryNameMap(
+    TARGET_GROUPS.map(g => g.name),
+  );
 
   section('  Step 5/5 — Repairing broken category_mapping entries');
   let repairCount = 0;
-  for (const [tombstonedId, targetName] of Object.entries(BROKEN_MAPPING_REPAIR)) {
+  for (const [tombstonedId, targetName] of Object.entries(
+    BROKEN_MAPPING_REPAIR,
+  )) {
     const newCategoryId = repairCatMap.get(targetName);
     if (!newCategoryId) {
-      log(`  WARN  Target "${targetName}" not found in repairCatMap — skipping`);
+      log(
+        `  WARN  Target "${targetName}" not found in repairCatMap — skipping`,
+      );
       continue;
     }
     log(

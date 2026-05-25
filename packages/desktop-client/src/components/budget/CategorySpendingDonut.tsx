@@ -4,11 +4,7 @@ import { Trans } from 'react-i18next';
 
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import {
-  bodySm,
-  caption,
-  metricValue,
-} from '@actual-app/components/typography';
+import { caption, chartValue } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { CategoryGroupEntity } from '@actual-app/core/types/models';
 import { Cell, Pie, PieChart, Tooltip } from 'recharts';
@@ -229,8 +225,7 @@ export function CategorySpendingDonut({
             <>
               <Text
                 style={{
-                  ...metricValue,
-                  fontSize: 14,
+                  ...chartValue,
                   color: theme.pageText,
                   lineHeight: '1.2',
                 }}
@@ -269,9 +264,8 @@ export function CategorySpendingDonut({
           <View style={{ alignItems: 'center', gap: 2 }}>
             <Text
               style={{
-                ...bodySm,
+                ...chartValue,
                 color: theme.pageText,
-                fontWeight: 600,
               }}
             >
               {hovered.name}

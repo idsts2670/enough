@@ -5,7 +5,7 @@ import { Button } from '@actual-app/components/button';
 import { SpaceBetween } from '@actual-app/components/space-between';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
-import { bodyMd } from '@actual-app/components/typography';
+import { bodyMd, bodySm } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
 import type { AccountEntity } from '@actual-app/core/types/models';
 
@@ -243,7 +243,7 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
               style={{
                 padding: '5px 14px',
                 minHeight: 0,
-                fontSize: 13,
+                ...bodySm,
                 color: theme.errorText,
               }}
               onPress={() => {
@@ -255,14 +255,14 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
 
             <SpaceBetween gap={8}>
               <Button
-                style={{ padding: '5px 14px', minHeight: 0, fontSize: 13 }}
+                style={{ padding: '5px 14px', minHeight: 0, ...bodySm }}
                 onPress={() => state.close()}
               >
                 <Trans>Cancel</Trans>
               </Button>
               <Button
                 variant="primary"
-                style={{ padding: '5px 14px', minHeight: 0, fontSize: 13 }}
+                style={{ padding: '5px 14px', minHeight: 0, ...bodySm }}
                 onPress={() => {
                   void onSave(() => state.close());
                 }}

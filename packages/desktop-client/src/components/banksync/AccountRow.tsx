@@ -5,7 +5,7 @@ import { Button } from '@actual-app/components/button';
 import { styles } from '@actual-app/components/styles';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
-import { tableCellLabel } from '@actual-app/components/typography';
+import { caption, tableCellLabel } from '@actual-app/components/typography';
 import { tsToRelativeTime } from '@actual-app/core/shared/util';
 import type { AccountEntity } from '@actual-app/core/types/models';
 import { format as formatDate } from 'date-fns';
@@ -105,7 +105,7 @@ export const AccountRow = memo(
               onPress={() => onAction(account, 'edit')}
               style={{
                 padding: '3px 10px',
-                fontSize: 12,
+                ...caption,
                 minHeight: 0,
                 borderRadius: 4,
                 backgroundColor: theme.noticeBackground,
@@ -122,7 +122,7 @@ export const AccountRow = memo(
               onPress={() => onAction(account, 'link')}
               style={{
                 padding: '3px 10px',
-                fontSize: 12,
+                ...caption,
                 minHeight: 0,
                 borderRadius: 4,
                 backgroundColor: theme.noticeBackground,
