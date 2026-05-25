@@ -92,8 +92,11 @@ export function FieldMapping({
         }
         style={{
           width: '25%',
-          margin: '1em 0',
+          margin: '0.5em 0',
           minWidth: '100px',
+          padding: '3px 10px',
+          minHeight: 0,
+          fontSize: 12,
         }}
       />
 
@@ -141,7 +144,7 @@ export function FieldMapping({
                   backgroundColor: theme.tableBackground,
                   display: 'flex',
                   alignItems: 'center',
-                  minHeight: '40px',
+                  minHeight: '32px',
                   borderTop: '1px solid ' + theme.tableBorder,
                 }}
                 collapsed
@@ -190,6 +193,9 @@ export function FieldMapping({
                     value={mapping.get(field.actualField)}
                     style={{
                       width: '100%',
+                      padding: '3px 8px',
+                      minHeight: 0,
+                      fontSize: 12,
                     }}
                     onChange={newValue => {
                       if (newValue) setMapping(field.actualField, newValue);

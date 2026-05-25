@@ -240,7 +240,12 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
             }}
           >
             <Button
-              style={{ color: theme.errorText }}
+              style={{
+                padding: '5px 14px',
+                minHeight: 0,
+                fontSize: 13,
+                color: theme.errorText,
+              }}
               onPress={() => {
                 void onUnlink(() => state.close());
               }}
@@ -248,12 +253,16 @@ export function EditSyncAccount({ account }: EditSyncAccountProps) {
               <Trans>Unlink account</Trans>
             </Button>
 
-            <SpaceBetween gap={10}>
-              <Button onPress={() => state.close()}>
+            <SpaceBetween gap={8}>
+              <Button
+                style={{ padding: '5px 14px', minHeight: 0, fontSize: 13 }}
+                onPress={() => state.close()}
+              >
                 <Trans>Cancel</Trans>
               </Button>
               <Button
                 variant="primary"
+                style={{ padding: '5px 14px', minHeight: 0, fontSize: 13 }}
                 onPress={() => {
                   void onSave(() => state.close());
                 }}

@@ -101,13 +101,35 @@ export const AccountRow = memo(
 
         {account.account_sync_source ? (
           <Cell name="edit" plain style={{ paddingRight: '10px' }}>
-            <Button onPress={() => onAction(account, 'edit')}>
+            <Button
+              onPress={() => onAction(account, 'edit')}
+              style={{
+                padding: '3px 10px',
+                fontSize: 12,
+                minHeight: 0,
+                borderRadius: 4,
+                backgroundColor: theme.noticeBackground,
+                border: '1px solid ' + theme.noticeBackground,
+                color: theme.noticeTextDark,
+              }}
+            >
               <Trans>Edit</Trans>
             </Button>
           </Cell>
         ) : (
           <Cell name="link" plain style={{ paddingRight: '10px' }}>
-            <Button onPress={() => onAction(account, 'link')}>
+            <Button
+              onPress={() => onAction(account, 'link')}
+              style={{
+                padding: '3px 10px',
+                fontSize: 12,
+                minHeight: 0,
+                borderRadius: 4,
+                backgroundColor: theme.noticeBackground,
+                border: '1px solid ' + theme.noticeBackground,
+                color: theme.noticeTextDark,
+              }}
+            >
               <Trans>Link account</Trans>
             </Button>
           </Cell>
