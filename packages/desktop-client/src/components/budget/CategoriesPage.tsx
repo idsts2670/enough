@@ -939,10 +939,9 @@ function CategoryListPanel({
           alignItems: 'center',
           backgroundColor: theme.tableBackground,
           position: 'sticky',
-          // 48px sticky title bar + 24px gap = 72px; the extra 24px ensures the
-          // header doesn't start sticking while the overview cards are still
-          // visible (which caused them to be visually covered during scroll).
-          top: 72,
+          // Sticks to the top of the scroll container. Page title bar is no
+          // longer sticky (it scrolls away), so top:0 is correct here.
+          top: 0,
           zIndex: 2,
           borderBottom: `1px solid ${theme.tableBorder}`,
           [`@media (max-width: ${tokens.breakpoint_small})`]: {
@@ -1403,10 +1402,6 @@ export function Categories() {
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 16,
-              position: 'sticky',
-              top: 0,
-              zIndex: 3,
-              backgroundColor: theme.pageBackground,
               [`@media (max-width: ${tokens.breakpoint_small})`]: {
                 alignItems: 'stretch',
                 flexDirection: 'column',
