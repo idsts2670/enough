@@ -91,6 +91,8 @@ jobs:
         uses: ./.github/actions/setup
         with:
           download-translations: 'false'
+      - name: Rebuild native modules
+        run: yarn rebuild
       - name: Test
         run: yarn test
   check-gh-actions:
