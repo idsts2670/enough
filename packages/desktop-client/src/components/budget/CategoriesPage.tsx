@@ -14,6 +14,7 @@ import { Button } from '@actual-app/components/button';
 import {
   SvgAdd,
   SvgCalendar,
+  SvgChartPie,
   SvgCheveronDown,
   SvgCheveronLeft,
   SvgCheveronRight,
@@ -65,6 +66,8 @@ import type { SheetFields } from '#spreadsheet';
 import { envelopeBudget, trackingBudget } from '#spreadsheet/bindings';
 
 import { getCategoryColor } from './categoryColors';
+import { CategorySpendingDonut } from './CategorySpendingDonut';
+import type { GroupForDonut } from './CategorySpendingDonut';
 import { prewarmAllMonths, prewarmMonth } from './util';
 
 type BudgetType = 'envelope' | 'tracking';
@@ -239,17 +242,18 @@ function CategoryOverview({
   monthLabel,
   groupCount,
   categoryCount,
+  visibleGroups,
+  excludedGroupIds,
 }: {
   budgetType: BudgetType;
   monthLabel: string;
   groupCount: number;
   categoryCount: number;
+  visibleGroups: GroupForDonut[];
+  excludedGroupIds: string[];
 }) {
   const format = useFormat();
   const { spent, budgeted, remaining } = useBudgetSummaryValues(budgetType);
-  const progress =
-    budgeted > 0 ? Math.min(Math.max(spent / budgeted, 0), 1) : 0;
-  const hasCircularData = budgeted > 0;
   const remainingColor =
     remaining < 0
       ? theme.semanticError
@@ -296,50 +300,20 @@ function CategoryOverview({
           gap: 22,
         }}
       >
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            gap: 16,
-            alignItems: 'center',
-          }}
-        >
-          <View style={{ gap: 4 }}>
-            <Text style={{ ...displayLg, color: theme.pageText }}>
-              <Trans>Category plan</Trans>
-            </Text>
-            <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-              {monthLabel}
-            </Text>
-          </View>
-          <View
-            aria-hidden={hasCircularData}
-            style={{
-              width: 76,
-              height: 76,
-              borderRadius: 9999,
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: hasCircularData
-                ? `conic-gradient(${theme.semanticInfo} ${
-                    progress * 100
-                  }%, ${theme.surfaceSubtle} 0)`
-                : theme.surfaceSubtle,
-              boxShadow: `inset 0 0 0 16px ${theme.tableBackground}`,
-            }}
-          >
-            {!hasCircularData && (
-              <Text
-                style={{
-                  ...caption,
-                  color: theme.pageTextSubdued,
-                }}
-              >
-                <Trans>No data</Trans>
-              </Text>
-            )}
-          </View>
+        <View style={{ gap: 4 }}>
+          <Text style={{ ...displayLg, color: theme.pageText }}>
+            <Trans>Category plan</Trans>
+          </Text>
+          <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+            {monthLabel}
+          </Text>
         </View>
+
+        <CategorySpendingDonut
+          budgetType={budgetType}
+          groups={visibleGroups}
+          excludedGroupIds={excludedGroupIds}
+        />
         <View
           style={{
             // flexShrink: 0 prevents this inner grid from being compressed
@@ -766,14 +740,18 @@ function CategoryGroupRow({
   budgetType,
   group,
   isCollapsed,
+  isExcluded = false,
   onOpenCategoryGroupMenu,
   onToggle,
+  onToggleExclusion,
 }: {
   budgetType: BudgetType;
   group: CategoryGroupView;
   isCollapsed: boolean;
+  isExcluded?: boolean;
   onOpenCategoryGroupMenu: (groupId: CategoryGroupEntity['id']) => void;
   onToggle: () => void;
+  onToggleExclusion?: () => void;
 }) {
   const { t } = useTranslation();
   const groupColor = getCategoryColor(group.name);
@@ -839,13 +817,15 @@ function CategoryGroupRow({
             />
           )}
         </Button>
-        <CategoryColorDot color={groupColor.color} />
+        <CategoryColorDot
+          color={isExcluded ? theme.pageTextLight : groupColor.color}
+        />
         <Text
           title={group.name}
           style={{
             ...bodyStrong,
             minWidth: 0,
-            color: theme.pageText,
+            color: isExcluded ? theme.pageTextSubdued : theme.pageText,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -856,7 +836,7 @@ function CategoryGroupRow({
         <Text
           style={{
             ...caption,
-            color: groupColor.color,
+            color: isExcluded ? theme.pageTextLight : groupColor.color,
             padding: '2px 7px',
             borderRadius: 9999,
             backgroundColor: theme.tableBackground,
@@ -864,6 +844,37 @@ function CategoryGroupRow({
         >
           {group.categories.length}
         </Text>
+        {/* Chart include/exclude toggle — expense groups only */}
+        {!group.is_income && onToggleExclusion && (
+          <Button
+            variant="bare"
+            aria-label={
+              isExcluded
+                ? t('Include {{name}} in chart', { name: group.name })
+                : t('Exclude {{name}} from chart', { name: group.name })
+            }
+            aria-pressed={!isExcluded}
+            onPress={onToggleExclusion}
+            style={{
+              width: 20,
+              height: 20,
+              minHeight: 0,
+              padding: 0,
+              borderRadius: 9999,
+              border: `1.5px solid ${isExcluded ? theme.pageTextLight : groupColor.color}`,
+              backgroundColor: isExcluded ? 'transparent' : groupColor.tint,
+              flexShrink: 0,
+            }}
+          >
+            {!isExcluded && (
+              <SvgChartPie
+                width={10}
+                height={10}
+                style={{ color: groupColor.color }}
+              />
+            )}
+          </Button>
+        )}
         <RowActionButton
           label={t('Manage {{name}} category group', { name: group.name })}
           onPress={() => onOpenCategoryGroupMenu(group.id)}
@@ -894,16 +905,20 @@ function CategoryGroupRow({
 function CategoryListPanel({
   budgetType,
   groups,
+  excludedGroupIds,
   onAddCategoryGroup,
   onOpenCategoryGroupMenu,
   onOpenCategoryMenu,
+  onToggleGroupExclusion,
   startMonth,
 }: {
   budgetType: BudgetType;
   groups: CategoryGroupView[];
+  excludedGroupIds: string[];
   onAddCategoryGroup: () => void;
   onOpenCategoryGroupMenu: (groupId: CategoryGroupEntity['id']) => void;
   onOpenCategoryMenu: (categoryId: CategoryEntity['id']) => void;
+  onToggleGroupExclusion: (groupId: string) => void;
   startMonth: string;
 }) {
   const [collapsedGroupIds = [], setCollapsedGroupIdsPref] =
@@ -1012,6 +1027,7 @@ function CategoryListPanel({
         ) : (
           groups.map(group => {
             const isCollapsed = collapsedGroupIds.includes(group.id);
+            const isExcluded = excludedGroupIds.includes(group.id);
 
             return (
               <Fragment key={group.id}>
@@ -1019,8 +1035,10 @@ function CategoryListPanel({
                   budgetType={budgetType}
                   group={group}
                   isCollapsed={isCollapsed}
+                  isExcluded={isExcluded}
                   onOpenCategoryGroupMenu={onOpenCategoryGroupMenu}
                   onToggle={() => onToggleGroup(group.id)}
+                  onToggleExclusion={() => onToggleGroupExclusion(group.id)}
                 />
                 {!isCollapsed &&
                   group.categories.map(category => (
@@ -1054,6 +1072,9 @@ export function Categories() {
   const saveCategory = useSaveCategoryMutation();
   const deleteCategoryGroup = useDeleteCategoryGroupMutation();
   const deleteCategory = useDeleteCategoryMutation();
+  const [excludedFromChart = [], setExcludedFromChart] = useLocalPref(
+    'budget.excludedFromChart',
+  );
   const [startMonthPref, setStartMonthPref] = useLocalPref('budget.startMonth');
   const startMonth = startMonthPref || currentMonth;
   const [budgetTypePref = 'envelope'] = useSyncedPref('budgetType');
@@ -1354,6 +1375,17 @@ export function Categories() {
     }
   };
 
+  const onToggleGroupExclusion = useCallback(
+    (groupId: string) => {
+      setExcludedFromChart(
+        excludedFromChart.includes(groupId)
+          ? excludedFromChart.filter(id => id !== groupId)
+          : [...excludedFromChart, groupId],
+      );
+    },
+    [excludedFromChart, setExcludedFromChart],
+  );
+
   if (!initialized || !categoryGroups) {
     return null;
   }
@@ -1457,14 +1489,18 @@ export function Categories() {
             monthLabel={monthLabel}
             groupCount={visibleGroups.length}
             categoryCount={visibleCategoryCount}
+            visibleGroups={visibleGroups}
+            excludedGroupIds={excludedFromChart}
           />
 
           <CategoryListPanel
             budgetType={budgetType}
             groups={visibleGroups}
+            excludedGroupIds={excludedFromChart}
             onAddCategoryGroup={onOpenNewCategoryGroupModal}
             onOpenCategoryGroupMenu={onOpenCategoryGroupMenuModal}
             onOpenCategoryMenu={onOpenCategoryMenuModal}
+            onToggleGroupExclusion={onToggleGroupExclusion}
             startMonth={startMonth}
           />
         </View>

@@ -86,6 +86,7 @@ export type LocalPrefs = Partial<{
   'budget.summaryCollapsed': boolean;
   'budget.showHiddenCategories': boolean;
   'budget.startMonth': string;
+  'budget.excludedFromChart': string[];
   'flags.updateNotificationShownForVersion': string;
   'schedules.showCompleted': boolean;
   reportsViewLegend: boolean;
