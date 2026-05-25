@@ -1379,14 +1379,8 @@ export function Categories() {
 
   const onDeleteGroup = useCallback(
     (groupId: CategoryGroupEntity['id']) => {
-      deleteCategoryGroup.mutate(
-        { id: groupId },
-        {
-          onSettled: () => {
-            dispatch(collapseModals({ rootModalName: 'category-group-menu' }));
-          },
-        },
-      );
+      dispatch(collapseModals({ rootModalName: 'category-group-menu' }));
+      deleteCategoryGroup.mutate({ id: groupId });
     },
     [deleteCategoryGroup, dispatch],
   );
@@ -1412,14 +1406,8 @@ export function Categories() {
 
   const onDeleteCategory = useCallback(
     (categoryId: CategoryEntity['id']) => {
-      deleteCategory.mutate(
-        { id: categoryId },
-        {
-          onSettled: () => {
-            dispatch(collapseModals({ rootModalName: 'category-menu' }));
-          },
-        },
-      );
+      dispatch(collapseModals({ rootModalName: 'category-menu' }));
+      deleteCategory.mutate({ id: categoryId });
     },
     [deleteCategory, dispatch],
   );
