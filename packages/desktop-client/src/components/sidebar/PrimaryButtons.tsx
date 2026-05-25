@@ -8,6 +8,7 @@ import {
   SvgCog,
   SvgCreditCard,
   SvgList,
+  SvgPiggyBank,
   SvgStoreFront,
   SvgTag,
   SvgTuning,
@@ -51,6 +52,7 @@ export function PrimaryButtons() {
   return (
     <View style={{ flexShrink: 0 }}>
       <Item title={t('Dashboard')} Icon={SvgWallet} to="/budget" />
+      <Item title={t('Budget')} Icon={SvgPiggyBank} to="/budget/edit" />
       <Item title={t('Transactions')} Icon={SvgList} to="/transactions" />
       <Item title={t('Schedules')} Icon={SvgCalendar3} to="/schedules" />
       <Item

@@ -248,6 +248,11 @@ export function FinancesApp() {
                 />
 
                 <Route
+                  path="/budget/edit"
+                  element={<NarrowAlternate name="BudgetEditor" />}
+                />
+
+                <Route
                   path="/categories"
                   element={<NarrowAlternate name="Categories" />}
                 />

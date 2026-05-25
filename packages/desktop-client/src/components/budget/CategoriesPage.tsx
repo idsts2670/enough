@@ -21,6 +21,7 @@ import {
   SvgCheveronRight,
   SvgDotsHorizontalTriple,
 } from '@actual-app/components/icons/v1';
+import { Input } from '@actual-app/components/input';
 import { styles } from '@actual-app/components/styles';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
@@ -670,6 +671,108 @@ function AmountCell({
   );
 }
 
+function EditableBudgetAmountCell({
+  categoryId,
+  categoryName,
+  value,
+  muted = false,
+  showDash = false,
+  onSave,
+}: {
+  categoryId: CategoryEntity['id'];
+  categoryName: CategoryEntity['name'];
+  value: number;
+  muted?: boolean;
+  showDash?: boolean;
+  onSave: (categoryId: CategoryEntity['id'], amount: number) => void;
+}) {
+  const format = useFormat();
+  const { t } = useTranslation();
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+
+  const beginEditing = () => {
+    setDraft(format.forEdit(Math.abs(value)));
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setDraft('');
+  };
+
+  const commitEditing = () => {
+    const parsedAmount = format.fromEdit(draft, Math.abs(value)) ?? 0;
+    onSave(categoryId, parsedAmount);
+    setIsEditing(false);
+    setDraft('');
+  };
+
+  if (isEditing) {
+    return (
+      <View
+        role="cell"
+        style={{
+          minWidth: 72,
+          alignItems: 'flex-end',
+        }}
+      >
+        <Input
+          aria-label={t('Budget amount for {{categoryName}}', {
+            categoryName,
+          })}
+          autoFocus
+          value={draft}
+          onChange={e => setDraft(e.currentTarget.value)}
+          onBlur={commitEditing}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commitEditing();
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              cancelEditing();
+            }
+          }}
+          style={{
+            ...tableCellAmount,
+            width: 88,
+            minHeight: 28,
+            padding: '3px 8px',
+            color: theme.pageText,
+            backgroundColor: theme.formInputBackground,
+            border: '1px solid ' + theme.formInputBorder,
+            borderRadius: 4,
+          }}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <Button
+      variant="bare"
+      aria-label={t('Edit budget amount for {{categoryName}}', {
+        categoryName,
+      })}
+      onPress={beginEditing}
+      style={{
+        ...tableCellAmount,
+        minWidth: 72,
+        minHeight: 28,
+        justifyContent: 'flex-end',
+        padding: '2px 4px',
+        color: muted ? theme.pageTextSubdued : theme.pageText,
+        textAlign: 'right',
+        whiteSpace: 'nowrap',
+        borderRadius: 4,
+      }}
+    >
+      {showDash ? '-' : format(Math.abs(value), 'financial')}
+    </Button>
+  );
+}
+
 function PaceCell({
   color,
   value,
@@ -823,12 +926,17 @@ function CategoryRow({
   budgetType,
   category,
   groupName,
+  onBudgetAmountChange,
   onOpenCategoryMenu,
   startMonth,
 }: {
   budgetType: BudgetType;
   category: CategoryEntity;
   groupName: string;
+  onBudgetAmountChange: (
+    categoryId: CategoryEntity['id'],
+    amount: number,
+  ) => void;
   onOpenCategoryMenu: (categoryId: CategoryEntity['id']) => void;
   startMonth: string;
 }) {
@@ -941,10 +1049,13 @@ function CategoryRow({
           show={hasBudget}
         />
       </View>
-      <AmountCell
+      <EditableBudgetAmountCell
+        categoryId={category.id}
+        categoryName={category.name}
         value={budgetedAmount}
         muted={!hasBudget}
         showDash={!hasBudget}
+        onSave={onBudgetAmountChange}
       />
     </RowGrid>
   );
@@ -1121,6 +1232,7 @@ function CategoryListPanel({
   groups,
   excludedGroupIds,
   onAddCategoryGroup,
+  onBudgetAmountChange,
   onOpenCategoryGroupMenu,
   onOpenCategoryMenu,
   onToggleGroupExclusion,
@@ -1130,6 +1242,10 @@ function CategoryListPanel({
   groups: CategoryGroupView[];
   excludedGroupIds: string[];
   onAddCategoryGroup: () => void;
+  onBudgetAmountChange: (
+    categoryId: CategoryEntity['id'],
+    amount: number,
+  ) => void;
   onOpenCategoryGroupMenu: (groupId: CategoryGroupEntity['id']) => void;
   onOpenCategoryMenu: (categoryId: CategoryEntity['id']) => void;
   onToggleGroupExclusion: (groupId: string) => void;
@@ -1261,6 +1377,7 @@ function CategoryListPanel({
                       budgetType={budgetType}
                       category={category}
                       groupName={group.name}
+                      onBudgetAmountChange={onBudgetAmountChange}
                       onOpenCategoryMenu={onOpenCategoryMenu}
                       startMonth={startMonth}
                     />
@@ -1506,6 +1623,20 @@ export function Categories() {
     [applyBudgetAction, startMonth],
   );
 
+  const onBudgetAmountChange = useCallback(
+    (categoryId: CategoryEntity['id'], amount: number) => {
+      applyBudgetAction.mutate({
+        month: startMonth,
+        type: 'budget-amount',
+        args: {
+          category: categoryId,
+          amount,
+        },
+      });
+    },
+    [applyBudgetAction, startMonth],
+  );
+
   const onOpenCategoryGroupMenuModal = useCallback(
     (groupId: CategoryGroupEntity['id']) => {
       dispatch(
@@ -1720,6 +1851,7 @@ export function Categories() {
             groups={visibleGroups}
             excludedGroupIds={excludedFromChart}
             onAddCategoryGroup={onOpenNewCategoryGroupModal}
+            onBudgetAmountChange={onBudgetAmountChange}
             onOpenCategoryGroupMenu={onOpenCategoryGroupMenuModal}
             onOpenCategoryMenu={onOpenCategoryMenuModal}
             onToggleGroupExclusion={onToggleGroupExclusion}

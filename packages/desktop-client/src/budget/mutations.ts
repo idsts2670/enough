@@ -491,7 +491,7 @@ export function useReorderCategoryGroupMutation() {
   });
 }
 
-type ApplyBudgetActionPayload =
+export type ApplyBudgetActionPayload =
   | {
       type: 'budget-amount';
       month: string;

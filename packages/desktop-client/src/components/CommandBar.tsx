@@ -98,6 +98,12 @@ export function CommandBar() {
     () => [
       { id: 'budget', name: t('Dashboard'), path: '/budget', Icon: SvgWallet },
       {
+        id: 'budget-edit',
+        name: t('Budget'),
+        path: '/budget/edit',
+        Icon: SvgPiggyBank,
+      },
+      {
         id: 'transactions',
         name: t('Transactions'),
         path: '/transactions',

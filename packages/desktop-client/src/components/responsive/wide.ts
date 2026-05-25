@@ -1,4 +1,5 @@
 export { Budget } from '#components/budget';
+export { BudgetEditorPage as BudgetEditor } from '#components/budget/BudgetEditorPage';
 export { Categories } from '#components/budget/CategoriesPage';
 
 export { Schedules } from '#components/schedules';

@@ -1,4 +1,5 @@
 export { BudgetPage as Budget } from '#components/mobile/budget/BudgetPage';
+export { BudgetPage as BudgetEditor } from '#components/mobile/budget/BudgetPage';
 export { Categories } from '#components/budget/CategoriesPage';
 
 export { AccountsPage as Accounts } from '#components/mobile/accounts/AccountsPage';

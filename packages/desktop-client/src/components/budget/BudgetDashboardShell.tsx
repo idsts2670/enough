@@ -65,6 +65,7 @@ import { getCategoryColor } from './categoryColors';
 type BudgetDashboardShellProps = {
   budgetType: string;
   categoryGroups: CategoryGroupEntity[];
+  onOpenBudgetEditor: () => void;
   startMonth: string;
 };
 
@@ -72,6 +73,7 @@ type MetricCardProps = {
   label: string;
   value: ReactNode;
   subtitle: string;
+  onPress?: () => void;
 };
 
 type FinancialMetricValueProps =
@@ -358,20 +360,25 @@ function FinancialMetricValue(props: FinancialMetricValueProps) {
   );
 }
 
-function MetricCard({ label, value, subtitle }: MetricCardProps) {
-  return (
-    <View
-      style={{
-        minHeight: 112,
-        justifyContent: 'space-between',
-        gap: 16,
-        padding: 24,
-        backgroundColor: theme.cardBackground,
-        border: '1px solid ' + theme.cardBorder,
-        borderRadius: 12,
-        boxShadow: theme.cardShadow,
-      }}
-    >
+function MetricCard({ label, value, subtitle, onPress }: MetricCardProps) {
+  const cardStyle = {
+    minHeight: 112,
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
+    gap: 16,
+    padding: 24,
+    backgroundColor: theme.cardBackground,
+    border: '1px solid ' + theme.cardBorder,
+    borderRadius: 12,
+    boxShadow: theme.cardShadow,
+    textAlign: 'left' as const,
+    ...(onPress && {
+      cursor: 'pointer',
+    }),
+  };
+
+  const content = (
+    <>
       <View style={{ gap: 4 }}>
         <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
           {label}
@@ -381,8 +388,23 @@ function MetricCard({ label, value, subtitle }: MetricCardProps) {
         </Text>
       </View>
       <View>{value}</View>
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <Button
+        variant="bare"
+        aria-label={label}
+        onPress={onPress}
+        style={cardStyle}
+      >
+        {content}
+      </Button>
+    );
+  }
+
+  return <View style={cardStyle}>{content}</View>;
 }
 
 function DashboardPanel({
@@ -1796,6 +1818,7 @@ function SavingsAdvisorCard({ month }: { month: string }) {
 export function BudgetDashboardShell({
   budgetType,
   categoryGroups,
+  onOpenBudgetEditor,
   startMonth,
 }: BudgetDashboardShellProps) {
   const { t } = useTranslation();
@@ -1876,6 +1899,7 @@ export function BudgetDashboardShell({
             )
           }
           subtitle={monthLabel}
+          onPress={onOpenBudgetEditor}
         />
         <MetricCard
           label={t('Spent')}
