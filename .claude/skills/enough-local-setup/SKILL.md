@@ -127,12 +127,12 @@ rm ~/Library/LaunchAgents/com.enough.budget.plist
 
 ### When to rebuild and restart
 
-| Situation | Action |
-|---|---|
+| Situation                   | Action                                                     |
+| --------------------------- | ---------------------------------------------------------- |
 | Pulled new sync-server code | `yarn workspace @actual-app/sync-server build` + kickstart |
-| Pulled new UI code | `yarn build:browser` + kickstart |
-| Changed Plaid credentials | Edit plist (never commit it), then kickstart |
-| Daemon not responding | Check `enough-server.err`, then kickstart |
+| Pulled new UI code          | `yarn build:browser` + kickstart                           |
+| Changed Plaid credentials   | Edit plist (never commit it), then kickstart               |
+| Daemon not responding       | Check `enough-server.err`, then kickstart                  |
 
 ### macOS TCC note
 

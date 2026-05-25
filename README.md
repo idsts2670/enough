@@ -92,9 +92,11 @@ yarn build:browser
 Replace `/ABSOLUTE/PATH/TO/enough` with the real path (e.g. `$(pwd)` from the repo root).
 
 > **Security note:** The plist stores your Plaid credentials in plaintext. Lock it down:
+>
 > ```bash
 > chmod 600 ~/Library/LaunchAgents/com.enough.budget.plist
 > ```
+>
 > Never commit or share this file.
 
 **Load it:**
