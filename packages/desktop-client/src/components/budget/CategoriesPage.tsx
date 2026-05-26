@@ -881,7 +881,6 @@ function RowGrid({
         columnGap: 16,
         minHeight: 44,
         padding: '0 24px',
-        borderBottom: `1px solid ${theme.tableBorder}`,
         [`@media (max-width: ${tokens.breakpoint_small})`]: {
           columnGap: 10,
           padding: '0 12px',
@@ -964,7 +963,7 @@ function CategoryRow({
   return (
     <RowGrid
       style={{
-        backgroundColor: theme.tableBackground,
+        backgroundColor: theme.pageBackground,
       }}
     >
       <View
@@ -1103,7 +1102,9 @@ function CategoryGroupRow({
   return (
     <RowGrid
       style={{
-        backgroundColor: theme.surfaceSubtle,
+        marginTop: 8,
+        backgroundColor: theme.tableRowBackgroundHighlight,
+        borderRadius: 6,
       }}
     >
       <View
@@ -1262,11 +1263,11 @@ function CategoryListPanel({
     <View
       role="table"
       style={{
-        borderRadius: 16,
-        backgroundColor: theme.tableBackground,
+        flexShrink: 0,
+        gap: 2,
+        backgroundColor: theme.pageBackground,
         marginTop: 8,
         overflow: 'visible',
-        border: `1px solid ${theme.tableBorder}`,
       }}
     >
       <View
@@ -1278,13 +1279,12 @@ function CategoryListPanel({
           minHeight: 44,
           padding: '0 24px',
           alignItems: 'center',
-          backgroundColor: theme.tableBackground,
+          backgroundColor: theme.pageBackground,
           position: 'sticky',
           // Sticks to the top of the scroll container. Page title bar is no
           // longer sticky (it scrolls away), so top:0 is correct here.
           top: 0,
           zIndex: 2,
-          borderBottom: `1px solid ${theme.tableBorder}`,
           [`@media (max-width: ${tokens.breakpoint_small})`]: {
             position: 'static',
           },
