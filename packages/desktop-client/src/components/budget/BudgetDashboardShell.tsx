@@ -527,7 +527,7 @@ function NetWorthSparkline({
           </defs>
           <YAxis hide domain={yDomain} />
           <Area
-            type="monotone"
+            type="linear"
             dataKey="y"
             stroke="none"
             fill={`url(#${gradId})`}
@@ -535,7 +535,7 @@ function NetWorthSparkline({
             {...animProps}
           />
           <Line
-            type="monotone"
+            type="linear"
             dataKey="y"
             stroke={trendColor}
             strokeWidth={2}
