@@ -469,8 +469,10 @@ export function BudgetEditorPage() {
             justifyContent: 'space-between',
             alignItems: 'flex-end',
             gap: 16,
+            flexShrink: 0,
             flexWrap: 'wrap',
-            marginBottom: 16,
+            minHeight: 54,
+            marginBottom: 20,
           }}
         >
           <View style={{ gap: 4 }}>
