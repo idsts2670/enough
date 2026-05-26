@@ -29,7 +29,12 @@ import type {
   ScheduleEntity,
 } from '@actual-app/core/types/models';
 import type { Locale } from 'date-fns';
-import { Area, AreaChart, Tooltip as RechartsTooltip } from 'recharts';
+import {
+  Area,
+  ComposedChart,
+  Line,
+  Tooltip as RechartsTooltip,
+} from 'recharts';
 
 import {
   buildGradientId,
@@ -496,7 +501,7 @@ function NetWorthSparkline({
   return (
     <ChartContainer minHeight={120}>
       {({ width, height }) => (
-        <AreaChart
+        <ComposedChart
           width={width}
           height={height}
           data={points}
@@ -512,9 +517,19 @@ function NetWorthSparkline({
           <Area
             type="monotone"
             dataKey="y"
+            stroke="none"
+            fill={`url(#${gradId})`}
+            dot={false}
+            {...animProps}
+          />
+          <Line
+            type="monotone"
+            dataKey="y"
             stroke={trendColor}
             strokeWidth={2}
-            fill={`url(#${gradId})`}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
             dot={false}
             activeDot={{
               r: 4,
@@ -539,7 +554,7 @@ function NetWorthSparkline({
               return '';
             }}
           />
-        </AreaChart>
+        </ComposedChart>
       )}
     </ChartContainer>
   );
