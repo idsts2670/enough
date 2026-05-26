@@ -45,6 +45,9 @@ type CategoryGroupView = CategoryGroupEntity & {
   categories: CategoryEntity[];
 };
 
+const budgetRowColumns =
+  'minmax(220px, 1fr) minmax(180px, 520px) minmax(88px, 112px)';
+
 function getVisibleCategories(group: CategoryGroupEntity): CategoryEntity[] {
   return (group.categories ?? []).filter(
     category => !category.hidden && !category.tombstone,
@@ -161,21 +164,66 @@ function EditableBudgetCell({
   );
 }
 
-function AmountCell({ value }: { value: number }) {
+function SpendingCell({
+  value,
+  budgeted,
+  color,
+}: {
+  value: number;
+  budgeted: number;
+  color: string;
+}) {
   const format = useFormat();
   const displayValue = Math.abs(value);
+  const displayBudgeted = Math.abs(budgeted);
+  const progress =
+    displayBudgeted > 0
+      ? Math.min(displayValue / displayBudgeted, 1)
+      : displayValue > 0
+        ? 1
+        : 0;
 
   return (
-    <Text
+    <View
       role="cell"
       style={{
-        ...tableCellAmount,
-        color: displayValue > 0 ? theme.pageText : theme.pageTextSubdued,
-        whiteSpace: 'nowrap',
+        minWidth: 0,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 16,
       }}
     >
-      {format(displayValue, 'financial')}
-    </Text>
+      <Text
+        style={{
+          ...tableCellAmount,
+          width: 96,
+          color: displayValue > 0 ? theme.pageText : theme.pageTextSubdued,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {format(displayValue, 'financial')}
+      </Text>
+      <View
+        aria-hidden
+        style={{
+          flex: 1,
+          height: 5,
+          minWidth: 56,
+          borderRadius: 999,
+          backgroundColor: theme.tableBorder,
+          overflow: 'hidden',
+        }}
+      >
+        <View
+          style={{
+            width: `${progress * 100}%`,
+            height: '100%',
+            borderRadius: 999,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -186,6 +234,7 @@ function GroupBudgetRow({
   budgetType: BudgetType;
   group: CategoryGroupView;
 }) {
+  const format = useFormat();
   const groupSpent =
     useBudgetValue(
       budgetType,
@@ -205,14 +254,14 @@ function GroupBudgetRow({
       role="row"
       style={{
         display: 'grid',
-        gridTemplateColumns:
-          'minmax(0, 1fr) minmax(88px, 112px) minmax(88px, 112px)',
+        gridTemplateColumns: budgetRowColumns,
         alignItems: 'center',
         columnGap: 16,
-        minHeight: 44,
-        padding: '0 24px',
-        backgroundColor: theme.tableRowHeaderBackground,
-        borderBottom: `1px solid ${theme.tableBorder}`,
+        minHeight: 32,
+        marginTop: 8,
+        padding: '0 16px',
+        backgroundColor: theme.tableRowBackgroundHighlight,
+        borderRadius: 6,
       }}
     >
       <View
@@ -240,8 +289,14 @@ function GroupBudgetRow({
           {group.categories.length}
         </Text>
       </View>
-      <AmountCell value={groupSpent} />
-      <AmountCell value={groupBudgeted} />
+      <SpendingCell
+        value={groupSpent}
+        budgeted={groupBudgeted}
+        color={groupColor}
+      />
+      <Text role="cell" style={{ ...tableCellAmount, color: theme.pageText }}>
+        {format(Math.abs(groupBudgeted), 'financial')}
+      </Text>
     </View>
   );
 }
@@ -286,14 +341,12 @@ function CategoryBudgetRow({
       role="row"
       style={{
         display: 'grid',
-        gridTemplateColumns:
-          'minmax(0, 1fr) minmax(88px, 112px) minmax(88px, 112px)',
+        gridTemplateColumns: budgetRowColumns,
         alignItems: 'center',
         columnGap: 16,
-        minHeight: 44,
-        padding: '0 24px',
-        backgroundColor: theme.tableBackground,
-        borderBottom: `1px solid ${theme.tableBorder}`,
+        minHeight: 32,
+        padding: '0 16px',
+        backgroundColor: theme.pageBackground,
       }}
     >
       <View
@@ -328,7 +381,7 @@ function CategoryBudgetRow({
           {category.name}
         </Text>
       </View>
-      <AmountCell value={spent} />
+      <SpendingCell value={spent} budgeted={budgeted} color={color} />
       <EditableBudgetCell
         category={category}
         value={budgeted}
@@ -401,7 +454,8 @@ export function BudgetEditorPage() {
           ...styles.page,
           height: `calc(100% - ${titlebarHeight}px)`,
           marginTop: titlebarHeight,
-          padding: '16px 16px 24px',
+          minHeight: 0,
+          padding: '16px 24px 32px',
           overflowX: 'hidden',
           overflowY: 'auto',
           [`@media (max-width: ${tokens.breakpoint_small})`]: {
@@ -433,24 +487,22 @@ export function BudgetEditorPage() {
           role="table"
           aria-label={t('Category budgets')}
           style={{
-            borderRadius: 8,
-            overflow: 'hidden',
-            backgroundColor: theme.tableBackground,
-            border: `1px solid ${theme.tableBorder}`,
+            flexShrink: 0,
+            gap: 2,
+            overflow: 'visible',
+            backgroundColor: theme.pageBackground,
           }}
         >
           <View
             role="row"
             style={{
               display: 'grid',
-              gridTemplateColumns:
-                'minmax(0, 1fr) minmax(88px, 112px) minmax(88px, 112px)',
+              gridTemplateColumns: budgetRowColumns,
               alignItems: 'center',
               columnGap: 16,
-              minHeight: 40,
-              padding: '0 24px',
-              backgroundColor: theme.tableHeaderBackground,
-              borderBottom: `1px solid ${theme.tableBorder}`,
+              minHeight: 28,
+              padding: '0 16px',
+              backgroundColor: theme.pageBackground,
             }}
           >
             <Text role="columnheader" style={{ ...bodySm }}>
