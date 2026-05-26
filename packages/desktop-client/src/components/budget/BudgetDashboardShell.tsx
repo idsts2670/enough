@@ -34,6 +34,7 @@ import {
   ComposedChart,
   Line,
   Tooltip as RechartsTooltip,
+  YAxis,
 } from 'recharts';
 
 import {
@@ -498,6 +499,16 @@ function NetWorthSparkline({
     );
   }
 
+  const yValues = points
+    .map(point => point.y)
+    .filter(value => Number.isFinite(value));
+  const minY = Math.min(...yValues);
+  const maxY = Math.max(...yValues);
+  const yRange = maxY - minY;
+  // Keep the lowest stroke inside the SVG clip area so flat sections do not render half-width.
+  const yPadding = Math.max(yRange * 0.08, Math.abs(maxY) * 0.02, 1);
+  const yDomain: [number, number] = [minY - yPadding, maxY + yPadding];
+
   return (
     <ChartContainer minHeight={120}>
       {({ width, height }) => (
@@ -514,6 +525,7 @@ function NetWorthSparkline({
               <stop offset="95%" stopColor={trendColor} stopOpacity={0} />
             </linearGradient>
           </defs>
+          <YAxis hide domain={yDomain} />
           <Area
             type="monotone"
             dataKey="y"
