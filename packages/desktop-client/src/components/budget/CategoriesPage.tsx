@@ -1044,7 +1044,7 @@ function CategoryRow({
       />
       <View style={paceColumnResponsiveStyle}>
         <PaceCell
-          color={isOverspent ? theme.semanticError : theme.semanticSuccess}
+          color={categoryColor.color}
           value={progress}
           show={hasBudget}
         />
@@ -1212,11 +1212,7 @@ function CategoryGroupRow({
         color={isOverspent ? theme.semanticError : undefined}
       />
       <View style={paceColumnResponsiveStyle}>
-        <PaceCell
-          color={isOverspent ? theme.semanticError : theme.semanticSuccess}
-          value={progress}
-          show={hasBudget}
-        />
+        <PaceCell color={groupColor.color} value={progress} show={hasBudget} />
       </View>
       <AmountCell
         value={groupBudgeted}
