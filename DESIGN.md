@@ -45,30 +45,48 @@ colors:
   semantic-info: "#0369A1"
   semantic-info-soft: "#E0F2FE"
 
-  category-housing: "#B45309"
-  category-housing-tint: "#FEF3C7"
-  category-food: "#15803D"
-  category-food-tint: "#DCFCE7"
-  category-transport: "#0E7490"
-  category-transport-tint: "#CFFAFE"
-  category-shopping: "#BE123C"
-  category-shopping-tint: "#FFE4E6"
-  category-bills: "#6D28D9"
-  category-bills-tint: "#EDE9FE"
-  category-health: "#047857"
-  category-health-tint: "#D1FAE5"
-  category-entertainment: "#C2410C"
-  category-entertainment-tint: "#FFEDD5"
-  category-travel: "#0369A1"
-  category-travel-tint: "#E0F2FE"
-  category-income: "#0F766E"
-  category-income-tint: "#CCFBF1"
-  category-debt: "#B91C1C"
-  category-debt-tint: "#FEE2E2"
-  category-savings: "#4D7C0F"
-  category-savings-tint: "#ECFCCB"
-  category-personal: "#7E22CE"
-  category-personal-tint: "#F3E8FF"
+  transaction-category-fixed: "#003ECC"
+  transaction-category-fixed-tint: "#E7EFFF"
+  transaction-category-fixed-deep: "#002B8A"
+  transaction-category-fixed-strong: "#0057D8"
+  transaction-category-fixed-mid: "#2F6BDB"
+  transaction-category-fixed-soft: "#5A86D6"
+  transaction-category-fixed-cyan: "#0078A8"
+  transaction-category-fixed-indigo: "#3949AB"
+  transaction-category-fixed-slate: "#466A9F"
+
+  transaction-category-fun: "#F4B000"
+  transaction-category-fun-tint: "#FFF3C4"
+  transaction-category-fun-deep: "#7C5A00"
+  transaction-category-fun-strong: "#8C5F00"
+  transaction-category-fun-amber: "#9A6400"
+  transaction-category-fun-honey: "#A86B00"
+  transaction-category-fun-orange: "#B45309"
+  transaction-category-fun-burnt: "#92400E"
+
+  transaction-category-trading-investment: "#CF202F"
+  transaction-category-trading-investment-tint: "#FDE2E5"
+  transaction-category-trading-investment-deep: "#7F1D2D"
+  transaction-category-trading-investment-strong: "#8F1722"
+  transaction-category-trading-investment-mid: "#A61B29"
+  transaction-category-trading-investment-red: "#B91C1C"
+  transaction-category-trading-investment-rose: "#BE3144"
+
+  transaction-category-other: "#5B616E"
+  transaction-category-other-tint: "#F1F3F6"
+  transaction-category-other-deep: "#343A46"
+  transaction-category-other-strong: "#4B5563"
+  transaction-category-other-mid: "#6B7280"
+  transaction-category-other-cool: "#717887"
+  transaction-category-other-slate: "#525A66"
+
+  transaction-category-income: "#A8B8CC"
+  transaction-category-income-tint: "#EDF2F7"
+  transaction-category-income-deep: "#45576E"
+  transaction-category-income-strong: "#53677F"
+  transaction-category-income-mid: "#627890"
+  transaction-category-income-slate: "#7188A1"
+  transaction-category-income-soft: "#8193AA"
 
 dark-mode-reserved:
   status: reserved-for-later
@@ -398,26 +416,75 @@ Raw `fontSize`, `fontWeight`, and `letterSpacing` values are not allowed in new 
 
 ## Category Color Rule
 
-Use the B1 Fresh Finance Palette:
+Use the Transaction Category Semantic Palette. Category color is family-first:
+each top-level group owns one primary hue, and child categories use related
+tints, shades, or lower-saturation variants inside the same hue family. This
+keeps the table scannable without turning every category into an unrelated
+rainbow.
 
-| Token                    |     Solid |      Tint | Use                                       |
-| ------------------------ | --------: | --------: | ----------------------------------------- |
-| `category-housing`       | `#B45309` | `#FEF3C7` | Housing, rent, mortgage, home             |
-| `category-food`          | `#15803D` | `#DCFCE7` | Groceries, restaurants                    |
-| `category-transport`     | `#0E7490` | `#CFFAFE` | Transit, gas, car                         |
-| `category-shopping`      | `#BE123C` | `#FFE4E6` | Retail and discretionary shopping         |
-| `category-bills`         | `#6D28D9` | `#EDE9FE` | Utilities, subscriptions, recurring bills |
-| `category-health`        | `#047857` | `#D1FAE5` | Medical, pharmacy, fitness                |
-| `category-entertainment` | `#C2410C` | `#FFEDD5` | Media, events, hobbies                    |
-| `category-travel`        | `#0369A1` | `#E0F2FE` | Flights, hotels, trips                    |
-| `category-income`        | `#0F766E` | `#CCFBF1` | Income groups                             |
-| `category-debt`          | `#B91C1C` | `#FEE2E2` | Debt, loans, interest                     |
-| `category-savings`       | `#4D7C0F` | `#ECFCCB` | Savings, investments, goals               |
-| `category-personal`      | `#7E22CE` | `#F3E8FF` | Personal care, fallback                   |
+### Transaction Category Semantic Palette
 
-Group-level category color is the rule. Child categories inherit their group color unless a later explicit color-setting feature is built.
+| Token                                            |     Value | Usage role                                                 | Variant guidance                                                                |
+| ------------------------------------------------ | --------: | ---------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `transaction-category-fixed`                     | `#003ECC` | Fixed expenses parent group                                | Deep institutional blue for committed, recurring obligations.                   |
+| `transaction-category-fixed-tint`                | `#E7EFFF` | Fixed soft fill/background                                 | Use only as a tint behind blue marks; never as text.                            |
+| `transaction-category-fixed-deep`                | `#002B8A` | Rent, mortgage, housing-heavy fixed costs                  | Darkest blue shade; best for high-value fixed categories.                       |
+| `transaction-category-fixed-strong`              | `#0057D8` | Insurance and important recurring fixed costs              | Strong blue variant with clear contrast on white/off-white.                     |
+| `transaction-category-fixed-mid`                 | `#2F6BDB` | Phone, groceries, or generic fixed child fallback          | Mid-blue; use when a fixed child does not have a more specific mapping.         |
+| `transaction-category-fixed-soft`                | `#5A86D6` | Utilities and lower-emphasis fixed costs                   | Softer blue; avoid using for tiny text.                                         |
+| `transaction-category-fixed-cyan`                | `#0078A8` | Transportation, transit, car                               | Blue-cyan variant that stays inside the Fixed family.                           |
+| `transaction-category-fixed-indigo`              | `#3949AB` | Subscriptions and recurring digital services               | Indigo-blue variant; distinct from transport while still Fixed-family.          |
+| `transaction-category-fixed-slate`               | `#466A9F` | Internet, broadband, network services                      | Desaturated blue; useful for infrastructure-like categories.                    |
+| `transaction-category-fun`                       | `#F4B000` | Fun parent group                                           | Bright yellow identity token; use with labels because it is not text-safe.      |
+| `transaction-category-fun-tint`                  | `#FFF3C4` | Fun soft fill/background                                   | Light amber tint for chips or card backgrounds; never use as the only signal.   |
+| `transaction-category-fun-deep`                  | `#7C5A00` | Hobbies and low-frequency discretionary spend              | Deep ochre; passes better contrast than the parent yellow.                      |
+| `transaction-category-fun-strong`                | `#8C5F00` | Personal care                                              | Strong amber-brown, readable as yellow-family without screaming.                |
+| `transaction-category-fun-amber`                 | `#9A6400` | Shopping and retail                                        | Amber shade for discretionary purchases.                                        |
+| `transaction-category-fun-honey`                 | `#A86B00` | Food/groceries when categorized under Fun                  | Honey shade; use for everyday discretionary food categories.                    |
+| `transaction-category-fun-orange`                | `#B45309` | Entertainment, media, events                               | Orange-amber shade; still belongs to Fun, not warning state.                    |
+| `transaction-category-fun-burnt`                 | `#92400E` | Restaurants, dining, bars, coffee                          | Burnt amber for dining; high enough contrast for small bars.                    |
+| `transaction-category-trading-investment`        | `#CF202F` | Trading and investment parent group                        | Red identity only; never use this token for loss/error meaning.                 |
+| `transaction-category-trading-investment-tint`   | `#FDE2E5` | Trading and investment soft fill/background                | Soft red tint for category context, not for account performance.                |
+| `transaction-category-trading-investment-deep`   | `#7F1D2D` | Brokerage fees                                             | Deep crimson; separates fees from account-value status.                         |
+| `transaction-category-trading-investment-strong` | `#8F1722` | Investment/portfolio child fallback                        | Strong crimson child variant.                                                   |
+| `transaction-category-trading-investment-mid`    | `#A61B29` | Stocks and ETFs                                            | Mid crimson; use for equities-related categories.                               |
+| `transaction-category-trading-investment-red`    | `#B91C1C` | Losses or interest-like trading categories                 | Closest to error red; pair with label so it is not mistaken for status.         |
+| `transaction-category-trading-investment-rose`   | `#BE3144` | Crypto and volatile investment categories                  | Rose-red variant, distinct from the parent red.                                 |
+| `transaction-category-other`                     | `#5B616E` | Other parent group, miscellaneous, uncategorized, fallback | Neutral gray identity token. Do not reuse for disabled text or inactive states. |
+| `transaction-category-other-tint`                | `#F1F3F6` | Other soft fill/background                                 | Secondary neutral fill; keep distinct from disabled surfaces.                   |
+| `transaction-category-other-deep`                | `#343A46` | Work expenses or heavy miscellaneous categories            | Dark neutral; clearly visible, not disabled.                                    |
+| `transaction-category-other-strong`              | `#4B5563` | Miscellaneous and uncategorized children                   | Default child color inside Other.                                               |
+| `transaction-category-other-mid`                 | `#6B7280` | Low-frequency custom Other children                        | Mid neutral; still a real category mark.                                        |
+| `transaction-category-other-cool`                | `#717887` | Plaid/fallback imported category groups                    | Cool neutral variant for imported or system-like groupings.                     |
+| `transaction-category-other-slate`               | `#525A66` | Custom Other fallback                                      | Slate neutral; use when stable hash needs another Other-family choice.          |
+| `transaction-category-income`                    | `#A8B8CC` | Income parent group                                        | Blue gray identity token; intentionally calm, not profit green.                 |
+| `transaction-category-income-tint`               | `#EDF2F7` | Income soft fill/background                                | Soft blue-gray tint for income grouping context.                                |
+| `transaction-category-income-deep`               | `#45576E` | Salary, payroll, wages                                     | Dark blue gray; use for actual income row marks so contrast is adequate.        |
+| `transaction-category-income-strong`             | `#53677F` | Bonus, commission                                          | Strong blue gray; separates income source type without using success green.     |
+| `transaction-category-income-mid`                | `#627890` | Transfers and deposits                                     | Mid blue gray for neutral income movement.                                      |
+| `transaction-category-income-slate`              | `#7188A1` | Interest and dividends                                     | Slate blue gray; avoid confusing with account status.                           |
+| `transaction-category-income-soft`               | `#8193AA` | Other income fallback                                      | Softest usable income child mark; do not use as body text.                      |
 
-Unknown custom category groups map to this palette by stable hash of the group name. Color is never the only signal; pair it with a label, amount, icon, or row context.
+### Palette Meaning And Contrast
+
+The palette is intentionally semantic, not decorative. Fixed is blue because
+fixed obligations should feel stable and institutional. Fun is yellow because
+discretionary spend should feel distinct from obligation and status colors.
+Trading and investment uses red only as a category-family identity; it must not
+be reused for loss, error, negative return, debt, or warning states. Other uses
+`#5B616E` as a real neutral category, not as disabled/inactive UI. Income uses
+blue gray so income is calm and legible without competing with green success.
+
+Contrast audit: `#003ECC`, `#CF202F`, and `#5B616E` are strong enough for small
+marks on white/off-white surfaces. `#F4B000` and `#A8B8CC` are lower-contrast
+identity colors, so they should not be used as text. Use the darker Fun and
+Income child variants for thin bars, dots, and dense table marks when the parent
+token would be too subtle. Color is never the only signal; pair it with a label,
+amount, icon, or row context.
+
+Unknown custom category groups map to the Other family by default. This is
+deliberate: miscellaneous or uncategorized transactions should feel neutral and
+secondary, while still reading as a real category.
 
 ## Action Color Rule
 

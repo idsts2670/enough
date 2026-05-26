@@ -140,6 +140,49 @@ export const categorySavingsTint = '#ECFCCB';
 export const categoryPersonal = '#7E22CE';
 export const categoryPersonalTint = '#F3E8FF';
 
+export const transactionCategoryFixed = '#003ECC';
+export const transactionCategoryFixedTint = '#E7EFFF';
+export const transactionCategoryFixedDeep = '#002B8A';
+export const transactionCategoryFixedStrong = '#0057D8';
+export const transactionCategoryFixedMid = '#2F6BDB';
+export const transactionCategoryFixedSoft = '#5A86D6';
+export const transactionCategoryFixedCyan = '#0078A8';
+export const transactionCategoryFixedIndigo = '#3949AB';
+export const transactionCategoryFixedSlate = '#466A9F';
+
+export const transactionCategoryFun = '#F4B000';
+export const transactionCategoryFunTint = '#FFF3C4';
+export const transactionCategoryFunDeep = '#7C5A00';
+export const transactionCategoryFunStrong = '#8C5F00';
+export const transactionCategoryFunAmber = '#9A6400';
+export const transactionCategoryFunHoney = '#A86B00';
+export const transactionCategoryFunOrange = '#B45309';
+export const transactionCategoryFunBurnt = '#92400E';
+
+export const transactionCategoryTradingInvestment = '#CF202F';
+export const transactionCategoryTradingInvestmentTint = '#FDE2E5';
+export const transactionCategoryTradingInvestmentDeep = '#7F1D2D';
+export const transactionCategoryTradingInvestmentStrong = '#8F1722';
+export const transactionCategoryTradingInvestmentMid = '#A61B29';
+export const transactionCategoryTradingInvestmentRed = '#B91C1C';
+export const transactionCategoryTradingInvestmentRose = '#BE3144';
+
+export const transactionCategoryOther = '#5B616E';
+export const transactionCategoryOtherTint = '#F1F3F6';
+export const transactionCategoryOtherDeep = '#343A46';
+export const transactionCategoryOtherStrong = '#4B5563';
+export const transactionCategoryOtherMid = '#6B7280';
+export const transactionCategoryOtherCool = '#717887';
+export const transactionCategoryOtherSlate = '#525A66';
+
+export const transactionCategoryIncome = '#A8B8CC';
+export const transactionCategoryIncomeTint = '#EDF2F7';
+export const transactionCategoryIncomeDeep = '#45576E';
+export const transactionCategoryIncomeStrong = '#53677F';
+export const transactionCategoryIncomeMid = '#627890';
+export const transactionCategoryIncomeSlate = '#7188A1';
+export const transactionCategoryIncomeSoft = '#8193AA';
+
 // Chart colors - Qualitative scale (9 colors)
 export const chartQual1 = '#16a34a'; // Success green
 export const chartQual2 = '#a8c8e8'; // Soft sky

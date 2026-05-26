@@ -1,84 +1,262 @@
-import { theme } from '@actual-app/components/theme';
+import * as colorPalette from '#style/palette';
 
 export type CategoryColor = {
   color: string;
   tint: string;
 };
 
-const categoryColorTokens = [
+type CategoryColorToken = CategoryColor & {
+  key: string;
+  words: string[];
+};
+
+type CategoryColorFamily = CategoryColor & {
+  key: string;
+  words: string[];
+  categories: CategoryColorToken[];
+};
+
+const categoryColorFamilies: CategoryColorFamily[] = [
   {
-    key: 'housing',
-    words: ['housing', 'home', 'rent', 'mortgage'],
-    color: theme.categoryHousing,
-    tint: theme.categoryHousingTint,
+    key: 'fixed',
+    words: ['fixed', 'fixed expense', 'fixed expenses'],
+    color: colorPalette.transactionCategoryFixed,
+    tint: colorPalette.transactionCategoryFixedTint,
+    categories: [
+      {
+        key: 'fixed-rent',
+        words: ['rent', 'mortgage', 'housing', 'home'],
+        color: colorPalette.transactionCategoryFixedDeep,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-transport',
+        words: ['transport', 'transportation', 'transit', 'car', 'gas'],
+        color: colorPalette.transactionCategoryFixedCyan,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-subscriptions',
+        words: ['subscription', 'subscriptions', 'recurring'],
+        color: colorPalette.transactionCategoryFixedIndigo,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-insurance',
+        words: ['insurance'],
+        color: colorPalette.transactionCategoryFixedStrong,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-phone',
+        words: ['phone', 'mobile', 'cell'],
+        color: colorPalette.transactionCategoryFixedMid,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-internet',
+        words: ['internet', 'wifi', 'broadband'],
+        color: colorPalette.transactionCategoryFixedSlate,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-utilities',
+        words: ['utility', 'utilities', 'electric', 'water', 'gas'],
+        color: colorPalette.transactionCategoryFixedSoft,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+      {
+        key: 'fixed-groceries',
+        words: ['grocery', 'groceries'],
+        color: colorPalette.transactionCategoryFixedMid,
+        tint: colorPalette.transactionCategoryFixedTint,
+      },
+    ],
   },
   {
-    key: 'food',
-    words: ['food', 'drink', 'grocery', 'restaurant'],
-    color: theme.categoryFood,
-    tint: theme.categoryFoodTint,
+    key: 'fun',
+    words: ['fun', 'lifestyle', 'discretionary'],
+    color: colorPalette.transactionCategoryFun,
+    tint: colorPalette.transactionCategoryFunTint,
+    categories: [
+      {
+        key: 'fun-personal-care',
+        words: ['personal care', 'beauty', 'haircut', 'wellness'],
+        color: colorPalette.transactionCategoryFunStrong,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+      {
+        key: 'fun-shopping',
+        words: ['shopping', 'retail', 'shop'],
+        color: colorPalette.transactionCategoryFunAmber,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+      {
+        key: 'fun-entertainment',
+        words: ['entertainment', 'movie', 'media', 'event'],
+        color: colorPalette.transactionCategoryFunOrange,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+      {
+        key: 'fun-hobbies',
+        words: ['hobby', 'hobbies', 'game', 'sport'],
+        color: colorPalette.transactionCategoryFunDeep,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+      {
+        key: 'fun-restaurants',
+        words: ['restaurant', 'restaurants', 'dining', 'bar', 'coffee'],
+        color: colorPalette.transactionCategoryFunBurnt,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+      {
+        key: 'fun-groceries',
+        words: ['grocery', 'groceries', 'food'],
+        color: colorPalette.transactionCategoryFunHoney,
+        tint: colorPalette.transactionCategoryFunTint,
+      },
+    ],
   },
   {
-    key: 'transport',
-    words: ['transport', 'car', 'transit', 'gas'],
-    color: theme.categoryTransport,
-    tint: theme.categoryTransportTint,
+    key: 'trading-investment',
+    words: [
+      'trading',
+      'investment',
+      'investments',
+      'brokerage',
+      'crypto',
+      'stock',
+      'stocks',
+    ],
+    color: colorPalette.transactionCategoryTradingInvestment,
+    tint: colorPalette.transactionCategoryTradingInvestmentTint,
+    categories: [
+      {
+        key: 'trading-brokerage-fees',
+        words: ['brokerage', 'fee', 'fees'],
+        color: colorPalette.transactionCategoryTradingInvestmentDeep,
+        tint: colorPalette.transactionCategoryTradingInvestmentTint,
+      },
+      {
+        key: 'trading-crypto',
+        words: ['crypto', 'bitcoin', 'ethereum'],
+        color: colorPalette.transactionCategoryTradingInvestmentRose,
+        tint: colorPalette.transactionCategoryTradingInvestmentTint,
+      },
+      {
+        key: 'trading-stocks',
+        words: ['stock', 'stocks', 'etf', 'etfs', 'equity'],
+        color: colorPalette.transactionCategoryTradingInvestmentMid,
+        tint: colorPalette.transactionCategoryTradingInvestmentTint,
+      },
+      {
+        key: 'trading-losses',
+        words: ['loss', 'losses', 'interest'],
+        color: colorPalette.transactionCategoryTradingInvestmentRed,
+        tint: colorPalette.transactionCategoryTradingInvestmentTint,
+      },
+      {
+        key: 'trading-investment',
+        words: ['invest', 'investment', 'portfolio'],
+        color: colorPalette.transactionCategoryTradingInvestmentStrong,
+        tint: colorPalette.transactionCategoryTradingInvestmentTint,
+      },
+    ],
   },
   {
-    key: 'shopping',
-    words: ['shopping', 'retail'],
-    color: theme.categoryShopping,
-    tint: theme.categoryShoppingTint,
-  },
-  {
-    key: 'bills',
-    words: ['bill', 'subscription', 'utility'],
-    color: theme.categoryBills,
-    tint: theme.categoryBillsTint,
-  },
-  {
-    key: 'health',
-    words: ['health', 'medical', 'fitness', 'pharmacy'],
-    color: theme.categoryHealth,
-    tint: theme.categoryHealthTint,
-  },
-  {
-    key: 'entertainment',
-    words: ['entertainment', 'hobby', 'media'],
-    color: theme.categoryEntertainment,
-    tint: theme.categoryEntertainmentTint,
-  },
-  {
-    key: 'travel',
-    words: ['travel', 'flight', 'hotel'],
-    color: theme.categoryTravel,
-    tint: theme.categoryTravelTint,
+    key: 'other',
+    words: [
+      'other',
+      'misc',
+      'miscellaneous',
+      'uncategorized',
+      'fallback',
+      'categories',
+      'plaid categories',
+      'general',
+    ],
+    color: colorPalette.transactionCategoryOther,
+    tint: colorPalette.transactionCategoryOtherTint,
+    categories: [
+      {
+        key: 'other-misc',
+        words: ['misc', 'miscellaneous', 'uncategorized', 'general'],
+        color: colorPalette.transactionCategoryOtherStrong,
+        tint: colorPalette.transactionCategoryOtherTint,
+      },
+      {
+        key: 'other-work',
+        words: ['work', 'business', 'reimburse'],
+        color: colorPalette.transactionCategoryOtherDeep,
+        tint: colorPalette.transactionCategoryOtherTint,
+      },
+      {
+        key: 'other-fallback',
+        words: ['other', 'fallback'],
+        color: colorPalette.transactionCategoryOther,
+        tint: colorPalette.transactionCategoryOtherTint,
+      },
+      {
+        key: 'other-custom',
+        words: ['custom'],
+        color: colorPalette.transactionCategoryOtherSlate,
+        tint: colorPalette.transactionCategoryOtherTint,
+      },
+      {
+        key: 'other-plaid',
+        words: ['plaid'],
+        color: colorPalette.transactionCategoryOtherCool,
+        tint: colorPalette.transactionCategoryOtherTint,
+      },
+    ],
   },
   {
     key: 'income',
-    words: ['income', 'transfer'],
-    color: theme.categoryIncome,
-    tint: theme.categoryIncomeTint,
-  },
-  {
-    key: 'debt',
-    words: ['debt', 'loan', 'payment'],
-    color: theme.categoryDebt,
-    tint: theme.categoryDebtTint,
-  },
-  {
-    key: 'savings',
-    words: ['saving', 'investment'],
-    color: theme.categorySavings,
-    tint: theme.categorySavingsTint,
-  },
-  {
-    key: 'personal',
-    words: ['personal'],
-    color: theme.categoryPersonal,
-    tint: theme.categoryPersonalTint,
+    words: ['income', 'salary', 'paycheck', 'revenue'],
+    color: colorPalette.transactionCategoryIncome,
+    tint: colorPalette.transactionCategoryIncomeTint,
+    categories: [
+      {
+        key: 'income-salary',
+        words: ['salary', 'paycheck', 'payroll', 'wage'],
+        color: colorPalette.transactionCategoryIncomeDeep,
+        tint: colorPalette.transactionCategoryIncomeTint,
+      },
+      {
+        key: 'income-bonus',
+        words: ['bonus', 'commission'],
+        color: colorPalette.transactionCategoryIncomeStrong,
+        tint: colorPalette.transactionCategoryIncomeTint,
+      },
+      {
+        key: 'income-transfer',
+        words: ['transfer', 'deposit'],
+        color: colorPalette.transactionCategoryIncomeMid,
+        tint: colorPalette.transactionCategoryIncomeTint,
+      },
+      {
+        key: 'income-interest',
+        words: ['interest', 'dividend'],
+        color: colorPalette.transactionCategoryIncomeSlate,
+        tint: colorPalette.transactionCategoryIncomeTint,
+      },
+      {
+        key: 'income-other',
+        words: ['income', 'revenue'],
+        color: colorPalette.transactionCategoryIncomeSoft,
+        tint: colorPalette.transactionCategoryIncomeTint,
+      },
+    ],
   },
 ];
+
+function normalizeName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
 function stableHash(value: string) {
   let hash = 2166136261;
@@ -89,34 +267,44 @@ function stableHash(value: string) {
   return hash >>> 0;
 }
 
-const genericCategoryGroups = new Set([
-  'categories',
-  'general',
-  'other',
-  'plaid categories',
-  'usual expenses',
-]);
+function matchesAny(text: string, words: string[]) {
+  return words.some(word => text.includes(normalizeName(word)));
+}
+
+function findFamily(groupName: string) {
+  const normalizedGroupName = normalizeName(groupName);
+
+  return (
+    categoryColorFamilies.find(
+      family =>
+        normalizedGroupName === family.key ||
+        matchesAny(normalizedGroupName, family.words),
+    ) ??
+    categoryColorFamilies.find(family => family.key === 'other') ??
+    categoryColorFamilies[0]
+  );
+}
 
 export function getCategoryColor(
   groupName: string,
   categoryName?: string | null,
 ): CategoryColor {
-  const normalized = groupName.toLowerCase();
-  const normalizedCategory = categoryName?.toLowerCase() ?? '';
-  const shouldPreferCategory = genericCategoryGroups.has(normalized);
-  const textToMatch = shouldPreferCategory
-    ? `${normalizedCategory} ${normalized}`
-    : `${normalized} ${normalizedCategory}`;
-  const namedToken = categoryColorTokens.find(
-    token =>
-      textToMatch.includes(token.key) ||
-      token.words.some(word => textToMatch.includes(word)),
+  const family = findFamily(groupName);
+
+  if (!categoryName) {
+    return { color: family.color, tint: family.tint };
+  }
+
+  const normalizedCategoryName = normalizeName(categoryName);
+  const namedCategory = family.categories.find(category =>
+    matchesAny(normalizedCategoryName, category.words),
   );
 
   return (
-    namedToken ??
-    categoryColorTokens[
-      stableHash(normalizedCategory || normalized) % categoryColorTokens.length
-    ]
+    namedCategory ??
+    family.categories[
+      stableHash(normalizedCategoryName || normalizeName(groupName)) %
+        family.categories.length
+    ] ?? { color: family.color, tint: family.tint }
   );
 }
