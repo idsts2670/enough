@@ -14,7 +14,7 @@ A calm personal-finance app for dense, repeated money work. Forked from [Actual 
 
 ## Cost Model
 
-Enough is intended to be completely free to run for personal local use:
+**Enough is intended to be completely free to run for personal local use:**
 
 - The app runs locally from this repository, and the server can be served from your own machine at `http://localhost:5006`.
 - Your budget data stays in local SQLite files unless you choose to expose or host the server elsewhere.
