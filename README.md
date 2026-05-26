@@ -6,10 +6,22 @@
 
 A calm personal-finance app for dense, repeated money work. Forked from [Actual Budget](https://github.com/actualbudget/actual) and extended with Plaid bank sync and a redesigned UI.
 
+- **Free for local personal use** — run the app and sync server on your own machine with no Enough subscription, hosting bill, or managed cloud service
 - **Local-first** — all data lives in SQLite on your machine, no cloud required
 - **Plaid sync** — pull live transactions from your bank accounts automatically
 - **Envelope budgeting** — allocate income to categories before you spend it
 - **Dashboard** — net worth, spending, categories, and recurring bills at a glance
+
+## Cost Model
+
+Enough is intended to be completely free to run for personal local use:
+
+- The app runs locally from this repository, and the server can be served from your own machine at `http://localhost:5006`.
+- Your budget data stays in local SQLite files unless you choose to expose or host the server elsewhere.
+- There is no Enough subscription, hosted service, or required paid infrastructure when you run it locally.
+- Plaid bank sync can use the [Plaid Trial plan](https://support.plaid.com/hc/en-us/articles/39994173227159-What-is-the-Plaid-Trial-plan), which currently provides free access to Plaid production APIs for eligible US/Canada developers.
+
+Plaid Trial is free, but not unlimited. It currently allows up to 10 production Items, and API calls are unlimited only for Items you have already connected. Plaid also says `/item/remove` is not supported on Trial, so treat each production bank connection as a limited slot. If you need more Items or products outside the Trial plan, you will need a paid Plaid Production account.
 
 ## Quick Start
 
