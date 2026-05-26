@@ -183,6 +183,15 @@ export const transactionCategoryIncomeMid = '#627890';
 export const transactionCategoryIncomeSlate = '#7188A1';
 export const transactionCategoryIncomeSoft = '#8193AA';
 
+export const transactionCategoryFutureMe = '#7C3AED';
+export const transactionCategoryFutureMeTint = '#F1EAFF';
+export const transactionCategoryFutureMeDeep = '#4C1D95';
+export const transactionCategoryFutureMeStrong = '#5B21B6';
+export const transactionCategoryFutureMeMid = '#6D28D9';
+export const transactionCategoryFutureMeSoft = '#8B5CF6';
+export const transactionCategoryFutureMeMuted = '#6E56A6';
+export const transactionCategoryFutureMeSlate = '#65558F';
+
 // Chart colors - Qualitative scale (9 colors)
 export const chartQual1 = '#16a34a'; // Success green
 export const chartQual2 = '#a8c8e8'; // Soft sky

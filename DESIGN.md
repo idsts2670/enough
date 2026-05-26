@@ -88,6 +88,15 @@ colors:
   transaction-category-income-slate: "#7188A1"
   transaction-category-income-soft: "#8193AA"
 
+  transaction-category-future-me: "#7C3AED"
+  transaction-category-future-me-tint: "#F1EAFF"
+  transaction-category-future-me-deep: "#4C1D95"
+  transaction-category-future-me-strong: "#5B21B6"
+  transaction-category-future-me-mid: "#6D28D9"
+  transaction-category-future-me-soft: "#8B5CF6"
+  transaction-category-future-me-muted: "#6E56A6"
+  transaction-category-future-me-slate: "#65558F"
+
 dark-mode-reserved:
   status: reserved-for-later
   rule: Do not design full dark mode in v0. Reserve equivalent token names only when implementation needs a slot.
@@ -464,6 +473,14 @@ rainbow.
 | `transaction-category-income-mid`                | `#627890` | Transfers and deposits                                     | Mid blue gray for neutral income movement.                                      |
 | `transaction-category-income-slate`              | `#7188A1` | Interest and dividends                                     | Slate blue gray; avoid confusing with account status.                           |
 | `transaction-category-income-soft`               | `#8193AA` | Other income fallback                                      | Softest usable income child mark; do not use as body text.                      |
+| `transaction-category-future-me`                 | `#7C3AED` | Future Me parent group                                     | Purple identity token for education, growth, career, and self-investment.       |
+| `transaction-category-future-me-tint`            | `#F1EAFF` | Future Me soft fill/background                             | Light purple tint for chips or contextual fills; never use as text.             |
+| `transaction-category-future-me-deep`            | `#4C1D95` | Career, certification, conferences, retirement             | Deep purple; strongest variant for high-importance future-building categories.  |
+| `transaction-category-future-me-strong`          | `#5B21B6` | Education, school, tuition, courses                        | Strong purple child token with high contrast on white/off-white surfaces.       |
+| `transaction-category-future-me-mid`             | `#6D28D9` | Learning, books, training, savings transfers               | Mid purple; use for ongoing learning or future-funding categories.              |
+| `transaction-category-future-me-soft`            | `#8B5CF6` | Future Me fallback child                                   | Brighter purple variant; use for larger marks, not small body text.             |
+| `transaction-category-future-me-muted`           | `#6E56A6` | Wellness, therapy, fitness under Future Me                 | Lower-saturation purple for personal-development health categories.             |
+| `transaction-category-future-me-slate`           | `#65558F` | Growth, self-improvement, emergency fund                   | Desaturated purple; useful when the row should feel calm but still active.      |
 
 ### Palette Meaning And Contrast
 
@@ -474,13 +491,17 @@ Trading and investment uses red only as a category-family identity; it must not
 be reused for loss, error, negative return, debt, or warning states. Other uses
 `#5B616E` as a real neutral category, not as disabled/inactive UI. Income uses
 blue gray so income is calm and legible without competing with green success.
+Future Me uses purple because it reads as aspirational and self-investment
+without colliding with fixed obligations, discretionary spend, income, or
+trading categories.
 
 Contrast audit: `#003ECC`, `#CF202F`, and `#5B616E` are strong enough for small
-marks on white/off-white surfaces. `#F4B000` and `#A8B8CC` are lower-contrast
-identity colors, so they should not be used as text. Use the darker Fun and
-Income child variants for thin bars, dots, and dense table marks when the parent
-token would be too subtle. Color is never the only signal; pair it with a label,
-amount, icon, or row context.
+marks on white/off-white surfaces. `#7C3AED` also has enough contrast for small
+category marks. `#F4B000` and `#A8B8CC` are lower-contrast identity colors, so
+they should not be used as text. Use the darker Fun and Income child variants
+for thin bars, dots, and dense table marks when the parent token would be too
+subtle. Color is never the only signal; pair it with a label, amount, icon, or
+row context.
 
 Unknown custom category groups map to the Other family by default. This is
 deliberate: miscellaneous or uncategorized transactions should feel neutral and
@@ -498,33 +519,28 @@ The implementer provides a typed helper:
 
 ```ts
 type CategoryGroup =
-  | 'housing'
-  | 'food'
-  | 'transport'
-  | 'shopping'
-  | 'bills'
-  | 'health'
-  | 'entertainment'
-  | 'travel'
+  | 'fixed'
+  | 'fun'
+  | 'trading-investment'
+  | 'other'
   | 'income'
-  | 'debt'
-  | 'savings'
-  | 'personal'
+  | 'future-me'
   | string; // custom groups
 
 function getCategoryColor(
   group: CategoryGroup,
-  variant: 'solid' | 'tint',
-): string;
+  category?: string | null,
+): { color: string; tint: string };
 ```
 
 Resolution rules, in order:
 
-1. **Stored override (Phase 3+).** If the category record has an explicit stored color, return it (after format normalization).
-2. **Named group.** If `group` is one of the 12 named groups (housing, food, transport, shopping, bills, health, entertainment, travel, income, debt, savings, personal), return `colors.category-{group}` for `solid` or `colors.category-{group}-tint` for `tint`.
-3. **Hash fallback (custom groups).** Compute `stableHash(group) mod 12` and return the token at that index in the ordered list above. The hash MUST be stable across reloads and processes (e.g. FNV-1a) so the same custom category name always renders the same color.
+1. **Stored override (Phase 3+).** If the category record has an explicit stored color, return it after format normalization.
+2. **Named semantic family.** If `group` resolves to Fixed, Fun, Trading and Investment, Other, Income, or Future Me, return that family parent color for the group row.
+3. **Named child variant.** If a category name is provided, match the category inside the resolved family and return a related tint, shade, or lower-saturation variant from that same family.
+4. **Family fallback.** If the group is unknown, resolve it to the Other family. If the category is unknown inside a known family, compute `stableHash(category) mod family.children.length` and return a stable child variant from that family.
 
-Bind at the usage site, not in the design tokens. Example: `<CategoryPill group={transaction.categoryGroup} />` resolves both `{category.tint}` (for `backgroundColor`) and `{category.solid}` (for `category-dot`) by calling `getCategoryColor` once per variant.
+Bind at the usage site, not in the design tokens. Example: `<CategoryPill group={transaction.categoryGroup} category={transaction.category} />` resolves both the group family and child variant by calling `getCategoryColor(group, category)`.
 
 The placeholder `{category.X}` in this file means "fill via `getCategoryColor` at usage site." Do not treat `{category.tint}` or `{category.solid}` as standalone tokens.
 
