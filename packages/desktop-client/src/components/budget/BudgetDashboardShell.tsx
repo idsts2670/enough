@@ -362,6 +362,7 @@ function FinancialMetricValue(props: FinancialMetricValueProps) {
 
 function MetricCard({ label, value, subtitle, onPress }: MetricCardProps) {
   const cardStyle = {
+    flexDirection: 'column' as const,
     minHeight: 112,
     justifyContent: 'space-between',
     alignItems: 'stretch',
