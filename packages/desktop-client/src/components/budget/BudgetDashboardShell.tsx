@@ -36,6 +36,7 @@ import {
   Tooltip as RechartsTooltip,
   YAxis,
 } from 'recharts';
+import type { DotItemDotProps } from 'recharts';
 
 import {
   buildGradientId,
@@ -508,6 +509,26 @@ function NetWorthSparkline({
   // Keep the lowest stroke inside the SVG clip area so flat sections do not render half-width.
   const yPadding = Math.max(yRange * 0.08, Math.abs(maxY) * 0.02, 1);
   const yDomain: [number, number] = [minY - yPadding, maxY + yPadding];
+  const renderLatestDot = (dotProps: DotItemDotProps) => {
+    if (
+      dotProps.index !== points.length - 1 ||
+      typeof dotProps.cx !== 'number' ||
+      typeof dotProps.cy !== 'number'
+    ) {
+      return null;
+    }
+
+    return (
+      <circle
+        cx={dotProps.cx}
+        cy={dotProps.cy}
+        r={5}
+        fill={theme.cardBackground}
+        stroke={trendColor}
+        strokeWidth={3}
+      />
+    );
+  };
 
   return (
     <ChartContainer minHeight={120}>
@@ -517,7 +538,7 @@ function NetWorthSparkline({
           height={height}
           data={points}
           onMouseLeave={onMouseLeave}
-          margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
+          margin={{ top: 4, right: 10, bottom: 0, left: 2 }}
         >
           <defs>
             <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -538,16 +559,16 @@ function NetWorthSparkline({
             type="linear"
             dataKey="y"
             stroke={trendColor}
-            strokeWidth={2}
+            strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
-            dot={false}
+            dot={renderLatestDot}
             activeDot={{
-              r: 4,
-              fill: trendColor,
-              stroke: theme.cardBackground,
-              strokeWidth: 2,
+              r: 5,
+              fill: theme.cardBackground,
+              stroke: trendColor,
+              strokeWidth: 3,
             }}
             {...animProps}
           />
