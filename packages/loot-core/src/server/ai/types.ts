@@ -51,3 +51,17 @@ export type SavingsAdvisorResponse = {
   topActions: SavingsAdvisorAction[];
   riskFlags: string[];
 };
+
+export type SavingsAdvisorChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+export type SavingsAdvisorChatError = 'unavailable' | 'invalid_messages';
+
+export type SavingsAdvisorChatResponse = {
+  reply: string | null;
+  model: string;
+  promptVersion: 'advisor-chat-v1';
+  error?: SavingsAdvisorChatError;
+};

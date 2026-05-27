@@ -23,10 +23,12 @@ import { Menu } from '@actual-app/components/menu';
 import { Popover } from '@actual-app/components/popover';
 import { SpaceBetween } from '@actual-app/components/space-between';
 import { styles } from '@actual-app/components/styles';
+import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { Tooltip } from '@actual-app/components/tooltip';
 import { displayXl } from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
+import * as monthUtils from '@actual-app/core/shared/months';
 import { tsToRelativeTime } from '@actual-app/core/shared/util';
 import type {
   AccountEntity,
@@ -52,6 +54,7 @@ import { useSyncServerStatus } from '#hooks/useSyncServerStatus';
 
 import type { TableRef } from './Account';
 import { Balances } from './Balance';
+import type { CategoryActivityBalance } from './Balance';
 import { BalanceHistoryGraph } from './BalanceHistoryGraph';
 import { ReconcileMenu, ReconcilingMessage } from './Reconcile';
 
@@ -78,6 +81,7 @@ type AccountHeaderProps = {
   canCalculateBalance?: () => boolean;
   isFiltered: boolean;
   filteredAmount?: number | null;
+  categoryActivity?: CategoryActivityBalance;
   isSorted: boolean;
   search: string;
   filterConditions: RuleConditionEntity[];
@@ -154,6 +158,7 @@ export function AccountHeader({
   canCalculateBalance,
   isFiltered,
   filteredAmount,
+  categoryActivity,
   isSorted,
   search,
   filterConditions,
@@ -309,13 +314,35 @@ export function AccountHeader({
                   accountsSyncing={accountsSyncing}
                 />
               )}
-              <AccountNameField
-                account={account}
-                accountName={accountName}
-                isNameEditable={isNameEditable}
-                saveNameError={saveNameError}
-                onSaveName={onSaveName}
-              />
+              {categoryActivity ? (
+                <View style={{ flexDirection: 'column', gap: 2 }}>
+                  <View
+                    style={{
+                      ...displayXl,
+                      marginRight: 5,
+                      marginBottom: -1,
+                    }}
+                    data-testid="account-name"
+                  >
+                    {categoryActivity.categoryName}
+                  </View>
+                  <Text style={{ color: theme.pageTextSubdued }}>
+                    {monthUtils.format(
+                      categoryActivity.month,
+                      'MMMM yyyy',
+                      locale,
+                    )}
+                  </Text>
+                </View>
+              ) : (
+                <AccountNameField
+                  account={account}
+                  accountName={accountName}
+                  isNameEditable={isNameEditable}
+                  saveNameError={saveNameError}
+                  onSaveName={onSaveName}
+                />
+              )}
             </View>
 
             <Balances
@@ -325,6 +352,7 @@ export function AccountHeader({
               account={account}
               isFiltered={isFiltered}
               filteredAmount={filteredAmount}
+              categoryActivity={categoryActivity}
             />
           </View>
 

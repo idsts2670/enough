@@ -46,7 +46,11 @@ type CategoryGroupView = CategoryGroupEntity & {
 };
 
 const budgetRowColumns =
-  'minmax(220px, 1fr) minmax(180px, 520px) minmax(88px, 112px)';
+  'minmax(220px, 1fr) minmax(80px, 88px) minmax(180px, 360px) minmax(80px, 96px)';
+const budgetRowColumnGap = 10;
+const spentAmountColumnWidth = 88;
+const spendingBarGap = 10;
+const pacePercentWidth = 42;
 
 function getVisibleCategories(group: CategoryGroupEntity): CategoryEntity[] {
   return (group.categories ?? []).filter(
@@ -164,7 +168,27 @@ function EditableBudgetCell({
   );
 }
 
-function SpendingCell({
+function SpentAmountCell({ value }: { value: number }) {
+  const format = useFormat();
+  const displayValue = Math.abs(value);
+
+  return (
+    <Text
+      role="cell"
+      style={{
+        ...tableCellAmount,
+        width: spentAmountColumnWidth,
+        justifySelf: 'end',
+        color: displayValue > 0 ? theme.pageText : theme.pageTextSubdued,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {format(displayValue, 'financial')}
+    </Text>
+  );
+}
+
+function PaceCell({
   value,
   budgeted,
   color,
@@ -173,15 +197,17 @@ function SpendingCell({
   budgeted: number;
   color: string;
 }) {
-  const format = useFormat();
   const displayValue = Math.abs(value);
   const displayBudgeted = Math.abs(budgeted);
-  const progress =
+  const rawProgress =
     displayBudgeted > 0
-      ? Math.min(displayValue / displayBudgeted, 1)
+      ? displayValue / displayBudgeted
       : displayValue > 0
         ? 1
         : 0;
+  const progress = Math.min(Math.max(rawProgress, 0), 1);
+  const percentage = Math.round(rawProgress * 100);
+  const showPace = displayBudgeted > 0;
 
   return (
     <View
@@ -190,21 +216,15 @@ function SpendingCell({
         minWidth: 0,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
+        gap: spendingBarGap,
       }}
     >
-      <Text
-        style={{
-          ...tableCellAmount,
-          width: 96,
-          color: displayValue > 0 ? theme.pageText : theme.pageTextSubdued,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {format(displayValue, 'financial')}
-      </Text>
       <View
-        aria-hidden
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={Math.max(100, percentage)}
+        aria-valuenow={Math.max(0, percentage)}
+        aria-valuetext={`${percentage}%`}
         style={{
           flex: 1,
           height: 5,
@@ -223,6 +243,17 @@ function SpendingCell({
           }}
         />
       </View>
+      <Text
+        style={{
+          ...bodySm,
+          width: pacePercentWidth,
+          color: theme.pageTextSubdued,
+          textAlign: 'right',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {showPace ? `${percentage}%` : ''}
+      </Text>
     </View>
   );
 }
@@ -256,7 +287,7 @@ function GroupBudgetRow({
         display: 'grid',
         gridTemplateColumns: budgetRowColumns,
         alignItems: 'center',
-        columnGap: 16,
+        columnGap: budgetRowColumnGap,
         minHeight: 32,
         marginTop: 8,
         padding: '0 16px',
@@ -289,7 +320,8 @@ function GroupBudgetRow({
           {group.categories.length}
         </Text>
       </View>
-      <SpendingCell
+      <SpentAmountCell value={groupSpent} />
+      <PaceCell
         value={groupSpent}
         budgeted={groupBudgeted}
         color={groupColor}
@@ -343,7 +375,7 @@ function CategoryBudgetRow({
         display: 'grid',
         gridTemplateColumns: budgetRowColumns,
         alignItems: 'center',
-        columnGap: 16,
+        columnGap: budgetRowColumnGap,
         minHeight: 32,
         padding: '0 16px',
         backgroundColor: theme.pageBackground,
@@ -381,7 +413,8 @@ function CategoryBudgetRow({
           {category.name}
         </Text>
       </View>
-      <SpendingCell value={spent} budgeted={budgeted} color={color} />
+      <SpentAmountCell value={spent} />
+      <PaceCell value={spent} budgeted={budgeted} color={color} />
       <EditableBudgetCell
         category={category}
         value={budgeted}
@@ -501,7 +534,7 @@ export function BudgetEditorPage() {
               display: 'grid',
               gridTemplateColumns: budgetRowColumns,
               alignItems: 'center',
-              columnGap: 16,
+              columnGap: budgetRowColumnGap,
               minHeight: 28,
               padding: '0 16px',
               backgroundColor: theme.pageBackground,
@@ -512,13 +545,31 @@ export function BudgetEditorPage() {
             </Text>
             <Text
               role="columnheader"
-              style={{ ...tableCellAmount, color: theme.pageTextSubdued }}
+              style={{
+                ...tableCellAmount,
+                width: spentAmountColumnWidth,
+                justifySelf: 'end',
+                color: theme.pageTextSubdued,
+              }}
             >
               <Trans>Spent</Trans>
             </Text>
             <Text
               role="columnheader"
-              style={{ ...tableCellAmount, color: theme.pageTextSubdued }}
+              style={{
+                ...bodySm,
+                color: theme.pageTextSubdued,
+              }}
+            >
+              <Trans>Pace</Trans>
+            </Text>
+            <Text
+              role="columnheader"
+              style={{
+                ...tableCellAmount,
+                justifySelf: 'end',
+                color: theme.pageTextSubdued,
+              }}
             >
               <Trans>Budget</Trans>
             </Text>

@@ -282,6 +282,7 @@ type TransactionListProps = Pick<
 > & {
   tableRef: RefObject<TableHandleRef<TransactionEntity> | null>;
   allTransactions: TransactionEntity[];
+  manualActivityTransactions?: TransactionEntity[];
   account: AccountEntity | undefined;
   category: CategoryEntity | undefined;
   isFiltered?: boolean;
@@ -493,6 +494,7 @@ export function TransactionList({
   tableRef,
   transactions,
   allTransactions,
+  manualActivityTransactions = [],
   loadMoreTransactions,
   account,
   accounts,
@@ -544,6 +546,30 @@ export function TransactionList({
   useLayoutEffect(() => {
     transactionsLatest.current = transactions;
   }, [transactions]);
+
+  const tableTransactions = useMemo(() => {
+    if (manualActivityTransactions.length === 0) {
+      return allTransactions;
+    }
+
+    const mergedTransactions = [
+      ...allTransactions,
+      ...manualActivityTransactions,
+    ];
+
+    if (sortField && sortField !== 'date') {
+      return mergedTransactions;
+    }
+
+    return mergedTransactions.sort((left, right) => {
+      const dateComparison = left.date.localeCompare(right.date);
+      if (dateComparison !== 0) {
+        return ascDesc === 'asc' ? dateComparison : -dateComparison;
+      }
+
+      return left.id.localeCompare(right.id);
+    });
+  }, [allTransactions, manualActivityTransactions, sortField, ascDesc]);
 
   const promptToConvertToSchedule = useCallback(
     (
@@ -936,7 +962,7 @@ export function TransactionList({
         />
         <TransactionTable
           ref={tableRef}
-          transactions={allTransactions}
+          transactions={tableTransactions}
           loadMoreTransactions={loadMoreTransactions}
           accounts={accounts}
           categoryGroups={categoryGroups}

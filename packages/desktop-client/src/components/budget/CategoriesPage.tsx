@@ -955,9 +955,7 @@ function CategoryRow({
   const spentAmount = Math.abs(spent ?? 0);
   const hasBudget = budgetedAmount > 0;
   const isOverspent = hasBudget && spentAmount > budgetedAmount;
-  const progress = hasBudget
-    ? Math.min(Math.max(spentAmount / budgetedAmount, 0), 1)
-    : 0;
+  const progress = hasBudget ? spentAmount / budgetedAmount : 0;
   const categoryColor = getCategoryColor(groupName, category.name);
 
   return (
@@ -1095,9 +1093,7 @@ function CategoryGroupRow({
   );
   const hasBudget = groupBudgeted > 0;
   const isOverspent = hasBudget && groupSpent > groupBudgeted;
-  const progress = hasBudget
-    ? Math.min(Math.max(groupSpent / groupBudgeted, 0), 1)
-    : 0;
+  const progress = hasBudget ? groupSpent / groupBudgeted : 0;
 
   return (
     <RowGrid

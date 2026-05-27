@@ -8,7 +8,7 @@ import {
   runCategorySuggestions,
 } from './category-suggestions';
 import { checkOllamaStatus, getOllamaConfig } from './ollama-client';
-import { getSavingsAdvisor } from './savings-advisor';
+import { getSavingsAdvisor, getSavingsAdvisorChat } from './savings-advisor';
 
 async function handleGetOllamaConfig() {
   return getOllamaConfig();
@@ -22,6 +22,7 @@ export type AiHandlers = {
   'ai/category-suggestion-accept': typeof acceptCategorySuggestion;
   'ai/category-suggestion-reject': typeof rejectCategorySuggestion;
   'ai/savings-advisor': typeof getSavingsAdvisor;
+  'ai/savings-advisor-chat': typeof getSavingsAdvisorChat;
 };
 
 export const app = createApp<AiHandlers>();
@@ -33,3 +34,4 @@ app.method('ai/category-suggestions-get', getCategorySuggestions);
 app.method('ai/category-suggestion-accept', mutator(acceptCategorySuggestion));
 app.method('ai/category-suggestion-reject', mutator(rejectCategorySuggestion));
 app.method('ai/savings-advisor', getSavingsAdvisor);
+app.method('ai/savings-advisor-chat', getSavingsAdvisorChat);

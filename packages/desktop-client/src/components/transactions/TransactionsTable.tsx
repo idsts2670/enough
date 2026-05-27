@@ -348,6 +348,12 @@ const TransactionHeader = memo(
 
 TransactionHeader.displayName = 'TransactionHeader';
 
+const manualRecurringTransactionPrefix = 'manual-recurring/';
+
+function isManualRecurringVirtualTransaction(id: TransactionEntity['id']) {
+  return id.startsWith(manualRecurringTransactionPrefix);
+}
+
 type StatusCellProps = {
   id: TransactionEntity['id'];
   status?: StatusTypes | null;
@@ -989,6 +995,10 @@ const Transaction = memo(function Transaction({
     useState(false);
 
   const onUpdate: TransactionUpdateFunction = async (name, value) => {
+    if (isManualRecurringVirtualTransaction(transaction.id)) {
+      return;
+    }
+
     // Had some issues with this is called twice which is a problem now that we are showing a warning
     // modal if the transaction is locked. I added a boolean to guard against showing the modal twice.
     // I'm still not completely happy with how the cells update pre/post modal. Sometimes you have to
@@ -1155,6 +1165,8 @@ const Transaction = memo(function Transaction({
     is_parent: isParent,
     _unmatched = false,
   } = transaction;
+  const isManualRecurring = isManualRecurringVirtualTransaction(id);
+  const canEditTransaction = !isPreview && !isManualRecurring;
 
   const { schedules = [] } = useCachedSchedules();
   const schedule = transaction.schedule
@@ -1221,6 +1233,7 @@ const Transaction = memo(function Transaction({
   const allowRowDrag =
     canDrag &&
     !isPreview &&
+    !isManualRecurring &&
     !isOnlyTransactionOnDate &&
     (!editing || focusedField === 'select' || focusedField === 'cleared');
   const { dragRef, dragProps } = useDrag<TransactionEntity>({
@@ -1234,13 +1247,14 @@ const Transaction = memo(function Transaction({
   // Gate callbacks for non-reorderable rows (children/previews) to avoid invalid drop operations
   // For child transactions, allow drops only from siblings (same parent)
   const isSiblingDrag = isChildTransaction && draggedParentId === parentId;
-  const safeOnDrop: OnDropCallback | undefined = isPreview
-    ? undefined
-    : isChildTransaction
-      ? isSiblingDrag
-        ? onDrop
-        : undefined
-      : onDrop;
+  const safeOnDrop: OnDropCallback | undefined =
+    isPreview || isManualRecurring
+      ? undefined
+      : isChildTransaction
+        ? isSiblingDrag
+          ? onDrop
+          : undefined
+        : onDrop;
 
   const { dropRef, dropProps, dropPos } = useDrop<TransactionEntity>({
     types: 'transaction',
@@ -1254,7 +1268,7 @@ const Transaction = memo(function Transaction({
   // Check if this row is a valid drop target for the currently dragged transaction
   const isValidDropTarget = useMemo(() => {
     // Non-droppable row types
-    if (isPreview) return false;
+    if (isPreview || isManualRecurring) return false;
 
     // When dragging a child transaction, only siblings are valid targets
     if (draggedParentId) {
@@ -1299,6 +1313,7 @@ const Transaction = memo(function Transaction({
     ascDesc,
     prevRowDate,
     nextRowDate,
+    isManualRecurring,
   ]);
 
   // Dim this row if it (or its parent) is being dragged
@@ -1349,34 +1364,36 @@ const Transaction = memo(function Transaction({
           ...(_unmatched && { opacity: 0.5 }),
           ...(isBeingDragged && { opacity: 0.5 }),
         }}
-        onContextMenu={handleContextMenu}
+        onContextMenu={isManualRecurring ? undefined : handleContextMenu}
       >
-        <Popover
-          triggerRef={triggerRef}
-          placement="bottom start"
-          isOpen={menuOpen}
-          onOpenChange={isOpen => {
-            if (!isOpen) setMenuOpen(false);
-          }}
-          {...position}
-          style={{ width: 200, margin: 1 }}
-          isNonModal={false}
-        >
-          <TransactionMenu
-            transaction={transaction}
-            getTransaction={id => allTransactions?.find(t => t.id === id)}
-            onDelete={ids => onBatchDelete?.(ids)}
-            onDuplicate={ids => onBatchDuplicate?.(ids)}
-            onLinkSchedule={ids => onBatchLinkSchedule?.(ids)}
-            onUnlinkSchedule={ids => onBatchUnlinkSchedule?.(ids)}
-            onCreateRule={ids => onCreateRule?.(ids)}
-            onScheduleAction={(name, ids) => onScheduleAction?.(name, ids)}
-            onMakeAsNonSplitTransactions={ids =>
-              onMakeAsNonSplitTransactions?.(ids)
-            }
-            closeMenu={() => setMenuOpen(false)}
-          />
-        </Popover>
+        {!isManualRecurring && (
+          <Popover
+            triggerRef={triggerRef}
+            placement="bottom start"
+            isOpen={menuOpen}
+            onOpenChange={isOpen => {
+              if (!isOpen) setMenuOpen(false);
+            }}
+            {...position}
+            style={{ width: 200, margin: 1 }}
+            isNonModal={false}
+          >
+            <TransactionMenu
+              transaction={transaction}
+              getTransaction={id => allTransactions?.find(t => t.id === id)}
+              onDelete={ids => onBatchDelete?.(ids)}
+              onDuplicate={ids => onBatchDuplicate?.(ids)}
+              onLinkSchedule={ids => onBatchLinkSchedule?.(ids)}
+              onUnlinkSchedule={ids => onBatchUnlinkSchedule?.(ids)}
+              onCreateRule={ids => onCreateRule?.(ids)}
+              onScheduleAction={(name, ids) => onScheduleAction?.(name, ids)}
+              onMakeAsNonSplitTransactions={ids =>
+                onMakeAsNonSplitTransactions?.(ids)
+              }
+              closeMenu={() => setMenuOpen(false)}
+            />
+          </Popover>
+        )}
 
         {splitError && listContainerRef?.current && (
           <Popover
@@ -1432,7 +1449,7 @@ const Transaction = memo(function Transaction({
           ) : (
             <Cell width={20} />
           )
-        ) : (isPreview && isChild) || !showSelection ? (
+        ) : (isPreview && isChild) || !showSelection || isManualRecurring ? (
           <Cell width={20} />
         ) : (
           <SelectCell
@@ -1476,7 +1493,7 @@ const Transaction = memo(function Transaction({
             formatter={date =>
               date ? formatDate(parseISO(date), dateFormat) : ''
             }
-            onExpose={name => !isPreview && onEdit(id, name)}
+            onExpose={name => canEditTransaction && onEdit(id, name)}
             onUpdate={value => {
               onUpdate('date', value);
             }}
@@ -1510,6 +1527,10 @@ const Transaction = memo(function Transaction({
             textAlign="flex"
             value={accountId}
             formatter={acctId => {
+              if (isManualRecurring) {
+                return t('Manual Entry');
+              }
+
               const acct = acctId && getAccountsById(accounts)[acctId];
               if (acct) {
                 return acct.name;
@@ -1517,8 +1538,8 @@ const Transaction = memo(function Transaction({
               return '';
             }}
             valueStyle={valueStyle}
-            exposed={focusedField === 'account'}
-            onExpose={name => !isPreview && onEdit(id, name)}
+            exposed={focusedField === 'account' && !isManualRecurring}
+            onExpose={name => canEditTransaction && onEdit(id, name)}
             onUpdate={async value => {
               // Only ever allow non-null values
               if (value) {
@@ -1563,7 +1584,7 @@ const Transaction = memo(function Transaction({
             transaction={transaction}
             transferAccountsByTransaction={transferAccountsByTransaction}
             importedPayee={importedPayee}
-            isPreview={isPreview}
+            isPreview={isPreview || isManualRecurring}
             onEdit={onEdit}
             onUpdate={onUpdate}
             onCreatePayee={onCreatePayee}
@@ -1584,7 +1605,7 @@ const Transaction = memo(function Transaction({
           formatter={value =>
             NotesTagFormatter({ notes: value, onNotesTagClick })
           }
-          onExpose={name => !isPreview && onEdit(id, name)}
+          onExpose={name => canEditTransaction && onEdit(id, name)}
           inputProps={{
             value: notes || '',
             onUpdate: onUpdate.bind(null, 'notes'),
@@ -1647,7 +1668,7 @@ const Transaction = memo(function Transaction({
                 },
               }}
               disabled={isTemporaryId(transaction.id)}
-              onEdit={() => !isPreview && onEdit(id, 'category')}
+              onEdit={() => canEditTransaction && onEdit(id, 'category')}
               onSelect={() => onToggleSplit(id)}
             >
               <View
@@ -1694,7 +1715,7 @@ const Transaction = memo(function Transaction({
             width="flex"
             exposed={focusedField === 'category'}
             focused={focusedField === 'category'}
-            onExpose={name => onEdit(id, name)}
+            onExpose={name => canEditTransaction && onEdit(id, name)}
             value={
               isOffBudget
                 ? t('Off budget')
@@ -1730,7 +1751,7 @@ const Transaction = memo(function Transaction({
                   : ''
             }
             exposed={focusedField === 'category'}
-            onExpose={name => !isPreview && onEdit(id, name)}
+            onExpose={name => canEditTransaction && onEdit(id, name)}
             valueStyle={
               !categoryId
                 ? {
@@ -1796,7 +1817,7 @@ const Transaction = memo(function Transaction({
           valueStyle={valueStyle}
           textAlign="right"
           title={debit}
-          onExpose={name => !isPreview && onEdit(id, name)}
+          onExpose={name => canEditTransaction && onEdit(id, name)}
           style={{
             ...(isParent && { fontStyle: 'italic' }),
             ...tableCellAmount,
@@ -1807,7 +1828,9 @@ const Transaction = memo(function Transaction({
             'data-1p-ignore': true,
           }}
           privacyFilter={{
-            activationFilters: [!isTemporaryId(transaction.id)],
+            activationFilters: [
+              !isTemporaryId(transaction.id) && !isManualRecurring,
+            ],
           }}
         />
 
@@ -1826,7 +1849,7 @@ const Transaction = memo(function Transaction({
           valueStyle={valueStyle}
           textAlign="right"
           title={credit}
-          onExpose={name => !isPreview && onEdit(id, name)}
+          onExpose={name => canEditTransaction && onEdit(id, name)}
           style={{
             ...(isParent && { fontStyle: 'italic' }),
             ...tableCellAmount,
@@ -1837,7 +1860,9 @@ const Transaction = memo(function Transaction({
             'data-1p-ignore': true,
           }}
           privacyFilter={{
-            activationFilters: [!isTemporaryId(transaction.id)],
+            activationFilters: [
+              !isTemporaryId(transaction.id) && !isManualRecurring,
+            ],
           }}
         />
 
@@ -1846,7 +1871,10 @@ const Transaction = memo(function Transaction({
             /* Balance field for all transactions */
             name="balance"
             value={
-              runningBalance == null || isChild || isTemporaryId(id)
+              runningBalance == null ||
+              isChild ||
+              isTemporaryId(id) ||
+              isManualRecurring
                 ? ''
                 : integerToCurrency(runningBalance)
             }
@@ -1863,7 +1891,9 @@ const Transaction = memo(function Transaction({
           />
         )}
 
-        {showCleared && (
+        {showCleared && isManualRecurring && <Cell width={38} />}
+
+        {showCleared && !isManualRecurring && (
           <StatusCell
             /* Icon field for all transactions */
             id={id}
@@ -2407,7 +2437,12 @@ function TransactionTableInner({
     const findPrevReorderableDate = (): string | null => {
       for (let i = index - 1; i >= 0; i--) {
         const row = transactionsToRender[i];
-        if (row && !row.is_child && !isPreviewId(row.id)) {
+        if (
+          row &&
+          !row.is_child &&
+          !isPreviewId(row.id) &&
+          !isManualRecurringVirtualTransaction(row.id)
+        ) {
           return row.date ?? null;
         }
       }
@@ -2416,7 +2451,12 @@ function TransactionTableInner({
     const findNextReorderableDate = (): string | null => {
       for (let i = index + 1; i < transactionsToRender.length; i++) {
         const row = transactionsToRender[i];
-        if (row && !row.is_child && !isPreviewId(row.id)) {
+        if (
+          row &&
+          !row.is_child &&
+          !isPreviewId(row.id) &&
+          !isManualRecurringVirtualTransaction(row.id)
+        ) {
           return row.date ?? null;
         }
       }

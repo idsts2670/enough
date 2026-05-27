@@ -1,4 +1,10 @@
-import React, { createRef, PureComponent, useEffect, useMemo } from 'react';
+import React, {
+  createRef,
+  PureComponent,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactElement, RefObject } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Trans } from 'react-i18next';
@@ -10,7 +16,7 @@ import { View } from '@actual-app/components/view';
 import { listen, send } from '@actual-app/core/platform/client/connection';
 import * as undo from '@actual-app/core/platform/client/undo';
 import type { UndoState } from '@actual-app/core/server/undo';
-import { currentDay } from '@actual-app/core/shared/months';
+import { currentDay, lastDayOfMonth } from '@actual-app/core/shared/months';
 import { q } from '@actual-app/core/shared/query';
 import type { Query } from '@actual-app/core/shared/query';
 import {
@@ -89,10 +95,100 @@ import { AccountHeader } from './Header';
 
 type ConditionEntity = Partial<RuleConditionEntity> | TransactionFilterEntity;
 
+const emptyFilterConditions: RuleConditionEntity[] = [];
+
 function isTransactionFilterEntity(
   filter: ConditionEntity,
 ): filter is TransactionFilterEntity {
   return 'id' in filter;
+}
+
+function getCategoryActivityContext(conditions: ConditionEntity[]): {
+  categoryId?: string;
+  month?: string;
+} {
+  const ruleConditions = conditions.filter(
+    (condition): condition is Partial<RuleConditionEntity> =>
+      !isTransactionFilterEntity(condition),
+  );
+
+  const categoryCondition = ruleConditions.find(
+    condition =>
+      condition.field === 'category' &&
+      condition.op === 'is' &&
+      typeof condition.value === 'string',
+  );
+  const monthCondition = ruleConditions.find(
+    condition =>
+      condition.field === 'date' &&
+      condition.op === 'is' &&
+      typeof condition.value === 'string' &&
+      condition.options?.month === true,
+  );
+
+  return {
+    categoryId:
+      typeof categoryCondition?.value === 'string'
+        ? categoryCondition.value
+        : undefined,
+    month:
+      typeof monthCondition?.value === 'string'
+        ? monthCondition.value
+        : undefined,
+  };
+}
+
+type ManualRecurringEntry = Awaited<
+  ReturnType<typeof send<'manual-recurring-entries/list'>>
+>[number];
+
+const manualRecurringTransactionPrefix = 'manual-recurring/';
+
+function isManualEntryActiveInMonth(
+  entry: ManualRecurringEntry,
+  categoryId: string,
+  month: string,
+) {
+  return (
+    entry.active &&
+    entry.category === categoryId &&
+    entry.startMonth <= month &&
+    (!entry.endMonth || entry.endMonth >= month)
+  );
+}
+
+function manualRecurringEntryDate(month: string, dayOfMonth: number) {
+  const lastDay = Number(lastDayOfMonth(month).slice(-2));
+  const day = Math.min(dayOfMonth, lastDay).toString().padStart(2, '0');
+  return `${month}-${day}`;
+}
+
+function manualRecurringEntryNotes(entry: ManualRecurringEntry) {
+  return entry.endMonth
+    ? t('Monthly from {{startMonth}} through {{endMonth}}', {
+        startMonth: entry.startMonth,
+        endMonth: entry.endMonth,
+      })
+    : t('Monthly from {{month}}', {
+        month: entry.startMonth,
+      });
+}
+
+function makeManualRecurringTransaction(
+  entry: ManualRecurringEntry,
+  month: string,
+): TransactionEntity {
+  return {
+    id: `${manualRecurringTransactionPrefix}${entry.id}/${month}`,
+    date: manualRecurringEntryDate(month, entry.dayOfMonth),
+    account: '',
+    payee: `new:${entry.name}`,
+    notes: manualRecurringEntryNotes(entry),
+    category: entry.category,
+    amount: -entry.amount,
+    cleared: false,
+    reconciled: false,
+  };
 }
 
 type AllTransactionsProps = {
@@ -239,6 +335,7 @@ type AccountInternalProps = {
   >['onBatchUnlinkSchedule'];
   onBatchDelete: ReturnType<typeof useTransactionBatchActions>['onBatchDelete'];
   categoryId?: string;
+  manualActivityTransactions: TransactionEntity[];
   location: ReturnType<typeof useLocation>;
   failedAccounts: ReturnType<typeof useFailedAccounts>;
   dateFormat: ReturnType<typeof useDateFormat>;
@@ -1756,6 +1853,25 @@ class AccountInternal extends PureComponent<
       : false;
 
     const balanceQuery = this.getBalanceQuery(accountId);
+    const activityContext = getCategoryActivityContext(
+      this.state.filterConditions,
+    );
+    const manualActivityAmount = this.props.manualActivityTransactions.reduce(
+      (sum, transaction) => sum + transaction.amount,
+      0,
+    );
+    const filteredAmountWithManualActivity =
+      filteredAmount == null
+        ? filteredAmount
+        : filteredAmount + manualActivityAmount;
+    const categoryActivity =
+      category && activityContext.month
+        ? {
+            categoryName: category.name,
+            month: activityContext.month,
+            amount: Math.abs(filteredAmountWithManualActivity ?? 0),
+          }
+        : undefined;
 
     const selectAllFilter = (item: TransactionEntity): boolean => {
       if (item.is_parent) {
@@ -1802,7 +1918,8 @@ class AccountInternal extends PureComponent<
                 showEmptyMessage={showEmptyMessage ?? false}
                 balanceQuery={balanceQuery}
                 canCalculateBalance={this?.canCalculateBalance ?? undefined}
-                filteredAmount={filteredAmount}
+                filteredAmount={filteredAmountWithManualActivity}
+                categoryActivity={categoryActivity}
                 isFiltered={transactionsFiltered ?? false}
                 isSorted={this.state.sort !== null}
                 reconcileAmount={reconcileAmount}
@@ -1852,6 +1969,11 @@ class AccountInternal extends PureComponent<
                   account={account}
                   transactions={transactions}
                   allTransactions={allTransactions}
+                  manualActivityTransactions={
+                    activityContext.categoryId && activityContext.month
+                      ? this.props.manualActivityTransactions
+                      : []
+                  }
                   loadMoreTransactions={() =>
                     this.paged && this.paged.fetchNext()
                   }
@@ -2008,9 +2130,43 @@ export function Account() {
   );
   const modalShowing = useSelector(state => state.modals.modalStack.length > 0);
   const accountsSyncing = useSelector(state => state.account.accountsSyncing);
-  const filterConditions = location?.state?.filterConditions || [];
+  const filterConditions =
+    location?.state?.filterConditions || emptyFilterConditions;
+  const activityContext = useMemo(
+    () => getCategoryActivityContext(filterConditions),
+    [filterConditions],
+  );
+  const [manualActivityTransactions, setManualActivityTransactions] = useState<
+    TransactionEntity[]
+  >([]);
 
   const savedFiters = useTransactionFilters();
+
+  useEffect(() => {
+    const { categoryId, month } = activityContext;
+
+    if (!categoryId || !month) {
+      setManualActivityTransactions([]);
+      return;
+    }
+
+    let isCurrent = true;
+    void send('manual-recurring-entries/list').then(entries => {
+      if (!isCurrent) {
+        return;
+      }
+
+      setManualActivityTransactions(
+        entries
+          .filter(entry => isManualEntryActiveInMonth(entry, categoryId, month))
+          .map(entry => makeManualRecurringTransaction(entry, month)),
+      );
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [activityContext]);
 
   const schedulesQuery = useMemo(
     () => getSchedulesQuery(params.id),
@@ -2067,6 +2223,7 @@ export function Account() {
             modalShowing={modalShowing}
             accountsSyncing={accountsSyncing}
             filterConditions={filterConditions}
+            manualActivityTransactions={manualActivityTransactions}
             categoryGroups={categoryGroups}
             accountId={params.id}
             categoryId={location?.state?.categoryId}

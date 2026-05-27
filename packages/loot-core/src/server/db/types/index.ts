@@ -146,6 +146,21 @@ export type DbScheduleNextDate = {
   base_next_date_ts: number;
 };
 
+export type DbManualRecurringEntry = {
+  id: string;
+  name: string;
+  amount: number;
+  category: DbCategory['id'];
+  start_month: string;
+  end_month: string | null;
+  day_of_month: number;
+  cadence: 'monthly';
+  active: 1 | 0;
+  created_at: string;
+  updated_at: string;
+  tombstone: 1 | 0;
+};
+
 // This is unused in the codebase.
 // type DbPendingTransaction = {
 //   id: string;

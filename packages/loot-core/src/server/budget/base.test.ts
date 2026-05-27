@@ -3,13 +3,200 @@ import * as sheet from '#server/sheet';
 // @ts-strict-ignore
 import * as monthUtils from '#shared/months';
 
-import { createAllBudgets } from './base';
+import { createAllBudgets, createBudget } from './base';
 
 beforeEach(() => {
   return global.emptyDatabase()();
 });
 
 describe('Base budget', () => {
+  it('includes manual recurring entries in monthly category and group spending without transactions', async () => {
+    await sheet.loadSpreadsheet(db);
+
+    await db.insertCategoryGroup({ id: 'group1', name: 'Future Me' });
+    await db.insertCategoryGroup({
+      id: 'group2',
+      name: 'Income',
+      is_income: 1,
+    });
+    const hsaCategoryId = await db.insertCategory({
+      name: 'HSA',
+      cat_group: 'group1',
+    });
+
+    await createBudget(['2024-01', '2024-02']);
+
+    await db.insertWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-1',
+      name: 'HSA contribution',
+      amount: 50000,
+      category: hsaCategoryId,
+      start_month: '2024-02',
+      end_month: null,
+      day_of_month: 1,
+      cadence: 'monthly',
+      active: true,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      tombstone: false,
+    });
+    await db.insertWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-2',
+      name: 'Catch-up HSA contribution',
+      amount: 25000,
+      category: hsaCategoryId,
+      start_month: '2024-02',
+      end_month: null,
+      day_of_month: 1,
+      cadence: 'monthly',
+      active: true,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      tombstone: false,
+    });
+
+    await sheet.waitOnSpreadsheet();
+
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-01'),
+        `sum-amount-${hsaCategoryId}`,
+      ),
+    ).toBe(0);
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-02'),
+        `sum-amount-${hsaCategoryId}`,
+      ),
+    ).toBe(-75000);
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-02'),
+        'group-sum-amount-group1',
+      ),
+    ).toBe(-75000);
+
+    const transactions = await db.all('SELECT * FROM transactions');
+    expect(transactions).toHaveLength(0);
+  });
+
+  it('stops manual recurring entries after their end month', async () => {
+    await sheet.loadSpreadsheet(db);
+
+    await db.insertCategoryGroup({ id: 'group1', name: 'Future Me' });
+    await db.insertCategoryGroup({
+      id: 'group2',
+      name: 'Income',
+      is_income: 1,
+    });
+    const rothCategoryId = await db.insertCategory({
+      name: 'Roth IRA',
+      cat_group: 'group1',
+    });
+
+    await createBudget(['2024-12', '2025-01']);
+
+    await db.insertWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-1',
+      name: 'Roth IRA contribution',
+      amount: 58300,
+      category: rothCategoryId,
+      start_month: '2024-01',
+      end_month: '2024-12',
+      day_of_month: 1,
+      cadence: 'monthly',
+      active: true,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      tombstone: false,
+    });
+    await db.insertWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-2',
+      name: 'Roth IRA contribution',
+      amount: 62500,
+      category: rothCategoryId,
+      start_month: '2025-01',
+      end_month: null,
+      day_of_month: 1,
+      cadence: 'monthly',
+      active: true,
+      created_at: '2025-01-01T00:00:00.000Z',
+      updated_at: '2025-01-01T00:00:00.000Z',
+      tombstone: false,
+    });
+
+    await sheet.waitOnSpreadsheet();
+
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-12'),
+        `sum-amount-${rothCategoryId}`,
+      ),
+    ).toBe(-58300);
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2025-01'),
+        `sum-amount-${rothCategoryId}`,
+      ),
+    ).toBe(-62500);
+  });
+
+  it('excludes paused manual recurring entries from budget spending', async () => {
+    await sheet.loadSpreadsheet(db);
+
+    await db.insertCategoryGroup({ id: 'group1', name: 'Future Me' });
+    await db.insertCategoryGroup({
+      id: 'group2',
+      name: 'Income',
+      is_income: 1,
+    });
+    const hsaCategoryId = await db.insertCategory({
+      name: 'HSA',
+      cat_group: 'group1',
+    });
+
+    await createBudget(['2024-02']);
+
+    await db.insertWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-1',
+      name: 'HSA contribution',
+      amount: 50000,
+      category: hsaCategoryId,
+      start_month: '2024-02',
+      end_month: null,
+      day_of_month: 1,
+      cadence: 'monthly',
+      active: true,
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      tombstone: false,
+    });
+
+    await sheet.waitOnSpreadsheet();
+
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-02'),
+        `sum-amount-${hsaCategoryId}`,
+      ),
+    ).toBe(-50000);
+
+    await db.updateWithSchema('manual_recurring_entries', {
+      id: 'manual-entry-1',
+      active: false,
+      updated_at: '2024-01-02T00:00:00.000Z',
+    });
+
+    await sheet.waitOnSpreadsheet();
+
+    expect(
+      sheet.getCellValue(
+        monthUtils.sheetForMonth('2024-02'),
+        `sum-amount-${hsaCategoryId}`,
+      ),
+    ).toBe(0);
+  });
+
   it('Recomputes budget cells when account fields change', async () => {
     await sheet.loadSpreadsheet(db);
 

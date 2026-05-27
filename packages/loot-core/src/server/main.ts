@@ -23,6 +23,7 @@ import * as encryption from './encryption';
 import { app as encryptionApp } from './encryption/app';
 import { app as filtersApp } from './filters/app';
 import { app } from './main-app';
+import { app as manualRecurringEntriesApp } from './manual-recurring-entries/app';
 import { mutator, runHandler } from './mutators';
 import { app as notesApp } from './notes/app';
 import { app as payeesApp } from './payees/app';
@@ -142,6 +143,7 @@ app.combine(
   transactionsApp,
   accountsApp,
   aiApp,
+  manualRecurringEntriesApp,
   payeesApp,
   spreadsheetApp,
   syncApp,

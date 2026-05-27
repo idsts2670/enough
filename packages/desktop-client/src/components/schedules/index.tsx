@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Trans, useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router';
 
 import { Button } from '@actual-app/components/button';
 import { theme } from '@actual-app/components/theme';
@@ -16,11 +17,20 @@ import { useSchedules } from '#hooks/useSchedules';
 import { pushModal } from '#modals/modalsSlice';
 import { useDispatch } from '#redux';
 
+import { ManualRecurringEntries } from './ManualRecurringEntries';
 import { SchedulesTable } from './SchedulesTable';
 import type { ScheduleItemAction } from './SchedulesTable';
 
+type ScheduleView = 'scheduled' | 'manual';
+
 export function Schedules() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const initialView: ScheduleView =
+    new URLSearchParams(location.search).get('view') === 'manual'
+      ? 'manual'
+      : 'scheduled';
+  const [view, setView] = useState<ScheduleView>(initialView);
 
   const dispatch = useDispatch();
   const [filter, setFilter] = useState('');
@@ -94,8 +104,23 @@ export function Schedules() {
             flexDirection: 'row',
             alignItems: 'center',
             padding: '0 0 15px',
+            gap: 12,
           }}
         >
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Button
+              variant={view === 'scheduled' ? 'primary' : 'normal'}
+              onPress={() => setView('scheduled')}
+            >
+              <Trans>Scheduled transactions</Trans>
+            </Button>
+            <Button
+              variant={view === 'manual' ? 'primary' : 'normal'}
+              onPress={() => setView('manual')}
+            >
+              <Trans>Manual entries</Trans>
+            </Button>
+          </View>
           <View
             style={{
               flex: 1,
@@ -103,51 +128,59 @@ export function Schedules() {
               justifyContent: 'flex-end',
             }}
           >
-            <Search
-              placeholder={t('Filter schedules…')}
-              value={filter}
-              onChange={setFilter}
+            {view === 'scheduled' && (
+              <Search
+                placeholder={t('Filter schedules…')}
+                value={filter}
+                onChange={setFilter}
+              />
+            )}
+          </View>
+        </View>
+
+        {view === 'manual' ? (
+          <ManualRecurringEntries />
+        ) : (
+          <>
+            <SchedulesTable
+              isLoading={isSchedulesLoading}
+              schedules={schedules}
+              filter={filter}
+              statuses={statuses}
+              allowCompleted
+              onSelect={onEdit}
+              onAction={onAction}
+              style={{ backgroundColor: theme.tableBackground }}
             />
-          </View>
-        </View>
 
-        <SchedulesTable
-          isLoading={isSchedulesLoading}
-          schedules={schedules}
-          filter={filter}
-          statuses={statuses}
-          allowCompleted
-          onSelect={onEdit}
-          onAction={onAction}
-          style={{ backgroundColor: theme.tableBackground }}
-        />
-
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            margin: '20px 0',
-            flexShrink: 0,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: '1em',
-            }}
-          >
-            <Button onPress={onDiscover}>
-              <Trans>Find schedules</Trans>
-            </Button>
-            <Button onPress={onChangeUpcomingLength}>
-              <Trans>Change upcoming length</Trans>
-            </Button>
-          </View>
-          <Button variant="primary" onPress={onAdd}>
-            <Trans>Add new schedule</Trans>
-          </Button>
-        </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                margin: '20px 0',
+                flexShrink: 0,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: '1em',
+                }}
+              >
+                <Button onPress={onDiscover}>
+                  <Trans>Find schedules</Trans>
+                </Button>
+                <Button onPress={onChangeUpcomingLength}>
+                  <Trans>Change upcoming length</Trans>
+                </Button>
+              </View>
+              <Button variant="primary" onPress={onAdd}>
+                <Trans>Add new schedule</Trans>
+              </Button>
+            </View>
+          </>
+        )}
       </Page>
     </ErrorBoundary>
   );

@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import type { RefObject } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { SvgArrowButtonRight1 } from '@actual-app/components/icons/v2';
@@ -27,6 +27,12 @@ import { useFormat } from '#hooks/useFormat';
 import { useSelectedItems } from '#hooks/useSelected';
 import { useSheetValue } from '#hooks/useSheetValue';
 import type { Binding } from '#spreadsheet';
+
+export type CategoryActivityBalance = {
+  categoryName: string;
+  month: string;
+  amount: number;
+};
 
 type DetailedBalanceProps = {
   name: string;
@@ -152,6 +158,27 @@ function FilteredBalance({ filteredAmount }: FilteredBalanceProps) {
   );
 }
 
+type CategoryActivitySpentProps = {
+  amount: number;
+};
+
+function CategoryActivitySpent({ amount }: CategoryActivitySpentProps) {
+  const format = useFormat();
+
+  return (
+    <View style={{ flexDirection: 'column', gap: 2 }}>
+      <Text style={{ color: theme.pageTextSubdued }}>
+        <Trans>Spent</Trans>
+      </Text>
+      <PrivacyFilter>
+        <FinancialText style={{ ...displayXl, ...tabularFigure }}>
+          {format(amount, 'financial')}
+        </FinancialText>
+      </PrivacyFilter>
+    </View>
+  );
+}
+
 type MoreBalancesProps = {
   balanceQuery: { name: `balance-query-${string}`; query: Query };
 };
@@ -187,6 +214,7 @@ type BalancesProps = {
   account?: AccountEntity;
   isFiltered: boolean;
   filteredAmount?: number | null;
+  categoryActivity?: CategoryActivityBalance;
 };
 
 export function Balances({
@@ -196,10 +224,32 @@ export function Balances({
   account,
   isFiltered,
   filteredAmount,
+  categoryActivity,
 }: BalancesProps) {
   const selectedItems = useSelectedItems();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isButtonHovered = useHover(buttonRef as RefObject<HTMLButtonElement>);
+
+  if (categoryActivity) {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          marginTop: -5,
+          marginLeft: -5,
+          gap: 10,
+        }}
+      >
+        <CategoryActivitySpent amount={categoryActivity.amount} />
+
+        {selectedItems.size > 0 && (
+          <SelectedBalance selectedItems={selectedItems} account={account} />
+        )}
+      </View>
+    );
+  }
 
   return (
     <View

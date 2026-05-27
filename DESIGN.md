@@ -45,6 +45,26 @@ colors:
   semantic-info: "#0369A1"
   semantic-info-soft: "#E0F2FE"
 
+  chat-advisor-accent: "#0369A1"        # Local AI identity, header dot, assistant status.
+  chat-advisor-accent-soft: "#E0F2FE"   # Assistant message tint, local model badge background.
+  chat-advisor-accent-pale: "#F0F9FF"   # Suggestion chip hover, empty chat background.
+  chat-advisor-accent-mid: "#0284C7"    # Active chip border, focused assistant affordance.
+  chat-advisor-accent-deep: "#075985"   # Text on pale/soft AI backgrounds.
+  chat-user-accent: "#2563EB"           # User action identity and Send button.
+  chat-user-accent-soft: "#DBEAFE"      # User message bubble background.
+  chat-neutral-surface: "#FFFFFF"       # Card/panel background.
+  chat-neutral-subtle: "#F3F2EF"        # Neutral assistant bubble fallback, summary blocks.
+  chat-neutral-pale: "#F8F7F4"          # Transcript background.
+  chat-neutral-border: "#E7E5E4"        # Input border, subtle separators.
+  chat-text-primary: "#0C0A09"          # Main chat text.
+  chat-text-secondary: "#777169"        # Helper copy and secondary metadata.
+  chat-success: "#15803D"               # Local model available indicator only.
+  chat-success-soft: "#DCFCE7"          # Available badge background.
+  chat-warning: "#B45309"               # Slow/retryable warning.
+  chat-warning-soft: "#FEF3C7"          # Warning banner background.
+  chat-error: "#B91C1C"                 # Ollama unavailable/error text.
+  chat-error-soft: "#FEE2E2"            # Error banner background.
+
   transaction-category-fixed: "#003ECC"
   transaction-category-fixed-tint: "#E7EFFF"
   transaction-category-fixed-deep: "#002B8A"
@@ -96,6 +116,35 @@ colors:
   transaction-category-future-me-soft: "#8B5CF6"
   transaction-category-future-me-muted: "#6E56A6"
   transaction-category-future-me-slate: "#65558F"
+
+chat-panel:
+  role: Local qwen3:4b Savings Advisor chat inside the Dashboard card.
+  rule: Use chat tokens for AI and chat status semantics. Do not use transaction-category colors for chat; those are reserved for spending semantics.
+  modelBadge:
+    backgroundColor: "{colors.chat-success-soft}"
+    textColor: "{colors.chat-success}"
+    label: "qwen3:4b local"
+  assistantBubble:
+    firstBackgroundColor: "{colors.chat-advisor-accent-soft}"
+    followupBackgroundColor: "{colors.chat-neutral-subtle}"
+    textColor: "{colors.chat-text-primary}"
+  userBubble:
+    backgroundColor: "{colors.chat-user-accent-soft}"
+    textColor: "{colors.chat-text-primary}"
+    alignment: right
+  suggestionChip:
+    backgroundColor: "{colors.chat-neutral-surface}"
+    border: "1px solid {colors.chat-neutral-border}"
+    hoverBackgroundColor: "{colors.chat-advisor-accent-pale}"
+    activeBorderColor: "{colors.chat-advisor-accent-mid}"
+  unavailableState:
+    backgroundColor: "{colors.chat-error-soft}"
+    textColor: "{colors.chat-error}"
+  visualRestrictions:
+    - No gradients.
+    - No purple AI glow.
+    - No bot avatar or cartoon assistant treatment.
+    - Use color to communicate local model identity, user action, and availability state only.
 
 dark-mode-reserved:
   status: reserved-for-later

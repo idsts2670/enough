@@ -1,11 +1,16 @@
 import { fetch } from '#platform/server/fetch';
 
-import type { CategorySuggestionResult, SavingsAdvisorResponse } from './types';
+import type {
+  CategorySuggestionResult,
+  SavingsAdvisorChatMessage,
+  SavingsAdvisorResponse,
+} from './types';
 
 const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
 const DEFAULT_OLLAMA_MODEL = 'qwen3:4b';
 const CATEGORY_PROMPT_VERSION = 'category-v1';
 const ADVISOR_PROMPT_VERSION = 'advisor-v1';
+const ADVISOR_CHAT_PROMPT_VERSION = 'advisor-chat-v1';
 
 function getEnv(name: string): string | undefined {
   return typeof process !== 'undefined' ? process.env?.[name] : undefined;
@@ -87,6 +92,53 @@ async function requestJson<T>({
     }
 
     return JSON.parse(content) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function stripQwenThinking(content: string) {
+  return content
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/^\s+/, '')
+    .trim();
+}
+
+async function requestText({
+  messages,
+  temperature = 0.2,
+}: {
+  messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  temperature?: number;
+}): Promise<string | null> {
+  const { baseUrl, model } = getOllamaConfig();
+
+  try {
+    const response = await fetch(`${baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        messages,
+        stream: false,
+        options: {
+          temperature,
+          top_p: 0.9,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const body = await response.json();
+    const content = body?.message?.content;
+    if (typeof content !== 'string') {
+      return null;
+    }
+
+    return stripQwenThinking(content);
   } catch {
     return null;
   }
@@ -212,4 +264,39 @@ export async function requestOllamaSavingsAdvice(metrics: object) {
     promptVersion: ADVISOR_PROMPT_VERSION,
     response: payload,
   };
+}
+
+export async function requestOllamaSavingsChat({
+  metrics,
+  messages,
+}: {
+  metrics: object;
+  messages: SavingsAdvisorChatMessage[];
+}) {
+  const { model } = getOllamaConfig();
+  const reply = await requestText({
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are a local personal finance advisor inside Enough. Answer from the provided aggregate metrics and conversation only. Do not invent source numbers. Do not claim access to raw transactions, account identifiers, Plaid data, category row details, or payee names. If detail is unavailable, say that and suggest what aggregate signal to review.',
+      },
+      {
+        role: 'user',
+        content: JSON.stringify({
+          aggregateMetrics: metrics,
+          privacyBoundary:
+            'Only aggregate computed metrics are provided. Raw transactions, account identifiers, category row details, Plaid data, and payee names are intentionally unavailable.',
+        }),
+      },
+      ...messages,
+    ],
+    temperature: 0.2,
+  });
+
+  return {
+    model,
+    promptVersion: ADVISOR_CHAT_PROMPT_VERSION,
+    reply,
+  } as const;
 }

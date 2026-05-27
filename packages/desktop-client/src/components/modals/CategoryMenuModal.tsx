@@ -1,5 +1,5 @@
 // @ts-strict-ignore
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
@@ -16,8 +16,16 @@ import {
 import { Menu } from '@actual-app/components/menu';
 import { Popover } from '@actual-app/components/popover';
 import { styles } from '@actual-app/components/styles';
+import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
+import {
+  bodySm,
+  bodyStrong,
+  caption,
+  tabularFigure,
+} from '@actual-app/components/typography';
 import { View } from '@actual-app/components/view';
+import { send } from '@actual-app/core/platform/client/connection';
 
 import {
   Modal,
@@ -28,6 +36,7 @@ import {
 import { Notes } from '#components/Notes';
 import { useCategory } from '#hooks/useCategory';
 import { useCategoryGroup } from '#hooks/useCategoryGroup';
+import { useFormat } from '#hooks/useFormat';
 import { useNotes } from '#hooks/useNotes';
 import type { Modal as ModalType } from '#modals/modalsSlice';
 
@@ -45,9 +54,21 @@ export function CategoryMenuModal({
   onClose,
 }: CategoryMenuModalProps) {
   const { t } = useTranslation();
+  const format = useFormat();
   const { data: category } = useCategory(categoryId);
   const { data: categoryGroup } = useCategoryGroup(category?.group);
   const originalNotes = useNotes(category.id);
+  const [manualEntries, setManualEntries] = useState<
+    Awaited<ReturnType<typeof send<'manual-recurring-entries/list'>>>
+  >([]);
+  const categoryManualEntries = useMemo(
+    () => manualEntries.filter(entry => entry.category === categoryId),
+    [categoryId, manualEntries],
+  );
+
+  useEffect(() => {
+    void send('manual-recurring-entries/list').then(setManualEntries);
+  }, []);
 
   const onRename = newName => {
     if (newName && newName !== category.name) {
@@ -133,6 +154,60 @@ export function CategoryMenuModal({
                   }),
                 })}
               />
+              {categoryManualEntries.length > 0 && (
+                <View
+                  style={{
+                    margin: '0 16px 16px',
+                    padding: 12,
+                    borderRadius: 8,
+                    backgroundColor: theme.tableRowBackgroundHover,
+                    gap: 8,
+                  }}
+                >
+                  <Text style={{ ...bodyStrong, color: theme.pageText }}>
+                    <Trans>Manual recurring entries</Trans>
+                  </Text>
+                  {categoryManualEntries.map(entry => (
+                    <View
+                      key={entry.id}
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                      }}
+                    >
+                      <View style={{ gap: 2 }}>
+                        <Text style={{ ...bodySm, color: theme.pageText }}>
+                          {entry.name}
+                        </Text>
+                        <Text
+                          style={{
+                            ...caption,
+                            color: theme.pageTextSubdued,
+                          }}
+                        >
+                          {entry.active
+                            ? entry.endMonth
+                              ? t('Monthly through {{month}}', {
+                                  month: entry.endMonth,
+                                })
+                              : t('Monthly active')
+                            : t('Paused')}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          ...bodyStrong,
+                          ...tabularFigure,
+                          color: theme.pageText,
+                        }}
+                      >
+                        {format(entry.amount, 'financial')}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
             <View
               style={{

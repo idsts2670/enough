@@ -4,13 +4,25 @@
 
 # Enough
 
-A calm personal-finance app for dense, repeated money work. Forked from [Actual Budget](https://github.com/actualbudget/actual) and extended with Plaid bank sync and a redesigned UI.
+Enough is a personal finance dashboard for people who want private, automated money visibility without paying for another budgeting subscription. It is forked from [Actual Budget](https://github.com/actualbudget/actual) and extended with Plaid bank sync, local AI, and a redesigned dashboard built around the 30-30-40 rule.
 
-- **Free for local personal use** — run the app and sync server on your own machine with no Enough subscription, hosting bill, or managed cloud service
-- **Local-first** — all data lives in SQLite on your machine, no cloud required
-- **Plaid sync** — pull live transactions from your bank accounts automatically
-- **Envelope budgeting** — allocate income to categories before you spend it
-- **Dashboard** — net worth, spending, categories, and recurring bills at a glance
+## Manage Your Money Like The 1%
+
+Enough starts with a simple operating system for your money: split income into **30% Fixed**, **30% Fun**, and **40% Future Me**. The dashboard turns that rule into live targets, actual spending, over/under status, net worth, top categories, accounts, transactions to review, and recurring bills.
+
+It is designed to run locally and stay cheap:
+
+- **Completely free for local personal use** — run the web app and sync server from this repository with no Enough subscription, hosting bill, or managed cloud service.
+- **Plaid Trial friendly** — connect bank data through Plaid's Trial plan when eligible, while treating each production Item as a limited slot.
+- **Local-first by default** — budget data lives in SQLite on your machine unless you choose to expose or host the server.
+- **AI where it is useful right now** — the dashboard includes a local Savings advisor powered by Ollama/qwen3:4b, and transactions can get AI category suggestions from rules, Plaid metadata, history, and Ollama.
+- **Built for repeated money work** — review uncategorized transactions, watch spending drift, and adjust allocations without leaving the dashboard.
+
+## AI Capabilities Available Now
+
+- **Savings advisor:** computes aggregate monthly metrics locally, summarizes the current month, suggests concrete actions, and supports chat prompts like "Where can I save?", "What changed this month?", and "What should I review?"
+- **AI categorization suggestions:** reviews uncategorized transactions and proposes categories using existing rules, Plaid categories, payee history, and local Ollama fallback. Suggestions can be accepted, rejected, or turned into a rule.
+- **Privacy-shaped prompting:** the advisor is built around computed aggregate metrics rather than handing an AI model unrestricted access to raw account identifiers or transaction detail.
 
 ## Cost Model
 

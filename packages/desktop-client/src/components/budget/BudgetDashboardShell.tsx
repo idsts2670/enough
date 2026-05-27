@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import type { ComponentProps, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
+import { SvgArrowButtonRight1 } from '@actual-app/components/icons/v2';
+import { Input } from '@actual-app/components/input';
+import { Select } from '@actual-app/components/select';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { tokens } from '@actual-app/components/tokens';
@@ -44,11 +47,9 @@ import {
 } from '#components/analytics/chart-theme';
 import { ChartContainer } from '#components/analytics/ChartContainer';
 import { createSpreadsheet as netWorthSpreadsheet } from '#components/analytics/net-worth-spreadsheet';
-import { CellValue, CellValueText } from '#components/spreadsheet/CellValue';
 import { useAccounts } from '#hooks/useAccounts';
 import { useDateFormat } from '#hooks/useDateFormat';
 import { useFailedAccounts } from '#hooks/useFailedAccounts';
-import type { FormatType } from '#hooks/useFormat';
 import { useFormat } from '#hooks/useFormat';
 import { useLocale } from '#hooks/useLocale';
 import { useNavigate } from '#hooks/useNavigate';
@@ -60,7 +61,6 @@ import { useSyncedPref } from '#hooks/useSyncedPref';
 import { uncategorizedTransactions } from '#queries';
 import { aqlQuery } from '#queries/aqlQuery';
 import { useSelector } from '#redux';
-import type { SheetFields } from '#spreadsheet';
 import {
   accountBalance,
   envelopeBudget,
@@ -75,29 +75,6 @@ type BudgetDashboardShellProps = {
   onOpenBudgetEditor: () => void;
   startMonth: string;
 };
-
-type MetricCardProps = {
-  label: string;
-  value: ReactNode;
-  subtitle: string;
-  onPress?: () => void;
-};
-
-type FinancialMetricValueProps =
-  | {
-      budgetKind: 'envelope';
-      binding: SheetFields<'envelope-budget'>;
-      /** Negate the raw spreadsheet value before display. */
-      negate?: boolean;
-      /** Show an amount magnitude while preserving signed values elsewhere. */
-      absolute?: boolean;
-    }
-  | {
-      budgetKind: 'tracking';
-      binding: SheetFields<'tracking-budget'>;
-      negate?: boolean;
-      absolute?: boolean;
-    };
 
 type TopCategoryRow = {
   category: string | null;
@@ -153,6 +130,18 @@ type AccountGroup = {
   tint: string;
   accounts: AccountEntity[];
 };
+
+type IncomeAllocationBucket = {
+  groupId: string;
+  percent: number;
+};
+
+type IncomeAllocationPrefs = {
+  monthlyIncome: number;
+  buckets: IncomeAllocationBucket[];
+};
+
+const incomeAllocationPrefKey = 'dashboard.incomeAllocation';
 
 function matchesAny(text: string, words: string[]) {
   return words.some(word => text.includes(word));
@@ -307,112 +296,108 @@ function groupAccounts(
   });
 }
 
-const EnvelopeDashboardCellValue = <
-  FieldName extends SheetFields<'envelope-budget'>,
->(
-  props: ComponentProps<typeof CellValue<'envelope-budget', FieldName>>,
-) => {
-  return <CellValue {...props} />;
-};
-
-const TrackingDashboardCellValue = <
-  FieldName extends SheetFields<'tracking-budget'>,
->(
-  props: ComponentProps<typeof CellValue<'tracking-budget', FieldName>>,
-) => {
-  return <CellValue {...props} />;
-};
-
-function FinancialMetricValue(props: FinancialMetricValueProps) {
-  const getDisplayValue = (value: number | null) => {
-    const raw = value ?? 0;
-    const transformed = props.absolute
-      ? Math.abs(raw)
-      : props.negate
-        ? -raw
-        : raw;
-
-    return Object.is(transformed, -0) ? 0 : transformed;
-  };
-
-  const metric = ({
-    name,
-    type,
-    value,
-  }: {
-    name: string;
-    type?: FormatType;
-    value: number | null;
-  }) => (
-    <CellValueText
-      name={name}
-      type={type}
-      value={getDisplayValue(value)}
-      style={{ ...metricValue, color: theme.pageText }}
-    />
-  );
-
-  if (props.budgetKind === 'tracking') {
-    return (
-      <TrackingDashboardCellValue binding={props.binding} type="financial">
-        {metric}
-      </TrackingDashboardCellValue>
-    );
-  }
-
-  return (
-    <EnvelopeDashboardCellValue binding={props.binding} type="financial">
-      {metric}
-    </EnvelopeDashboardCellValue>
+function getExpenseCategoryGroups(categoryGroups: CategoryGroupEntity[]) {
+  return categoryGroups.filter(
+    group => !group.is_income && !group.hidden && !group.tombstone,
   );
 }
 
-function MetricCard({ label, value, subtitle, onPress }: MetricCardProps) {
-  const cardStyle = {
-    flexDirection: 'column' as const,
-    minHeight: 112,
-    justifyContent: 'space-between',
-    alignItems: 'stretch',
-    gap: 16,
-    padding: 24,
-    backgroundColor: theme.cardBackground,
-    border: '1px solid ' + theme.cardBorder,
-    borderRadius: 12,
-    boxShadow: theme.cardShadow,
-    textAlign: 'left' as const,
-    ...(onPress && {
-      cursor: 'pointer',
-    }),
-  };
+function normalizeAllocationGroupName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
 
-  const content = (
-    <>
-      <View style={{ gap: 4 }}>
-        <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
-          {label}
-        </Text>
-        <Text style={{ ...metricSubtitle, color: theme.pageTextSubdued }}>
-          {subtitle}
-        </Text>
-      </View>
-      <View>{value}</View>
-    </>
+function findAllocationGroup(
+  categoryGroups: CategoryGroupEntity[],
+  candidates: string[],
+) {
+  const normalizedCandidates = candidates.map(normalizeAllocationGroupName);
+
+  return getExpenseCategoryGroups(categoryGroups).find(group =>
+    normalizedCandidates.includes(normalizeAllocationGroupName(group.name)),
   );
+}
 
-  if (onPress) {
-    return (
-      <Button
-        variant="bare"
-        aria-label={label}
-        onPress={onPress}
-        style={cardStyle}
-      >
-        {content}
-      </Button>
-    );
+function createDefaultIncomeAllocation(
+  categoryGroups: CategoryGroupEntity[],
+): IncomeAllocationPrefs {
+  return {
+    monthlyIncome: 0,
+    buckets: [
+      {
+        groupId: findAllocationGroup(categoryGroups, ['Fixed'])?.id,
+        percent: 30,
+      },
+      {
+        groupId: findAllocationGroup(categoryGroups, ['Fun'])?.id,
+        percent: 30,
+      },
+      {
+        groupId: findAllocationGroup(categoryGroups, ['Future Me', 'Future'])
+          ?.id,
+        percent: 40,
+      },
+    ].flatMap(bucket =>
+      bucket.groupId
+        ? [{ groupId: bucket.groupId, percent: bucket.percent }]
+        : [],
+    ),
+  };
+}
+
+function parseIncomeAllocationPref(
+  value: string | undefined,
+  categoryGroups: CategoryGroupEntity[],
+): IncomeAllocationPrefs {
+  if (!value) {
+    return createDefaultIncomeAllocation(categoryGroups);
   }
 
-  return <View style={cardStyle}>{content}</View>;
+  try {
+    const parsed = JSON.parse(value) as Partial<IncomeAllocationPrefs>;
+
+    return {
+      monthlyIncome:
+        typeof parsed.monthlyIncome === 'number' &&
+        Number.isFinite(parsed.monthlyIncome)
+          ? Math.max(0, parsed.monthlyIncome)
+          : 0,
+      buckets: Array.isArray(parsed.buckets)
+        ? parsed.buckets.flatMap(bucket => {
+            if (
+              !bucket ||
+              typeof bucket.groupId !== 'string' ||
+              typeof bucket.percent !== 'number' ||
+              !Number.isFinite(bucket.percent)
+            ) {
+              return [];
+            }
+
+            return [
+              {
+                groupId: bucket.groupId,
+                percent: Math.max(0, bucket.percent),
+              },
+            ];
+          })
+        : [],
+    };
+  } catch {
+    return createDefaultIncomeAllocation(categoryGroups);
+  }
+}
+
+function serializeIncomeAllocationPref(allocation: IncomeAllocationPrefs) {
+  return JSON.stringify({
+    monthlyIncome: allocation.monthlyIncome,
+    buckets: allocation.buckets.map(bucket => ({
+      groupId: bucket.groupId,
+      percent: bucket.percent,
+    })),
+  });
 }
 
 function DashboardPanel({
@@ -1772,14 +1757,530 @@ function AccountsSummaryCard() {
   );
 }
 
+function IncomeAllocationBucketRow({
+  allocation,
+  availableGroups,
+  bucket,
+  budgetType,
+  disabledGroupIds,
+  group,
+  onChangeGroup,
+  onChangePercent,
+  onRemove,
+}: {
+  allocation: IncomeAllocationPrefs;
+  availableGroups: CategoryGroupEntity[];
+  bucket: IncomeAllocationBucket;
+  budgetType: string;
+  disabledGroupIds: string[];
+  group?: CategoryGroupEntity;
+  onChangeGroup: (groupId: string) => void;
+  onChangePercent: (percent: number) => void;
+  onRemove: () => void;
+}) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const envelopeSpent =
+    useSheetValue<'envelope-budget', 'group-sum-amount'>(
+      envelopeBudget.groupSumAmount(bucket.groupId),
+    ) ?? 0;
+  const trackingSpent =
+    useSheetValue<'tracking-budget', 'group-sum-amount'>(
+      trackingBudget.groupSumAmount(bucket.groupId),
+    ) ?? 0;
+  const spent = Math.abs(
+    budgetType === 'tracking' ? trackingSpent : envelopeSpent,
+  );
+  const target = Math.round((allocation.monthlyIncome * bucket.percent) / 100);
+  const variance = target - spent;
+  const isOver = variance < 0;
+  const progress = target > 0 ? Math.min(spent / target, 1) : 0;
+  const color = group
+    ? getCategoryColor(group.name).color
+    : theme.pageTextSubdued;
+  const groupOptions = availableGroups.map(
+    availableGroup => [availableGroup.id, availableGroup.name] as const,
+  );
+
+  return (
+    <View
+      style={{
+        display: 'grid',
+        gridTemplateColumns:
+          'minmax(180px, 1.4fr) 96px minmax(120px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 72px',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 0',
+        borderTop: '1px solid ' + theme.cardBorder,
+        [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+          gridTemplateColumns: '1fr',
+          alignItems: 'stretch',
+        },
+      }}
+    >
+      <Select
+        options={groupOptions}
+        value={bucket.groupId}
+        defaultLabel={t('Missing group')}
+        disabledKeys={disabledGroupIds}
+        onChange={onChangeGroup}
+        style={{
+          minHeight: 34,
+          padding: '6px 10px',
+          color: theme.pageText,
+        }}
+      />
+      <Input
+        aria-label={t('Allocation percent for {{name}}', {
+          name: group?.name ?? t('missing group'),
+        })}
+        inputMode="decimal"
+        value={String(bucket.percent)}
+        onChangeValue={value => {
+          const nextValue = Number(value);
+          onChangePercent(Number.isFinite(nextValue) ? nextValue : 0);
+        }}
+        style={{
+          minHeight: 34,
+          padding: '6px 10px',
+          textAlign: 'right',
+        }}
+      />
+      <Text style={{ ...bodyStrong, ...tabularFigure, color: theme.pageText }}>
+        {format(target, 'financial')}
+      </Text>
+      <View style={{ gap: 6 }}>
+        <Text
+          style={{ ...bodyStrong, ...tabularFigure, color: theme.pageText }}
+        >
+          {format(spent, 'financial')}
+        </Text>
+        <View
+          aria-hidden
+          style={{
+            height: 5,
+            overflow: 'hidden',
+            borderRadius: 9999,
+            backgroundColor: theme.surfaceSubtle,
+          }}
+        >
+          <View
+            style={{
+              width: `${progress * 100}%`,
+              minWidth: spent > 0 ? 5 : 0,
+              height: '100%',
+              borderRadius: 9999,
+              backgroundColor: isOver ? theme.semanticError : color,
+            }}
+          />
+        </View>
+      </View>
+      <Text
+        style={{
+          ...bodyStrong,
+          ...tabularFigure,
+          color: isOver ? theme.semanticError : theme.semanticSuccess,
+        }}
+      >
+        {isOver
+          ? t('{{amount}} over', {
+              amount: format(Math.abs(variance), 'financial'),
+            })
+          : t('{{amount}} under', {
+              amount: format(variance, 'financial'),
+            })}
+      </Text>
+      <Button
+        variant="bare"
+        aria-label={t('Remove {{name}} allocation', {
+          name: group?.name ?? t('missing group'),
+        })}
+        onPress={onRemove}
+        style={{
+          minHeight: 0,
+          justifyContent: 'flex-end',
+          padding: 0,
+          color: theme.pageTextSubdued,
+        }}
+      >
+        <Trans>Remove</Trans>
+      </Button>
+    </View>
+  );
+}
+
+function IncomeAllocationPanel({
+  budgetType,
+  categoryGroups,
+  monthLabel,
+}: {
+  budgetType: string;
+  categoryGroups: CategoryGroupEntity[];
+  monthLabel: string;
+}) {
+  const { t } = useTranslation();
+  const format = useFormat();
+  const navigate = useNavigate();
+  const [storedAllocation, setStoredAllocation] = useSyncedPref(
+    incomeAllocationPrefKey,
+  );
+  const availableGroups = useMemo(
+    () => getExpenseCategoryGroups(categoryGroups),
+    [categoryGroups],
+  );
+  const parsedAllocation = useMemo(
+    () => parseIncomeAllocationPref(storedAllocation, categoryGroups),
+    [categoryGroups, storedAllocation],
+  );
+  const [allocation, setAllocation] = useState(parsedAllocation);
+  const [incomeDraft, setIncomeDraft] = useState(
+    parsedAllocation.monthlyIncome
+      ? format.forEdit(parsedAllocation.monthlyIncome)
+      : '',
+  );
+
+  useEffect(() => {
+    setAllocation(parsedAllocation);
+    setIncomeDraft(
+      parsedAllocation.monthlyIncome
+        ? format.forEdit(parsedAllocation.monthlyIncome)
+        : '',
+    );
+  }, [format, parsedAllocation]);
+
+  const groupsById = useMemo(
+    () => new Map(categoryGroups.map(group => [group.id, group])),
+    [categoryGroups],
+  );
+  const percentTotal = allocation.buckets.reduce(
+    (total, bucket) => total + bucket.percent,
+    0,
+  );
+  const hasInvalidTotal = Math.abs(percentTotal - 100) > 0.001;
+  const hasMissingGroups = allocation.buckets.some(
+    bucket => !groupsById.has(bucket.groupId),
+  );
+  const hasStoredAllocation = Boolean(storedAllocation);
+  const isDirty =
+    !hasStoredAllocation ||
+    serializeIncomeAllocationPref(allocation) !==
+      serializeIncomeAllocationPref(parsedAllocation);
+  const usedGroupIds = allocation.buckets.map(bucket => bucket.groupId);
+  const nextAvailableGroup = availableGroups.find(
+    group => !usedGroupIds.includes(group.id),
+  );
+
+  function updateBucket(
+    index: number,
+    update: Partial<IncomeAllocationBucket>,
+  ) {
+    setAllocation(current => ({
+      ...current,
+      buckets: current.buckets.map((bucket, bucketIndex) =>
+        bucketIndex === index ? { ...bucket, ...update } : bucket,
+      ),
+    }));
+  }
+
+  function saveAllocation() {
+    const parsedIncome = format.fromEdit(incomeDraft, allocation.monthlyIncome);
+    const nextAllocation = {
+      ...allocation,
+      monthlyIncome: Math.max(0, parsedIncome ?? 0),
+    };
+
+    setAllocation(nextAllocation);
+    setStoredAllocation(serializeIncomeAllocationPref(nextAllocation));
+  }
+
+  return (
+    <DashboardPanel
+      title={<Trans>Manage Your Money Like The 1%</Trans>}
+      subtitle={monthLabel}
+      accentColor={theme.semanticInfo}
+    >
+      <View style={{ gap: 16 }}>
+        <View
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(220px, 320px) 1fr',
+            gap: 16,
+            alignItems: 'end',
+            [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+              gridTemplateColumns: '1fr',
+            },
+          }}
+        >
+          <View style={{ gap: 6 }}>
+            <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+              <Trans>Expected monthly income</Trans>
+            </Text>
+            <Input
+              aria-label={t('Expected monthly income')}
+              inputMode="decimal"
+              placeholder={format(0, 'financial')}
+              value={incomeDraft}
+              onChangeValue={value => {
+                setIncomeDraft(value);
+                const parsedIncome = format.fromEdit(value, null);
+                if (parsedIncome !== null) {
+                  setAllocation(current => ({
+                    ...current,
+                    monthlyIncome: Math.max(0, parsedIncome),
+                  }));
+                }
+              }}
+              style={{
+                minHeight: 38,
+                padding: '8px 10px',
+              }}
+            />
+          </View>
+          <View style={{ gap: 4 }}>
+            <Text style={{ ...bodyStrong, color: theme.pageText }}>
+              <Trans>Allocate income across your highest-level buckets.</Trans>
+            </Text>
+            <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+              <Trans>
+                Targets are calculated from your manual income setting. Actuals
+                come from this month&apos;s category group spending.
+              </Trans>
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              'minmax(180px, 1.4fr) 96px minmax(120px, 1fr) minmax(120px, 1fr) minmax(120px, 1fr) 72px',
+            gap: 10,
+            color: theme.pageTextSubdued,
+            [`@media (max-width: ${tokens.breakpoint_medium})`]: {
+              display: 'none',
+            },
+          }}
+        >
+          <Text style={caption}>
+            <Trans>Bucket</Trans>
+          </Text>
+          <Text style={{ ...caption, textAlign: 'right' }}>
+            <Trans>Percent</Trans>
+          </Text>
+          <Text style={caption}>
+            <Trans>Target</Trans>
+          </Text>
+          <Text style={caption}>
+            <Trans>Spent</Trans>
+          </Text>
+          <Text style={caption}>
+            <Trans>Status</Trans>
+          </Text>
+          <View />
+        </View>
+
+        <View>
+          {allocation.buckets.map((bucket, index) => {
+            const group = groupsById.get(bucket.groupId);
+            const disabledGroupIds = usedGroupIds.filter(
+              groupId => groupId !== bucket.groupId,
+            );
+
+            return (
+              <IncomeAllocationBucketRow
+                key={`${bucket.groupId}-${index}`}
+                allocation={allocation}
+                availableGroups={availableGroups}
+                bucket={bucket}
+                budgetType={budgetType}
+                disabledGroupIds={disabledGroupIds}
+                group={group}
+                onChangeGroup={groupId => updateBucket(index, { groupId })}
+                onChangePercent={percent =>
+                  updateBucket(index, { percent: Math.max(0, percent) })
+                }
+                onRemove={() =>
+                  setAllocation(current => ({
+                    ...current,
+                    buckets: current.buckets.filter(
+                      (_, bucketIndex) => bucketIndex !== index,
+                    ),
+                  }))
+                }
+              />
+            );
+          })}
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <View style={{ gap: 4 }}>
+            <Text
+              style={{
+                ...bodyStrong,
+                color:
+                  hasInvalidTotal || hasMissingGroups
+                    ? theme.semanticError
+                    : theme.pageText,
+              }}
+            >
+              {t('Total allocation: {{percent}}%', {
+                percent: percentTotal.toLocaleString(undefined, {
+                  maximumFractionDigits: 2,
+                }),
+              })}
+            </Text>
+            <Text style={{ ...caption, color: theme.pageTextSubdued }}>
+              {hasMissingGroups ? (
+                <Trans>One or more saved groups no longer exists.</Trans>
+              ) : hasInvalidTotal ? (
+                <Trans>Allocation must equal 100% before saving.</Trans>
+              ) : !hasStoredAllocation ? (
+                <Trans>Default allocation rule. Save to keep it.</Trans>
+              ) : isDirty ? (
+                <Trans>Unsaved allocation changes.</Trans>
+              ) : (
+                <Trans>Allocation rule saved.</Trans>
+              )}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+            <Button
+              variant="normal"
+              isDisabled={!nextAvailableGroup}
+              onPress={() => {
+                if (!nextAvailableGroup) {
+                  return;
+                }
+
+                setAllocation(current => ({
+                  ...current,
+                  buckets: [
+                    ...current.buckets,
+                    { groupId: nextAvailableGroup.id, percent: 0 },
+                  ],
+                }));
+              }}
+            >
+              <Trans>Add bucket</Trans>
+            </Button>
+            <Button
+              variant="normal"
+              onPress={() => navigate('/schedules?view=manual')}
+            >
+              <Trans>Manual entries</Trans>
+            </Button>
+            <Button
+              variant="primary"
+              isDisabled={hasInvalidTotal || hasMissingGroups || !isDirty}
+              onPress={saveAllocation}
+            >
+              <Trans>Save allocation</Trans>
+            </Button>
+          </View>
+        </View>
+      </View>
+    </DashboardPanel>
+  );
+}
+
 type SavingsAdvisorData = Awaited<
   ReturnType<typeof send<'ai/savings-advisor'>>
 >;
+type SavingsAdvisorChatData = Awaited<
+  ReturnType<typeof send<'ai/savings-advisor-chat'>>
+>;
+type SavingsAdvisorChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
+function SavingsAdvisorLocalBadge({ model }: { model: string }) {
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        alignSelf: 'flex-start',
+        padding: '3px 8px',
+        borderRadius: 9999,
+        backgroundColor: theme.chatSuccessSoft,
+      }}
+    >
+      <View
+        aria-hidden
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: 9999,
+          backgroundColor: theme.chatSuccess,
+        }}
+      />
+      <Text style={{ ...caption, color: theme.chatSuccess }}>
+        {model} <Trans>local</Trans>
+      </Text>
+    </View>
+  );
+}
+
+function SavingsAdvisorMessageBubble({
+  index,
+  message,
+}: {
+  index: number;
+  message: SavingsAdvisorChatMessage;
+}) {
+  const isUser = message.role === 'user';
+
+  return (
+    <View
+      style={{
+        maxWidth: '88%',
+        alignSelf: isUser ? 'flex-end' : 'flex-start',
+        padding: '8px 10px',
+        borderRadius: 10,
+        backgroundColor: isUser
+          ? theme.chatUserAccentSoft
+          : index === 0
+            ? theme.chatAdvisorAccentSoft
+            : theme.chatNeutralSubtle,
+      }}
+    >
+      <Text
+        style={{
+          ...bodySm,
+          color: theme.chatTextPrimary,
+          whiteSpace: 'pre-wrap',
+        }}
+      >
+        {message.content}
+      </Text>
+    </View>
+  );
+}
 
 function SavingsAdvisorCard({ month }: { month: string }) {
   const { t } = useTranslation();
   const [data, setData] = useState<SavingsAdvisorData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<SavingsAdvisorChatMessage[]>([]);
+  const [draft, setDraft] = useState('');
+  const [chatError, setChatError] = useState<SavingsAdvisorChatData['error']>();
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const modelLabel = 'qwen3:4b';
+  const suggestedQuestions = [
+    t('Where can I save?'),
+    t('What changed this month?'),
+    t('What should I review?'),
+  ];
 
   useEffect(() => {
     let isCancelled = false;
@@ -1805,10 +2306,54 @@ function SavingsAdvisorCard({ month }: { month: string }) {
     };
   }, [month]);
 
+  useEffect(() => {
+    setMessages([]);
+    setDraft('');
+    setChatError(undefined);
+    setIsChatLoading(false);
+  }, [month]);
+
+  async function sendMessage(content: string) {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || isChatLoading) {
+      return;
+    }
+
+    const nextMessages: SavingsAdvisorChatMessage[] = [
+      ...messages,
+      { role: 'user', content: trimmedContent },
+    ];
+
+    setMessages(nextMessages);
+    setDraft('');
+    setChatError(undefined);
+    setIsChatLoading(true);
+
+    try {
+      const result = await send('ai/savings-advisor-chat', {
+        month,
+        messages: nextMessages,
+      });
+
+      if (result.reply) {
+        setMessages([
+          ...nextMessages,
+          { role: 'assistant', content: result.reply },
+        ]);
+      } else {
+        setChatError(result.error ?? 'unavailable');
+      }
+    } catch {
+      setChatError('unavailable');
+    } finally {
+      setIsChatLoading(false);
+    }
+  }
+
   return (
     <DashboardPanel
       title={<Trans>Savings advisor</Trans>}
-      subtitle={t('Local AI summary')}
+      subtitle={t('Local AI summary and chat')}
       accentColor={theme.semanticInfo}
     >
       {isLoading && !data ? (
@@ -1820,44 +2365,183 @@ function SavingsAdvisorCard({ month }: { month: string }) {
           <Trans>No savings insight yet</Trans>
         </Text>
       ) : (
-        <View style={{ gap: 12 }}>
-          <Text style={{ ...bodyStrong, color: theme.pageText }}>
-            {data.response.summary}
-          </Text>
-          {data.response.topActions.slice(0, 3).map(action => (
-            <View
-              key={`${action.title}-${action.impactEstimate}`}
+        <View style={{ gap: 14 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              gap: 12,
+              alignItems: 'flex-start',
+            }}
+          >
+            <Text
               style={{
-                gap: 4,
-                padding: 8,
-                borderRadius: 8,
-                backgroundColor: theme.surfaceSubtle,
+                ...bodyStrong,
+                color: theme.pageText,
+                flex: 1,
+                minWidth: 0,
               }}
             >
+              {data.response.summary}
+            </Text>
+            <SavingsAdvisorLocalBadge model={modelLabel} />
+          </View>
+
+          <View style={{ gap: 8 }}>
+            {data.response.topActions.slice(0, 2).map(action => (
               <View
+                key={`${action.title}-${action.impactEstimate}`}
                 style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  gap: 12,
+                  gap: 4,
+                  padding: 8,
+                  borderRadius: 8,
+                  backgroundColor: theme.chatNeutralSubtle,
                 }}
               >
-                <Text style={{ ...bodyStrong, color: theme.pageText }}>
-                  {action.title}
-                </Text>
-                <Text style={{ ...caption, color: theme.semanticSuccess }}>
-                  {action.impactEstimate}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}
+                >
+                  <Text style={{ ...bodyStrong, color: theme.pageText }}>
+                    {action.title}
+                  </Text>
+                  <Text style={{ ...caption, color: theme.semanticSuccess }}>
+                    {action.impactEstimate}
+                  </Text>
+                </View>
+                <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
+                  {action.reason}
                 </Text>
               </View>
-              <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                {action.reason}
+            ))}
+          </View>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {suggestedQuestions.map(question => (
+              <Button
+                key={question}
+                variant="normal"
+                isDisabled={isChatLoading}
+                onPress={() => sendMessage(question)}
+                style={{
+                  minHeight: 30,
+                  padding: '6px 10px',
+                  borderRadius: 9999,
+                  border: `1px solid ${theme.chatNeutralBorder}`,
+                  backgroundColor: theme.chatNeutralSurface,
+                  color: theme.chatAdvisorAccentDeep,
+                }}
+              >
+                {question}
+              </Button>
+            ))}
+          </View>
+
+          {(messages.length > 0 || isChatLoading) && (
+            <View
+              style={{
+                minHeight: 112,
+                maxHeight: 220,
+                gap: 8,
+                padding: 10,
+                overflowY: 'auto',
+                borderRadius: 10,
+                backgroundColor: theme.chatNeutralPale,
+                border: `1px solid ${theme.chatNeutralBorder}`,
+              }}
+            >
+              {messages.map((message, index) => (
+                <SavingsAdvisorMessageBubble
+                  key={`${message.role}-${index}`}
+                  index={index}
+                  message={message}
+                />
+              ))}
+              {isChatLoading && (
+                <View
+                  style={{
+                    alignSelf: 'flex-start',
+                    padding: '8px 10px',
+                    borderRadius: 10,
+                    backgroundColor: theme.chatNeutralSubtle,
+                  }}
+                >
+                  <Text style={{ ...bodySm, color: theme.chatTextSecondary }}>
+                    <Trans>Thinking locally...</Trans>
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {chatError && (
+            <View
+              style={{
+                padding: 10,
+                borderRadius: 8,
+                backgroundColor: theme.chatErrorSoft,
+              }}
+            >
+              <Text style={{ ...bodySm, color: theme.chatError }}>
+                {chatError === 'invalid_messages' ? (
+                  <Trans>Enter a question before sending.</Trans>
+                ) : (
+                  <Trans>
+                    Local AI unavailable. Check Ollama and qwen3:4b.
+                  </Trans>
+                )}
               </Text>
             </View>
-          ))}
+          )}
+
           {data.response.riskFlags.length > 0 && (
             <Text style={{ ...caption, color: theme.semanticError }}>
               {data.response.riskFlags.join(', ')}
             </Text>
           )}
+
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <Input
+              aria-label={t('Ask Savings advisor')}
+              placeholder={t('Ask about this month')}
+              value={draft}
+              disabled={isChatLoading}
+              onChange={event => setDraft(event.currentTarget.value)}
+              onEnter={(value, event) => {
+                event.preventDefault();
+                void sendMessage(value);
+              }}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                minHeight: 38,
+                padding: '8px 10px',
+                borderRadius: 9999,
+                border: `1px solid ${theme.chatNeutralBorder}`,
+                backgroundColor: theme.chatNeutralSurface,
+                color: theme.chatTextPrimary,
+              }}
+            />
+            <Button
+              variant="primary"
+              aria-label={t('Send message')}
+              isDisabled={isChatLoading || draft.trim().length === 0}
+              onPress={() => sendMessage(draft)}
+              style={{
+                width: 38,
+                height: 38,
+                minHeight: 38,
+                padding: 0,
+                backgroundColor: theme.chatUserAccent,
+                borderColor: theme.chatUserAccent,
+              }}
+            >
+              <SvgArrowButtonRight1 width={15} height={15} />
+            </Button>
+          </View>
         </View>
       )}
     </DashboardPanel>
@@ -1867,13 +2551,11 @@ function SavingsAdvisorCard({ month }: { month: string }) {
 export function BudgetDashboardShell({
   budgetType,
   categoryGroups,
-  onOpenBudgetEditor,
   startMonth,
 }: BudgetDashboardShellProps) {
   const { t } = useTranslation();
   const locale = useLocale();
   const monthLabel = monthUtils.format(startMonth, 'MMMM yyyy', locale);
-  const isTrackingBudget = budgetType === 'tracking';
 
   return (
     <View
@@ -1904,89 +2586,13 @@ export function BudgetDashboardShell({
         </View>
       </View>
 
-      <View
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-          gap: 12,
-          [`@media (max-width: ${tokens.breakpoint_medium})`]: {
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          },
-        }}
-      >
-        <MetricCard
-          label={isTrackingBudget ? t('Income') : t('Available funds')}
-          value={
-            isTrackingBudget ? (
-              <FinancialMetricValue
-                budgetKind="tracking"
-                binding={trackingBudget.totalIncome}
-              />
-            ) : (
-              <FinancialMetricValue
-                budgetKind="envelope"
-                binding={envelopeBudget.incomeAvailable}
-              />
-            )
-          }
-          subtitle={monthLabel}
-        />
-        <MetricCard
-          label={t('Budgeted')}
-          value={
-            isTrackingBudget ? (
-              <FinancialMetricValue
-                budgetKind="tracking"
-                binding={trackingBudget.totalBudgetedExpense}
-              />
-            ) : (
-              <FinancialMetricValue
-                budgetKind="envelope"
-                binding={envelopeBudget.totalBudgeted}
-                absolute
-              />
-            )
-          }
-          subtitle={monthLabel}
-          onPress={onOpenBudgetEditor}
-        />
-        <MetricCard
-          label={t('Spent')}
-          value={
-            isTrackingBudget ? (
-              <FinancialMetricValue
-                budgetKind="tracking"
-                binding={trackingBudget.totalSpent}
-                absolute
-              />
-            ) : (
-              <FinancialMetricValue
-                budgetKind="envelope"
-                binding={envelopeBudget.totalSpent}
-                absolute
-              />
-            )
-          }
-          subtitle={monthLabel}
-        />
-        <MetricCard
-          label={isTrackingBudget ? t('Left') : t('Balance')}
-          value={
-            isTrackingBudget ? (
-              <FinancialMetricValue
-                budgetKind="tracking"
-                binding={trackingBudget.totalLeftover}
-              />
-            ) : (
-              <FinancialMetricValue
-                budgetKind="envelope"
-                binding={envelopeBudget.totalBalance}
-              />
-            )
-          }
-          subtitle={monthLabel}
-        />
-      </View>
+      <SavingsAdvisorCard month={startMonth} />
+
+      <IncomeAllocationPanel
+        budgetType={budgetType}
+        categoryGroups={categoryGroups}
+        monthLabel={monthLabel}
+      />
 
       <View
         style={{
@@ -2008,7 +2614,6 @@ export function BudgetDashboardShell({
         />
         <RecurringsCard />
         <AccountsSummaryCard />
-        <SavingsAdvisorCard month={startMonth} />
       </View>
     </View>
   );

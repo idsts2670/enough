@@ -2,8 +2,16 @@ import * as db from '#server/db';
 import * as monthUtils from '#shared/months';
 import { integerToAmount } from '#shared/util';
 
-import { requestOllamaSavingsAdvice } from './ollama-client';
-import type { SavingsAdvisorResponse } from './types';
+import {
+  getOllamaConfig,
+  requestOllamaSavingsAdvice,
+  requestOllamaSavingsChat,
+} from './ollama-client';
+import type {
+  SavingsAdvisorChatMessage,
+  SavingsAdvisorChatResponse,
+  SavingsAdvisorResponse,
+} from './types';
 
 type MonthlyCategoryRow = {
   month: string;
@@ -109,7 +117,118 @@ export type SavingsAdvisorMetrics = {
   }>;
 };
 
-export async function getSavingsAdvisor({ month }: { month?: string } = {}) {
+type SavingsAdvisorRange = {
+  startDate: string;
+  endDate: string;
+  monthStart: string;
+  monthEnd: string;
+};
+
+type SavingsAdvisorSummaryMetrics = Omit<
+  SavingsAdvisorMetrics,
+  | 'monthIncome'
+  | 'monthExpenses'
+  | 'fixedSpend'
+  | 'discretionarySpend'
+  | 'foodDiningSpend'
+  | 'foodDiningThreeMonthAverage'
+  | 'debtPayments'
+> & {
+  monthIncome: number;
+  monthExpenses: number;
+  fixedSpend: number;
+  discretionarySpend: number;
+  foodDiningSpend: number;
+  foodDiningThreeMonthAverage: number;
+  debtPayments: number;
+};
+
+type SavingsAdvisorChatMetrics = Omit<
+  SavingsAdvisorSummaryMetrics,
+  'recurringSubscriptions'
+> & {
+  recurringSubscriptions: {
+    count: number;
+    totalMonthlyAverage: number;
+    highestMonthlyAverage: number;
+  };
+};
+
+function summarizeMetrics(
+  metrics: SavingsAdvisorMetrics,
+): SavingsAdvisorSummaryMetrics {
+  return {
+    ...metrics,
+    monthIncome: dollars(metrics.monthIncome),
+    monthExpenses: dollars(metrics.monthExpenses),
+    fixedSpend: dollars(metrics.fixedSpend),
+    discretionarySpend: dollars(metrics.discretionarySpend),
+    foodDiningSpend: dollars(metrics.foodDiningSpend),
+    foodDiningThreeMonthAverage: dollars(metrics.foodDiningThreeMonthAverage),
+    debtPayments: dollars(metrics.debtPayments),
+  };
+}
+
+function buildChatSafeMetrics(
+  metrics: SavingsAdvisorSummaryMetrics,
+): SavingsAdvisorChatMetrics {
+  const subscriptionAverages = metrics.recurringSubscriptions.map(
+    subscription => subscription.monthlyAverage,
+  );
+
+  return {
+    ...metrics,
+    recurringSubscriptions: {
+      count: metrics.recurringSubscriptions.length,
+      totalMonthlyAverage: dollars(
+        subscriptionAverages.reduce((sum, amount) => sum + amount, 0),
+      ),
+      highestMonthlyAverage: Math.max(0, ...subscriptionAverages),
+    },
+  };
+}
+
+function validateChatMessages(
+  messages: SavingsAdvisorChatMessage[] | undefined,
+): SavingsAdvisorChatMessage[] | null {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return null;
+  }
+
+  const normalized = messages
+    .slice(-12)
+    .map(message => ({
+      role: message.role,
+      content:
+        typeof message.content === 'string' ? message.content.trim() : '',
+    }))
+    .filter(message => message.content.length > 0);
+
+  if (
+    normalized.length === 0 ||
+    normalized.some(
+      message =>
+        (message.role !== 'user' && message.role !== 'assistant') ||
+        message.content.length > 2000,
+    ) ||
+    normalized.at(-1)?.role !== 'user'
+  ) {
+    return null;
+  }
+
+  return normalized;
+}
+
+async function buildSavingsAdvisorContext({
+  month,
+}: {
+  month?: string;
+} = {}): Promise<{
+  metrics: SavingsAdvisorMetrics;
+  summarizedForModel: SavingsAdvisorSummaryMetrics;
+  chatSafeMetrics: SavingsAdvisorChatMetrics;
+  range: SavingsAdvisorRange;
+}> {
   const targetMonth = month ?? monthUtils.currentMonth();
   const startMonth = monthUtils.subMonths(targetMonth, 5);
   const startDate = monthUtils.firstDayOfMonth(startMonth);
@@ -323,16 +442,20 @@ export async function getSavingsAdvisor({ month }: { month?: string } = {}) {
     monthlyCashFlow,
   };
 
-  const summarizedForModel = {
-    ...metrics,
-    monthIncome: dollars(metrics.monthIncome),
-    monthExpenses: dollars(metrics.monthExpenses),
-    fixedSpend: dollars(metrics.fixedSpend),
-    discretionarySpend: dollars(metrics.discretionarySpend),
-    foodDiningSpend: dollars(metrics.foodDiningSpend),
-    foodDiningThreeMonthAverage: dollars(metrics.foodDiningThreeMonthAverage),
-    debtPayments: dollars(metrics.debtPayments),
+  const summarizedForModel = summarizeMetrics(metrics);
+  const chatSafeMetrics = buildChatSafeMetrics(summarizedForModel);
+
+  return {
+    metrics,
+    summarizedForModel,
+    chatSafeMetrics,
+    range: { startDate, endDate, monthStart, monthEnd },
   };
+}
+
+export async function getSavingsAdvisor({ month }: { month?: string } = {}) {
+  const { metrics, summarizedForModel, range } =
+    await buildSavingsAdvisorContext({ month });
 
   const modelResult = await requestOllamaSavingsAdvice(summarizedForModel);
 
@@ -340,6 +463,47 @@ export async function getSavingsAdvisor({ month }: { month?: string } = {}) {
     metrics: summarizedForModel,
     promptVersion: modelResult.promptVersion,
     response: modelResult.response ?? fallbackAdvice(metrics),
-    range: { startDate, endDate, monthStart, monthEnd },
+    range,
+  };
+}
+
+export async function getSavingsAdvisorChat({
+  month,
+  messages,
+}: {
+  month?: string;
+  messages?: SavingsAdvisorChatMessage[];
+} = {}): Promise<SavingsAdvisorChatResponse> {
+  const normalizedMessages = validateChatMessages(messages);
+  const { model } = getOllamaConfig();
+
+  if (!normalizedMessages) {
+    return {
+      reply: null,
+      model,
+      promptVersion: 'advisor-chat-v1',
+      error: 'invalid_messages',
+    };
+  }
+
+  const { chatSafeMetrics } = await buildSavingsAdvisorContext({ month });
+  const modelResult = await requestOllamaSavingsChat({
+    metrics: chatSafeMetrics,
+    messages: normalizedMessages,
+  });
+
+  if (!modelResult.reply) {
+    return {
+      reply: null,
+      model: modelResult.model,
+      promptVersion: modelResult.promptVersion,
+      error: 'unavailable',
+    };
+  }
+
+  return {
+    reply: modelResult.reply,
+    model: modelResult.model,
+    promptVersion: modelResult.promptVersion,
   };
 }

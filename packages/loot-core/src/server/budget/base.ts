@@ -38,7 +38,13 @@ export function getBudgetRange(start: string, end: string) {
   return { start, end, range: monthUtils.rangeInclusive(start, end) };
 }
 
+function monthFromDateRepr(date: number) {
+  const value = String(date);
+  return `${value.slice(0, 4)}-${value.slice(4, 6)}`;
+}
+
 export function createCategory(cat, sheetName, prevSheetName, start, end) {
+  const month = monthFromDateRepr(start);
   sheet.get().createDynamic(sheetName, 'sum-amount-' + cat.id, {
     initialValue: 0,
     run: () => {
@@ -52,8 +58,20 @@ export function createCategory(cat, sheetName, prevSheetName, start, end) {
         true,
       );
       const row = rows[0];
-      const amount = row ? row.amount : 0;
-      return amount || 0;
+      const transactionAmount = row ? row.amount : 0;
+      const manualRows = db.runQuery<{ amount: number }>(
+        `SELECT SUM(amount) as amount FROM manual_recurring_entries
+         WHERE category = ?
+           AND start_month <= ?
+           AND (end_month IS NULL OR end_month >= ?)
+           AND active = 1
+           AND tombstone = 0
+           AND cadence = 'monthly'`,
+        [cat.id, month, month],
+        true,
+      );
+      const manualAmount = manualRows[0]?.amount || 0;
+      return (transactionAmount || 0) - manualAmount;
     },
   });
 
@@ -145,6 +163,41 @@ function handleBudgetChange(budget) {
   }
 }
 
+function handleManualRecurringEntryChange(months, oldValue, newValue) {
+  const values = [oldValue, newValue].filter(Boolean);
+  const seen = new Set<string>();
+
+  values.forEach(value => {
+    if (!value.category || !value.start_month) {
+      return;
+    }
+
+    months.forEach(month => {
+      if (
+        month < value.start_month ||
+        (value.end_month && month > value.end_month)
+      ) {
+        return;
+      }
+
+      const key = `${month}:${value.category}`;
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+      sheet
+        .get()
+        .recompute(
+          resolveName(
+            monthUtils.sheetForMonth(month),
+            'sum-amount-' + value.category,
+          ),
+        );
+    });
+  });
+}
+
 export function triggerBudgetChanges(oldValues, newValues) {
   const { createdMonths = new Set() } = sheet.get().meta();
   const budgetType = getBudgetType();
@@ -202,6 +255,8 @@ export function triggerBudgetChanges(oldValues, newValues) {
           }
         } else if (table === 'accounts') {
           handleAccountChange(createdMonths, oldValue, newValue);
+        } else if (table === 'manual_recurring_entries') {
+          handleManualRecurringEntryChange(createdMonths, oldValue, newValue);
         }
       });
     });
