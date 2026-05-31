@@ -118,12 +118,12 @@ colors:
   transaction-category-future-me-slate: "#65558F"
 
 chat-panel:
-  role: Local qwen3:4b Savings Advisor chat inside the Dashboard card.
+  role: Local Ollama Savings Advisor chat inside the Dashboard card.
   rule: Use chat tokens for AI and chat status semantics. Do not use transaction-category colors for chat; those are reserved for spending semantics.
   modelBadge:
     backgroundColor: "{colors.chat-success-soft}"
     textColor: "{colors.chat-success}"
-    label: "qwen3:4b local"
+    label: "configured local model"
   assistantBubble:
     firstBackgroundColor: "{colors.chat-advisor-accent-soft}"
     followupBackgroundColor: "{colors.chat-neutral-subtle}"

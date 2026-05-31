@@ -77,6 +77,72 @@ PLAID_ENV=production
 
 The script also accepts an outer workspace `.env` at `../.env`, which is useful when this repo lives under `money-tracker/`.
 
+## Local AI Setup: Ollama and qwen3:8b
+
+Enough's Dashboard Savings advisor uses local Ollama by default:
+
+- Base URL: `http://localhost:11434`
+- Model: `qwen3:8b`
+- Override knobs: `OLLAMA_BASE_URL` and `OLLAMA_MODEL`
+
+Use the official Ollama model tag exactly. Do not pick random `qwen3:8b` lookalikes from search results or user-published variants.
+
+### Install Ollama on macOS
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+The installer should place `Ollama.app` in `/Applications`. In non-interactive agent terminals, the final CLI symlink step can fail because `sudo` needs the user's password. That is not fatal if the app bundle exists. Use the bundled CLI path directly:
+
+```bash
+/Applications/Ollama.app/Contents/Resources/ollama --version
+```
+
+Start Ollama:
+
+```bash
+open -a Ollama
+```
+
+Verify the local API is listening:
+
+```bash
+curl -s http://localhost:11434/api/tags
+```
+
+If it returns `{"models":[]}`, Ollama is running but no models are installed yet.
+
+### Pull and verify qwen3:8b
+
+```bash
+/Applications/Ollama.app/Contents/Resources/ollama pull qwen3:8b
+```
+
+Confirm the model appears:
+
+```bash
+curl -s http://localhost:11434/api/tags
+```
+
+Run a real local chat completion:
+
+```bash
+curl -s http://localhost:11434/api/chat \
+  -d '{"model":"qwen3:8b","stream":false,"messages":[{"role":"user","content":"Reply with exactly: local qwen ready"}]}'
+```
+
+The response should include `"model":"qwen3:8b"` and assistant content `local qwen ready`. qwen may also return internal thinking fields; Enough strips `<think>...</think>` style visible output before showing replies.
+
+### Dashboard verification
+
+After Ollama is running and `qwen3:8b` is pulled:
+
+1. Open `http://localhost:5006/budget`.
+2. Find the Dashboard Savings advisor panel.
+3. Ask a short question, for example `What should I review this month?`.
+4. If the UI says `Local AI unavailable`, recheck `curl -s http://localhost:11434/api/tags` and confirm `qwen3:8b` is listed.
+
 ## Always-on Daemon (macOS launchd)
 
 The production server can run as a login-item daemon instead of via `yarn personal:start`. When set up, the app is always available at `http://localhost:5006` without any terminal window.

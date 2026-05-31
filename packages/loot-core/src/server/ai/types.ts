@@ -59,9 +59,21 @@ export type SavingsAdvisorChatMessage = {
 
 export type SavingsAdvisorChatError = 'unavailable' | 'invalid_messages';
 
+export type SavingsAdvisorChatSource = 'deterministic' | 'ollama' | 'fallback';
+
+export type SavingsAdvisorChatAllocation = {
+  monthlyIncome: number;
+  buckets: Array<{
+    groupId: string;
+    groupName: string;
+    percent: number;
+  }>;
+};
+
 export type SavingsAdvisorChatResponse = {
   reply: string | null;
   model: string;
-  promptVersion: 'advisor-chat-v1';
+  promptVersion: 'advisor-chat-v2';
+  source: SavingsAdvisorChatSource;
   error?: SavingsAdvisorChatError;
 };

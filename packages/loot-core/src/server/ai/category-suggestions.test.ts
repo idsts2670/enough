@@ -1,4 +1,8 @@
 import * as db from '#server/db';
+import {
+  CREDIT_CARD_PAYMENTS_CATEGORY_NAME,
+  PAYMENT_TRANSFER_GROUP_NAME,
+} from '#shared/payment-transfers';
 
 import {
   acceptCategorySuggestion,
@@ -57,6 +61,26 @@ async function getTransactionCategory(id: string) {
     [id],
   );
   return row?.category ?? null;
+}
+
+async function setupPaymentTransferFixture() {
+  await db.insertAccount({ id: 'checking', name: 'TOTAL CHECKING' });
+  await db.insertCategoryGroup({
+    id: 'payment-group',
+    name: PAYMENT_TRANSFER_GROUP_NAME,
+  });
+  await db.insertCategory({
+    id: 'credit-card-payments',
+    name: CREDIT_CARD_PAYMENTS_CATEGORY_NAME,
+    cat_group: 'payment-group',
+  });
+  await db.insertCategoryGroup({ id: 'loan-group', name: 'Debt' });
+  await db.insertCategory({
+    id: 'loan-payments',
+    name: 'Loan Payments',
+    cat_group: 'loan-group',
+  });
+  await db.insertPayee({ id: 'robinhood', name: 'Robinhood' });
 }
 
 describe('AI category suggestions', () => {
@@ -188,5 +212,54 @@ describe('AI category suggestions', () => {
       acceptCategorySuggestion({ id: suggestionId }),
     ).resolves.toEqual({ applied: false });
     expect(await getTransactionCategory('target')).toBe('other');
+  });
+
+  it('auto-applies credit card payment transfers to the payment bucket', async () => {
+    await setupPaymentTransferFixture();
+    await db.insertTransaction({
+      id: 'target',
+      account: 'checking',
+      amount: -68203,
+      date: '2026-05-01',
+      payee: 'robinhood',
+      imported_payee: 'Robinhood',
+      notes: 'Robinhood',
+    });
+
+    const suggestionId = await suggestCategoryForTransaction('target');
+
+    expect(suggestionId).toBeTruthy();
+    expect(await getTransactionCategory('target')).toBe('credit-card-payments');
+    await expect(
+      getCategorySuggestions({ status: 'auto_applied' }),
+    ).resolves.toMatchObject([
+      {
+        id: suggestionId,
+        transactionId: 'target',
+        categoryId: 'credit-card-payments',
+        confidence: 0.99,
+        source: 'rule',
+        status: 'auto_applied',
+      },
+    ]);
+  });
+
+  it('moves card payment rows out of ordinary categories like Loan Payments', async () => {
+    await setupPaymentTransferFixture();
+    await db.insertTransaction({
+      id: 'target',
+      account: 'checking',
+      amount: -68203,
+      date: '2026-05-01',
+      payee: 'robinhood',
+      imported_payee: 'Robinhood',
+      notes: 'Robinhood',
+      category: 'loan-payments',
+    });
+
+    const suggestionId = await suggestCategoryForTransaction('target');
+
+    expect(suggestionId).toBeTruthy();
+    expect(await getTransactionCategory('target')).toBe('credit-card-payments');
   });
 });

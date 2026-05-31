@@ -15,7 +15,7 @@ It is designed to run locally and stay cheap:
 - **Completely free for local personal use** — run the web app and sync server from this repository with no Enough subscription, hosting bill, or managed cloud service.
 - **Plaid Trial friendly** — connect bank data through Plaid's Trial plan when eligible, while treating each production Item as a limited slot.
 - **Local-first by default** — budget data lives in SQLite on your machine unless you choose to expose or host the server.
-- **AI where it is useful right now** — the dashboard includes a local Savings advisor powered by Ollama/qwen3:4b, and transactions can get AI category suggestions from rules, Plaid metadata, history, and Ollama.
+- **AI where it is useful right now** — the dashboard includes a local Savings advisor powered by Ollama/qwen3:8b by default, and transactions can get AI category suggestions from rules, Plaid metadata, history, and Ollama.
 - **Built for repeated money work** — review uncategorized transactions, watch spending drift, and adjust allocations without leaving the dashboard.
 
 ## AI Capabilities Available Now

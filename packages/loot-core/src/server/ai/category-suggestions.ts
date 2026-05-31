@@ -3,6 +3,12 @@ import { v4 as uuidv4 } from 'uuid';
 import * as db from '#server/db';
 import { batchUpdateTransactions } from '#server/transactions';
 import { insertRule } from '#server/transactions/transaction-rules';
+import {
+  CREDIT_CARD_PAYMENTS_CATEGORY_NAME,
+  isPaymentTransferCategory,
+  isPaymentTransferLike,
+  PAYMENT_TRANSFER_GROUP_NAME,
+} from '#shared/payment-transfers';
 
 import { requestOllamaCategorySuggestion } from './ollama-client';
 import { normalizePayeeName } from './payee-normalizer';
@@ -19,10 +25,12 @@ type TransactionRow = {
   date: string;
   amount: number;
   account: string;
+  account_name: string | null;
   category: string | null;
   payee: string | null;
   payee_name: string | null;
   imported_payee: string | null;
+  notes: string | null;
   raw_synced_data: string | null;
 };
 
@@ -84,12 +92,15 @@ async function getTransaction(id: string): Promise<TransactionRow | null> {
             t.date,
             t.amount,
             t.account,
+            a.name AS account_name,
             t.category,
             t.payee,
             p.name AS payee_name,
             t.imported_payee,
+            t.notes,
             t.raw_synced_data
        FROM v_transactions_internal_alive t
+       LEFT JOIN accounts a ON a.id = t.account
        LEFT JOIN payees p ON p.id = t.payee AND p.tombstone = 0
       WHERE t.id = ?
       LIMIT 1`,
@@ -178,6 +189,46 @@ function buildPlaidSuggestion(
     reason: `Plaid classified this merchant as ${plaidCategoryName}.`,
     shouldAutoApply: confidence >= AUTO_APPLY_THRESHOLD,
     suggestedRule: `If payee matches ${normalizedPayee}, categorize as ${category.name}`,
+    model: null,
+    promptVersion: null,
+  };
+}
+
+function buildPaymentTransferSuggestion(
+  trans: TransactionRow,
+  categories: CategoryRow[],
+  normalizedPayee: string,
+): CategorySuggestionResult | null {
+  if (
+    !isPaymentTransferLike({
+      accountName: trans.account_name,
+      payeeName: trans.payee_name,
+      importedPayee: trans.imported_payee,
+      notes: trans.notes,
+    })
+  ) {
+    return null;
+  }
+
+  const category = categories.find(
+    row =>
+      row.name === CREDIT_CARD_PAYMENTS_CATEGORY_NAME &&
+      row.group_name === PAYMENT_TRANSFER_GROUP_NAME,
+  );
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    source: 'rule',
+    categoryId: category.id,
+    confidence: 0.99,
+    normalizedPayee,
+    reason:
+      'This matches a credit card payment pattern and should be excluded from spending reports.',
+    shouldAutoApply: true,
+    suggestedRule: `Categorize credit card payment transfers as ${category.name}`,
     model: null,
     promptVersion: null,
   };
@@ -416,9 +467,10 @@ async function persistSuggestion(
 async function applySuggestionToTransaction(
   transactionId: string,
   categoryId: string,
+  { overwriteExisting = false }: { overwriteExisting?: boolean } = {},
 ) {
   const current = await getTransaction(transactionId);
-  if (!current || current.category) {
+  if (!current || (current.category && !overwriteExisting)) {
     return false;
   }
 
@@ -434,7 +486,7 @@ export async function suggestCategoryForTransaction(transactionId: string) {
   await ensureAiTables();
 
   const trans = await getTransaction(transactionId);
-  if (!trans || trans.category || !trans.amount) {
+  if (!trans || !trans.amount) {
     return null;
   }
 
@@ -442,13 +494,31 @@ export async function suggestCategoryForTransaction(transactionId: string) {
   const normalizedPayee = normalizePayeeName(rawPayee);
   const categories = await getCategories();
 
+  const currentCategory = trans.category
+    ? categories.find(category => category.id === trans.category)
+    : null;
+  if (
+    currentCategory &&
+    isPaymentTransferCategory({
+      categoryName: currentCategory.name,
+      categoryGroupName: currentCategory.group_name,
+    })
+  ) {
+    return null;
+  }
+
   const deterministicSuggestion =
+    buildPaymentTransferSuggestion(trans, categories, normalizedPayee) ??
     buildPlaidSuggestion(trans, categories, normalizedPayee) ??
-    (await buildHistorySuggestion(trans, normalizedPayee));
+    (trans.category
+      ? null
+      : await buildHistorySuggestion(trans, normalizedPayee));
 
   const suggestion =
     deterministicSuggestion ??
-    (await buildOllamaSuggestion(trans, categories, normalizedPayee));
+    (trans.category
+      ? null
+      : await buildOllamaSuggestion(trans, categories, normalizedPayee));
 
   if (!suggestion || !suggestion.categoryId) {
     return null;
@@ -467,6 +537,7 @@ export async function suggestCategoryForTransaction(transactionId: string) {
     const applied = await applySuggestionToTransaction(
       transactionId,
       suggestion.categoryId,
+      { overwriteExisting: suggestion.source === 'rule' },
     );
 
     if (!applied) {

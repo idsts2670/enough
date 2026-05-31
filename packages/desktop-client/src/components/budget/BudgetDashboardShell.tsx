@@ -23,6 +23,7 @@ import {
 import { View } from '@actual-app/components/view';
 import { send } from '@actual-app/core/platform/client/connection';
 import * as monthUtils from '@actual-app/core/shared/months';
+import { isReportingExcludedPaymentTransfer } from '@actual-app/core/shared/payment-transfers';
 import { q } from '@actual-app/core/shared/query';
 import { getScheduledAmount } from '@actual-app/core/shared/schedules';
 import { tsToRelativeTime } from '@actual-app/core/shared/util';
@@ -77,6 +78,7 @@ type BudgetDashboardShellProps = {
 };
 
 type TopCategoryRow = {
+  id: string;
   category: string | null;
   categoryName: string | null;
   categoryGroupName: string | null;
@@ -84,6 +86,10 @@ type TopCategoryRow = {
   categoryGroupHidden: boolean | null;
   categoryIncome: boolean | null;
   accountOffBudget: boolean | null;
+  accountName: string | null;
+  payeeName: string | null;
+  importedPayee: string | null;
+  notes: string | null;
   amount: number | null;
 };
 
@@ -400,16 +406,43 @@ function serializeIncomeAllocationPref(allocation: IncomeAllocationPrefs) {
   });
 }
 
+function buildSavingsAdvisorAllocation(
+  allocation: IncomeAllocationPrefs,
+  categoryGroups: CategoryGroupEntity[],
+) {
+  const groupsById = new Map(categoryGroups.map(group => [group.id, group]));
+
+  return {
+    monthlyIncome: allocation.monthlyIncome,
+    buckets: allocation.buckets.flatMap(bucket => {
+      const group = groupsById.get(bucket.groupId);
+      if (!group) {
+        return [];
+      }
+
+      return [
+        {
+          groupId: bucket.groupId,
+          groupName: group.name,
+          percent: bucket.percent,
+        },
+      ];
+    }),
+  };
+}
+
 function DashboardPanel({
   children,
   title,
   subtitle,
   accentColor,
+  headerAccessory,
 }: {
   children: ReactNode;
   title: ReactNode;
   subtitle: string;
   accentColor?: string;
+  headerAccessory?: ReactNode;
 }) {
   return (
     <View
@@ -423,32 +456,42 @@ function DashboardPanel({
         boxShadow: theme.cardShadow,
       }}
     >
-      <View style={{ gap: 4 }}>
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          {accentColor && (
-            <View
-              aria-hidden
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 9999,
-                backgroundColor: accentColor,
-              }}
-            />
-          )}
-          <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
-            {title}
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          gap: 16,
+          alignItems: 'flex-start',
+        }}
+      >
+        <View style={{ gap: 4, minWidth: 0 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            {accentColor && (
+              <View
+                aria-hidden
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 9999,
+                  backgroundColor: accentColor,
+                }}
+              />
+            )}
+            <Text style={{ ...metricTitle, color: theme.pageTextDark }}>
+              {title}
+            </Text>
+          </View>
+          <Text style={{ ...metricSubtitle, color: theme.pageTextSubdued }}>
+            {subtitle}
           </Text>
         </View>
-        <Text style={{ ...metricSubtitle, color: theme.pageTextSubdued }}>
-          {subtitle}
-        </Text>
+        {headerAccessory}
       </View>
       {children}
     </View>
@@ -997,21 +1040,22 @@ function useTopCategories({
     void aqlQuery(
       q('transactions')
         .filter({
-          $and: [
-            { date: { $transform: '$month', $eq: startMonth } },
-            { amount: { $lt: 0 } },
-          ],
+          date: { $transform: '$month', $eq: startMonth },
         })
-        .groupBy([{ $id: '$category.id' }])
         .select([
-          { category: { $id: '$category.id' } },
-          { categoryName: { $id: '$category.name' } },
-          { categoryGroupName: { $id: '$category.group.name' } },
-          { categoryHidden: { $id: '$category.hidden' } },
-          { categoryGroupHidden: { $id: '$category.group.hidden' } },
-          { categoryIncome: { $id: '$category.is_income' } },
-          { accountOffBudget: { $id: '$account.offbudget' } },
-          { amount: { $sum: '$amount' } },
+          'id',
+          'amount',
+          'notes',
+          'imported_payee',
+          { category: 'category.id' },
+          { categoryName: 'category.name' },
+          { categoryGroupName: 'category.group.name' },
+          { categoryHidden: 'category.hidden' },
+          { categoryGroupHidden: 'category.group.hidden' },
+          { categoryIncome: 'category.is_income' },
+          { accountOffBudget: 'account.offbudget' },
+          { accountName: 'account.name' },
+          { payeeName: 'payee.name' },
         ]),
     )
       .then(({ data }: { data: TopCategoryRow[] }) => {
@@ -1019,28 +1063,55 @@ function useTopCategories({
           return;
         }
 
-        const categories = data
-          .filter(
-            row =>
-              row.category &&
-              !row.categoryHidden &&
-              !row.categoryGroupHidden &&
-              !row.categoryIncome &&
-              !row.accountOffBudget &&
-              row.amount,
-          )
-          .map(row => {
-            const fallback = categoryFallback.get(row.category ?? '');
+        const rowsByCategory = new Map<
+          string,
+          {
+            row: TopCategoryRow;
+            amount: number;
+          }
+        >();
+
+        for (const row of data) {
+          if (
+            !row.category ||
+            row.categoryHidden ||
+            row.categoryGroupHidden ||
+            row.categoryIncome ||
+            row.accountOffBudget ||
+            !row.amount ||
+            isReportingExcludedPaymentTransfer({
+              categoryName: row.categoryName,
+              categoryGroupName: row.categoryGroupName,
+              accountName: row.accountName,
+              payeeName: row.payeeName,
+              importedPayee: row.importedPayee,
+              notes: row.notes,
+            })
+          ) {
+            continue;
+          }
+
+          const current = rowsByCategory.get(row.category);
+          rowsByCategory.set(row.category, {
+            row,
+            amount: (current?.amount ?? 0) + row.amount,
+          });
+        }
+
+        const categories = [...rowsByCategory.entries()]
+          .filter(([, { amount }]) => amount < 0)
+          .map(([id, { row, amount }]) => {
+            const fallback = categoryFallback.get(id);
             const groupName =
               row.categoryGroupName ?? fallback?.groupName ?? 'Personal';
             const categoryName =
-              row.categoryName ?? fallback?.categoryName ?? row.category ?? '';
+              row.categoryName ?? fallback?.categoryName ?? id;
             const color = getCategoryColor(groupName, categoryName);
 
             return {
-              id: row.category ?? '',
+              id,
               name: categoryName,
-              amount: Math.abs(row.amount ?? 0),
+              amount: Math.abs(amount),
               color: color.color,
               tint: color.tint,
             };
@@ -2191,9 +2262,6 @@ function IncomeAllocationPanel({
   );
 }
 
-type SavingsAdvisorData = Awaited<
-  ReturnType<typeof send<'ai/savings-advisor'>>
->;
 type SavingsAdvisorChatData = Awaited<
   ReturnType<typeof send<'ai/savings-advisor-chat'>>
 >;
@@ -2202,7 +2270,7 @@ type SavingsAdvisorChatMessage = {
   content: string;
 };
 
-function SavingsAdvisorLocalBadge({ model }: { model: string }) {
+function SavingsAdvisorLocalBadge({ model }: { model: string | null }) {
   return (
     <View
       style={{
@@ -2225,7 +2293,13 @@ function SavingsAdvisorLocalBadge({ model }: { model: string }) {
         }}
       />
       <Text style={{ ...caption, color: theme.chatSuccess }}>
-        {model} <Trans>local</Trans>
+        {model ? (
+          <>
+            {model} <Trans>local</Trans>
+          </>
+        ) : (
+          <Trans>Local AI</Trans>
+        )}
       </Text>
     </View>
   );
@@ -2243,68 +2317,62 @@ function SavingsAdvisorMessageBubble({
   return (
     <View
       style={{
-        maxWidth: '88%',
-        alignSelf: isUser ? 'flex-end' : 'flex-start',
-        padding: '8px 10px',
-        borderRadius: 10,
-        backgroundColor: isUser
-          ? theme.chatUserAccentSoft
-          : index === 0
-            ? theme.chatAdvisorAccentSoft
-            : theme.chatNeutralSubtle,
+        flexDirection: 'row',
+        justifyContent: isUser ? 'flex-end' : 'flex-start',
+        width: '100%',
       }}
     >
-      <Text
+      <View
         style={{
-          ...bodySm,
-          color: theme.chatTextPrimary,
-          whiteSpace: 'pre-wrap',
+          maxWidth: '78%',
+          padding: '8px 10px',
+          borderRadius: 10,
+          backgroundColor: isUser
+            ? theme.chatUserAccentSoft
+            : index === 0
+              ? theme.chatAdvisorAccentSoft
+              : theme.chatNeutralSubtle,
         }}
       >
-        {message.content}
-      </Text>
+        <Text
+          style={{
+            ...bodySm,
+            display: 'block',
+            color: theme.chatTextPrimary,
+            lineHeight: 1.35,
+            overflowWrap: 'anywhere',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {message.content}
+        </Text>
+      </View>
     </View>
   );
 }
 
-function SavingsAdvisorCard({ month }: { month: string }) {
+function SavingsAdvisorCard({
+  categoryGroups,
+  month,
+}: {
+  categoryGroups: CategoryGroupEntity[];
+  month: string;
+}) {
   const { t } = useTranslation();
-  const [data, setData] = useState<SavingsAdvisorData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [storedAllocation] = useSyncedPref(incomeAllocationPrefKey);
   const [messages, setMessages] = useState<SavingsAdvisorChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [chatError, setChatError] = useState<SavingsAdvisorChatData['error']>();
   const [isChatLoading, setIsChatLoading] = useState(false);
-  const modelLabel = 'qwen3:4b';
-  const suggestedQuestions = [
-    t('Where can I save?'),
-    t('What changed this month?'),
-    t('What should I review?'),
-  ];
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    async function load() {
-      setIsLoading(true);
-      try {
-        const nextData = await send('ai/savings-advisor', { month });
-        if (!isCancelled) {
-          setData(nextData);
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void load();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [month]);
+  const [activeModel, setActiveModel] = useState<string | null>(null);
+  const advisorAllocation = useMemo(
+    () =>
+      buildSavingsAdvisorAllocation(
+        parseIncomeAllocationPref(storedAllocation, categoryGroups),
+        categoryGroups,
+      ),
+    [categoryGroups, storedAllocation],
+  );
 
   useEffect(() => {
     setMessages([]);
@@ -2312,6 +2380,24 @@ function SavingsAdvisorCard({ month }: { month: string }) {
     setChatError(undefined);
     setIsChatLoading(false);
   }, [month]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    send('ai/ollama-config')
+      .then(result => {
+        if (isMounted) {
+          setActiveModel(result.model);
+        }
+      })
+      .catch(() => {
+        // Keep the generic local badge if config lookup is unavailable.
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function sendMessage(content: string) {
     const trimmedContent = content.trim();
@@ -2331,9 +2417,12 @@ function SavingsAdvisorCard({ month }: { month: string }) {
 
     try {
       const result = await send('ai/savings-advisor-chat', {
+        allocation: advisorAllocation,
         month,
         messages: nextMessages,
       });
+
+      setActiveModel(result.model);
 
       if (result.reply) {
         setMessages([
@@ -2355,195 +2444,121 @@ function SavingsAdvisorCard({ month }: { month: string }) {
       title={<Trans>Savings advisor</Trans>}
       subtitle={t('Local AI summary and chat')}
       accentColor={theme.semanticInfo}
+      headerAccessory={<SavingsAdvisorLocalBadge model={activeModel} />}
     >
-      {isLoading && !data ? (
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          <Trans>Computing metrics</Trans>
-        </Text>
-      ) : !data ? (
-        <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-          <Trans>No savings insight yet</Trans>
-        </Text>
-      ) : (
-        <View style={{ gap: 14 }}>
+      <View style={{ gap: 14 }}>
+        {(messages.length > 0 || isChatLoading) && (
           <View
             style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
+              minHeight: 112,
+              maxHeight: 320,
               gap: 12,
-              alignItems: 'flex-start',
+              padding: 10,
+              overflowY: 'auto',
+              borderRadius: 10,
+              backgroundColor: theme.chatNeutralPale,
+              border: `1px solid ${theme.chatNeutralBorder}`,
             }}
           >
-            <Text
-              style={{
-                ...bodyStrong,
-                color: theme.pageText,
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {data.response.summary}
-            </Text>
-            <SavingsAdvisorLocalBadge model={modelLabel} />
-          </View>
-
-          <View style={{ gap: 8 }}>
-            {data.response.topActions.slice(0, 2).map(action => (
+            {messages.map((message, index) => (
+              <SavingsAdvisorMessageBubble
+                key={`${message.role}-${index}`}
+                index={index}
+                message={message}
+              />
+            ))}
+            {isChatLoading && (
               <View
-                key={`${action.title}-${action.impactEstimate}`}
                 style={{
-                  gap: 4,
-                  padding: 8,
-                  borderRadius: 8,
-                  backgroundColor: theme.chatNeutralSubtle,
+                  flexDirection: 'row',
+                  justifyContent: 'flex-start',
+                  width: '100%',
                 }}
               >
                 <View
                   style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <Text style={{ ...bodyStrong, color: theme.pageText }}>
-                    {action.title}
-                  </Text>
-                  <Text style={{ ...caption, color: theme.semanticSuccess }}>
-                    {action.impactEstimate}
-                  </Text>
-                </View>
-                <Text style={{ ...bodySm, color: theme.pageTextSubdued }}>
-                  {action.reason}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {suggestedQuestions.map(question => (
-              <Button
-                key={question}
-                variant="normal"
-                isDisabled={isChatLoading}
-                onPress={() => sendMessage(question)}
-                style={{
-                  minHeight: 30,
-                  padding: '6px 10px',
-                  borderRadius: 9999,
-                  border: `1px solid ${theme.chatNeutralBorder}`,
-                  backgroundColor: theme.chatNeutralSurface,
-                  color: theme.chatAdvisorAccentDeep,
-                }}
-              >
-                {question}
-              </Button>
-            ))}
-          </View>
-
-          {(messages.length > 0 || isChatLoading) && (
-            <View
-              style={{
-                minHeight: 112,
-                maxHeight: 220,
-                gap: 8,
-                padding: 10,
-                overflowY: 'auto',
-                borderRadius: 10,
-                backgroundColor: theme.chatNeutralPale,
-                border: `1px solid ${theme.chatNeutralBorder}`,
-              }}
-            >
-              {messages.map((message, index) => (
-                <SavingsAdvisorMessageBubble
-                  key={`${message.role}-${index}`}
-                  index={index}
-                  message={message}
-                />
-              ))}
-              {isChatLoading && (
-                <View
-                  style={{
-                    alignSelf: 'flex-start',
+                    maxWidth: '78%',
                     padding: '8px 10px',
                     borderRadius: 10,
                     backgroundColor: theme.chatNeutralSubtle,
                   }}
                 >
-                  <Text style={{ ...bodySm, color: theme.chatTextSecondary }}>
+                  <Text
+                    style={{
+                      ...bodySm,
+                      display: 'block',
+                      color: theme.chatTextSecondary,
+                    }}
+                  >
                     <Trans>Thinking locally...</Trans>
                   </Text>
                 </View>
-              )}
-            </View>
-          )}
-
-          {chatError && (
-            <View
-              style={{
-                padding: 10,
-                borderRadius: 8,
-                backgroundColor: theme.chatErrorSoft,
-              }}
-            >
-              <Text style={{ ...bodySm, color: theme.chatError }}>
-                {chatError === 'invalid_messages' ? (
-                  <Trans>Enter a question before sending.</Trans>
-                ) : (
-                  <Trans>
-                    Local AI unavailable. Check Ollama and qwen3:4b.
-                  </Trans>
-                )}
-              </Text>
-            </View>
-          )}
-
-          {data.response.riskFlags.length > 0 && (
-            <Text style={{ ...caption, color: theme.semanticError }}>
-              {data.response.riskFlags.join(', ')}
-            </Text>
-          )}
-
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            <Input
-              aria-label={t('Ask Savings advisor')}
-              placeholder={t('Ask about this month')}
-              value={draft}
-              disabled={isChatLoading}
-              onChange={event => setDraft(event.currentTarget.value)}
-              onEnter={(value, event) => {
-                event.preventDefault();
-                void sendMessage(value);
-              }}
-              style={{
-                flex: 1,
-                minWidth: 0,
-                minHeight: 38,
-                padding: '8px 10px',
-                borderRadius: 9999,
-                border: `1px solid ${theme.chatNeutralBorder}`,
-                backgroundColor: theme.chatNeutralSurface,
-                color: theme.chatTextPrimary,
-              }}
-            />
-            <Button
-              variant="primary"
-              aria-label={t('Send message')}
-              isDisabled={isChatLoading || draft.trim().length === 0}
-              onPress={() => sendMessage(draft)}
-              style={{
-                width: 38,
-                height: 38,
-                minHeight: 38,
-                padding: 0,
-                backgroundColor: theme.chatUserAccent,
-                borderColor: theme.chatUserAccent,
-              }}
-            >
-              <SvgArrowButtonRight1 width={15} height={15} />
-            </Button>
+              </View>
+            )}
           </View>
+        )}
+
+        {chatError && (
+          <View
+            style={{
+              padding: 10,
+              borderRadius: 8,
+              backgroundColor: theme.chatErrorSoft,
+            }}
+          >
+            <Text style={{ ...bodySm, color: theme.chatError }}>
+              {chatError === 'invalid_messages' ? (
+                <Trans>Enter a question before sending.</Trans>
+              ) : (
+                <Trans>
+                  Local AI unavailable. Check Ollama and{' '}
+                  {{ model: activeModel ?? t('your local model') }}.
+                </Trans>
+              )}
+            </Text>
+          </View>
+        )}
+
+        <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+          <Input
+            aria-label={t('Ask Savings advisor')}
+            placeholder={t('Ask about this month')}
+            value={draft}
+            disabled={isChatLoading}
+            onChange={event => setDraft(event.currentTarget.value)}
+            onEnter={(value, event) => {
+              event.preventDefault();
+              void sendMessage(value);
+            }}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              minHeight: 38,
+              padding: '8px 10px',
+              borderRadius: 9999,
+              border: `1px solid ${theme.chatNeutralBorder}`,
+              backgroundColor: theme.chatNeutralSurface,
+              color: theme.chatTextPrimary,
+            }}
+          />
+          <Button
+            variant="primary"
+            aria-label={t('Send message')}
+            isDisabled={isChatLoading || draft.trim().length === 0}
+            onPress={() => sendMessage(draft)}
+            style={{
+              width: 38,
+              height: 38,
+              minHeight: 38,
+              padding: 0,
+              backgroundColor: theme.chatUserAccent,
+              borderColor: theme.chatUserAccent,
+            }}
+          >
+            <SvgArrowButtonRight1 width={15} height={15} />
+          </Button>
         </View>
-      )}
+      </View>
     </DashboardPanel>
   );
 }
@@ -2586,7 +2601,7 @@ export function BudgetDashboardShell({
         </View>
       </View>
 
-      <SavingsAdvisorCard month={startMonth} />
+      <SavingsAdvisorCard categoryGroups={categoryGroups} month={startMonth} />
 
       <IncomeAllocationPanel
         budgetType={budgetType}

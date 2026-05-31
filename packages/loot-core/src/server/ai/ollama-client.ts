@@ -7,10 +7,10 @@ import type {
 } from './types';
 
 const DEFAULT_OLLAMA_BASE_URL = 'http://localhost:11434';
-const DEFAULT_OLLAMA_MODEL = 'qwen3:4b';
+const DEFAULT_OLLAMA_MODEL = 'qwen3:8b';
 const CATEGORY_PROMPT_VERSION = 'category-v1';
 const ADVISOR_PROMPT_VERSION = 'advisor-v1';
-const ADVISOR_CHAT_PROMPT_VERSION = 'advisor-chat-v1';
+const ADVISOR_CHAT_PROMPT_VERSION = 'advisor-chat-v2';
 
 function getEnv(name: string): string | undefined {
   return typeof process !== 'undefined' ? process.env?.[name] : undefined;
@@ -72,10 +72,12 @@ async function requestJson<T>({
       body: JSON.stringify({
         model,
         messages,
+        think: false,
         stream: false,
         format: schema,
         options: {
           temperature,
+          num_predict: 700,
           top_p: 0.9,
         },
       }),
@@ -100,29 +102,43 @@ async function requestJson<T>({
 export function stripQwenThinking(content: string) {
   return content
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/^[\s\S]*?<\/think>/i, '')
     .replace(/^\s+/, '')
     .trim();
+}
+
+function isMetaSavingsChatReply(content: string) {
+  return /^(okay|let's|first,?\s+i|i need|let me|we are given|we need|the user|looking at|based on the prompt|advisor facts|finalquestion|the main sections|the user's question|wait,)/i.test(
+    content,
+  );
 }
 
 async function requestText({
   messages,
   temperature = 0.2,
+  timeoutMs = 60_000,
 }: {
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
   temperature?: number;
+  timeoutMs?: number;
 }): Promise<string | null> {
   const { baseUrl, model } = getOllamaConfig();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(`${baseUrl}/api/chat`, {
       method: 'POST',
+      signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
         messages,
+        think: false,
         stream: false,
         options: {
           temperature,
+          num_predict: 512,
           top_p: 0.9,
         },
       }),
@@ -141,6 +157,8 @@ async function requestText({
     return stripQwenThinking(content);
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -220,12 +238,13 @@ export async function requestOllamaCategorySuggestion({
 }
 
 export async function requestOllamaSavingsAdvice(metrics: object) {
+  const { model } = getOllamaConfig();
   const payload = await requestJson<SavingsAdvisorResponse>({
     messages: [
       {
         role: 'system',
         content:
-          'You are a local personal finance advisor. Explain the provided computed metrics and suggest concrete actions. Do not invent source numbers.',
+          '/no_think\nYou are a local personal finance advisor. Return product-ready copy for a dashboard card. Write the summary in second person, maximum two short sentences. Do not write phrases like "the user", "financial metrics", "provided data", or "aggregate metrics". Suggest concrete actions. Do not invent source numbers. Use currentDate, currentMonth, month, and selectedMonthStatus exactly as provided. Never call the selected month a future date unless selectedMonthStatus is "future". If monthIncome or monthExpenses is above zero, never describe the profile as empty or say no transactions have been processed.',
       },
       {
         role: 'user',
@@ -261,6 +280,7 @@ export async function requestOllamaSavingsAdvice(metrics: object) {
   });
 
   return {
+    model,
     promptVersion: ADVISOR_PROMPT_VERSION,
     response: payload,
   };
@@ -274,25 +294,58 @@ export async function requestOllamaSavingsChat({
   messages: SavingsAdvisorChatMessage[];
 }) {
   const { model } = getOllamaConfig();
-  const reply = await requestText({
-    messages: [
-      {
-        role: 'system',
-        content:
-          'You are a local personal finance advisor inside Enough. Answer from the provided aggregate metrics and conversation only. Do not invent source numbers. Do not claim access to raw transactions, account identifiers, Plaid data, category row details, or payee names. If detail is unavailable, say that and suggest what aggregate signal to review.',
-      },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          aggregateMetrics: metrics,
-          privacyBoundary:
-            'Only aggregate computed metrics are provided. Raw transactions, account identifiers, category row details, Plaid data, and payee names are intentionally unavailable.',
-        }),
-      },
-      ...messages,
-    ],
-    temperature: 0.2,
+  const recentMessages = messages.slice(-8);
+  const userQuestion = messages.at(-1)?.content ?? '';
+  const systemPrompt =
+    '/no_think\nYou are a local personal finance advisor inside Enough. Answer the final user question directly from the advisor facts payload. Return only the final answer. Do not narrate your reasoning, mention prompts, mention provided data, or say "the user". Do not start with phrases like "Okay", "Let me", "First", or "I need". Do not invent source numbers. Use currentDate, currentMonth, month, and selectedMonthStatus exactly as provided. Use topSpendingCategories for largest, biggest, highest, or top spending-category questions. Use topSpendingGroups for group, bucket, or high-level category questions. Use spendingGroupBreakdowns for questions asking what categories or items are inside a group or bucket. Use allocationAnalysis for 30/30/40, allocation-rule, target-vs-actual, over-target, under-target, and improvement questions. Use topSpendingPayees as merchant/payee drivers when the user asks about habits, where to improve, where to save more, or why a category is high. Never call the selected month a future date unless selectedMonthStatus is "future". Prefer 2-5 concise bullets for advice. Tie each recommendation to a category, budget variance, group, or payee driver. Raw transaction rows, account identifiers, Plaid payloads, notes, and transaction IDs are unavailable; do not claim you inspected them.';
+  const advisorPayload = JSON.stringify({
+    advisorFacts: metrics,
+    recentConversation: recentMessages,
+    finalQuestion: userQuestion,
+    privacyBoundary:
+      'This is a local Ollama chat. You receive computed month metrics, category/group rankings, budget targets, allocation analysis, and aggregate payee/merchant drivers. Raw transaction rows, account identifiers, notes, transaction IDs, and Plaid payloads are not provided.',
   });
+  const messagesForModel: Array<{
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+  }> = [
+    {
+      role: 'system',
+      content: systemPrompt,
+    },
+    {
+      role: 'user',
+      content: `${advisorPayload}\n\nAnswer finalQuestion now. Do not explain the prompt. Do not say the facts are missing unless advisorFacts is empty.\n/no_think`,
+    },
+  ];
+  let reply = await requestText({
+    messages: messagesForModel,
+    temperature: 0.35,
+    timeoutMs: 45_000,
+  });
+
+  if (reply && isMetaSavingsChatReply(reply)) {
+    reply = await requestText({
+      messages: [
+        ...messagesForModel,
+        {
+          role: 'assistant',
+          content: reply,
+        },
+        {
+          role: 'user',
+          content:
+            'Rewrite your previous response as the final answer only. Use the advisorFacts payload. Give 2-5 concise bullets. Do not mention prompts, instructions, missing facts, or reasoning. Do not use preamble. Start with the strongest recommendation.\n/no_think',
+        },
+      ],
+      temperature: 0.2,
+      timeoutMs: 30_000,
+    });
+  }
+
+  if (reply && isMetaSavingsChatReply(reply)) {
+    reply = null;
+  }
 
   return {
     model,

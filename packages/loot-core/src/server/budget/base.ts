@@ -4,6 +4,10 @@ import * as sheet from '#server/sheet';
 import { resolveName } from '#server/spreadsheet/util';
 // @ts-strict-ignore
 import * as monthUtils from '#shared/months';
+import {
+  CREDIT_CARD_PAYMENTS_CATEGORY_NAME,
+  PAYMENT_TRANSFER_GROUP_NAME,
+} from '#shared/payment-transfers';
 import { q } from '#shared/query';
 import { getChangedValues } from '#shared/util';
 import type { CategoryGroupEntity } from '#types/models';
@@ -43,6 +47,13 @@ function monthFromDateRepr(date: number) {
   return `${value.slice(0, 4)}-${value.slice(4, 6)}`;
 }
 
+const reportingExcludedCategorySql = `
+  (
+    lower(IFNULL(c.name, '')) = lower('${CREDIT_CARD_PAYMENTS_CATEGORY_NAME}')
+    OR lower(IFNULL(g.name, '')) = lower('${PAYMENT_TRANSFER_GROUP_NAME}')
+  )
+`;
+
 export function createCategory(cat, sheetName, prevSheetName, start, end) {
   const month = monthFromDateRepr(start);
   sheet.get().createDynamic(sheetName, 'sum-amount-' + cat.id, {
@@ -52,8 +63,11 @@ export function createCategory(cat, sheetName, prevSheetName, start, end) {
       const rows = db.runQuery<{ amount: number }>(
         `SELECT SUM(amount) as amount FROM v_transactions_internal_alive t
            LEFT JOIN accounts a ON a.id = t.account
+           LEFT JOIN categories c ON c.id = t.category AND c.tombstone = 0
+           LEFT JOIN category_groups g ON g.id = c.cat_group AND g.tombstone = 0
          WHERE t.date >= ${start} AND t.date <= ${end}
-           AND category = '${cat.id}' AND a.offbudget = 0`,
+           AND category = '${cat.id}' AND a.offbudget = 0
+           AND NOT ${reportingExcludedCategorySql}`,
         [],
         true,
       );
