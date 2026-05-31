@@ -36,6 +36,29 @@ const importScriptsWithRetry = async (script, { maxRetries = 5 } = {}) => {
   }
 };
 
+const BACKEND_WORKER_HASH = /^[A-Za-z0-9_-]+$/;
+
+const getBackendWorkerScriptUrl = ({ publicUrl = '', hash }) => {
+  if (typeof hash !== 'string' || !BACKEND_WORKER_HASH.test(hash)) {
+    throw new Error('Invalid backend worker hash');
+  }
+
+  const baseUrl =
+    typeof publicUrl === 'string' && publicUrl.length > 0
+      ? new URL(publicUrl, self.location.href)
+      : new URL('./', self.location.href);
+
+  if (baseUrl.origin !== self.location.origin) {
+    throw new Error('Invalid backend worker origin');
+  }
+
+  if (!baseUrl.pathname.endsWith('/')) {
+    baseUrl.pathname = `${baseUrl.pathname}/`;
+  }
+
+  return new URL(`kcab/kcab.worker.${hash}.js`, baseUrl).toString();
+};
+
 const RECONNECT_INTERVAL_MS = 200;
 const MAX_RECONNECT_ATTEMPTS = 500;
 let reconnectAttempts = 0;
@@ -77,7 +100,7 @@ self.addEventListener('message', async event => {
         }
 
         await importScriptsWithRetry(
-          `${msg.publicUrl}/kcab/kcab.worker.${hash}.js`,
+          getBackendWorkerScriptUrl({ publicUrl: msg.publicUrl, hash }),
           { maxRetries: isDev ? 5 : 0 },
         );
 

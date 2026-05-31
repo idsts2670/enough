@@ -214,6 +214,17 @@ describe('app-cors-proxy', () => {
       expect(res.statusCode).toBe(400);
       expect(res.body.error).toBe('Invalid url parameter');
     });
+
+    it('should return 400 if multiple url parameters are provided', async () => {
+      validateSession.mockReturnValue({ userId: 'test-user' });
+
+      const res = await request(app)
+        .get('/')
+        .query({ url: ['https://github.com/user/repo1', 'https://evil.test'] });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toBe('Invalid url parameter');
+    });
   });
 
   describe('Session validation', () => {
@@ -268,12 +279,49 @@ describe('app-cors-proxy', () => {
       expect(res.body.error).toBe('URL not allowed');
     });
 
+    it('should block localhost hostnames', async () => {
+      const res = await request(app)
+        .get('/')
+        .query({ url: 'https://localhost/test' });
+
+      expect(res.statusCode).toBe(403);
+      expect(res.body.error).toBe('URL not allowed');
+      expect(console.warn).toHaveBeenCalledWith(
+        'Blocked request to local hostname: localhost',
+      );
+    });
+
+    it('should block non-HTTPS URLs', async () => {
+      const res = await request(app)
+        .get('/')
+        .query({ url: 'http://github.com/user/repo1' });
+
+      expect(res.statusCode).toBe(403);
+      expect(res.body.error).toBe('URL not allowed');
+      expect(console.warn).toHaveBeenCalledWith(
+        'Blocked non-HTTPS proxy URL:',
+        'http://github.com/user/repo1',
+      );
+    });
+
     it('should allow allowlisted repository URLs', async () => {
       const res = await request(app)
         .get('/')
         .query({ url: 'https://github.com/user/repo1' });
 
       expect(res.statusCode).toBe(200);
+    });
+
+    it('should proxy only the normalized allowed URL', async () => {
+      const res = await request(app).get('/').query({
+        url: 'https://user:pass@github.com/user/repo1/readme.txt#fragment',
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(global.fetch).toHaveBeenLastCalledWith(
+        'https://github.com/user/repo1/readme.txt',
+        expect.any(Object),
+      );
     });
 
     it('should allow GitHub API URLs for allowlisted repos', async () => {

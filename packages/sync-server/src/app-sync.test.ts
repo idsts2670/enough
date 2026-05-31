@@ -417,6 +417,22 @@ describe('/upload-user-file', () => {
     expect(res.text).toBe('invalid fileId');
   });
 
+  it.each(['../budget', 'folder/budget', '..\\budget'])(
+    'returns 400 for traversal-like fileId %s',
+    async fileId => {
+      const res = await request(app)
+        .post('/upload-user-file')
+        .set('Content-Type', 'application/encrypted-file')
+        .set('x-actual-token', 'valid-token')
+        .set('x-actual-name', 'test-file')
+        .set('x-actual-file-id', fileId)
+        .send(Buffer.from('file content'));
+
+      expect(res.statusCode).toEqual(400);
+      expect(res.text).toBe('invalid fileId');
+    },
+  );
+
   it('uploads a new file successfully', async () => {
     const fileId = generateFileId();
     const fileName = 'test-file.txt';

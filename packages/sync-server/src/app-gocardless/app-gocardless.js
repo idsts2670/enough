@@ -1,6 +1,7 @@
 import path from 'path';
 
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 
 import { sha256String } from '#util/hash';
 import {
@@ -41,9 +42,18 @@ function sanitizeId(id) {
 const app = express();
 app.use(requestLoggerMiddleware);
 
-app.get('/link', function (req, res) {
-  res.sendFile('link.html', { root: path.resolve('./src/app-gocardless') });
-});
+app.get(
+  '/link',
+  rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    legacyHeaders: false,
+    standardHeaders: true,
+  }),
+  function (req, res) {
+    res.sendFile('link.html', { root: path.resolve('./src/app-gocardless') });
+  },
+);
 
 export { app as handlers };
 app.use(express.json());

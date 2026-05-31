@@ -15,4 +15,8 @@ describe('normalizePayeeName', () => {
     expect(normalizePayeeName('PAYPAL *SPOTIFY USA 123456')).toBe('Spotify');
     expect(normalizePayeeName('UBER TRIP HELP.UBER.COM')).toBe('Uber Trip');
   });
+
+  it('does not rely on no-op wildcard replacement for processor prefixes', () => {
+    expect(normalizePayeeName('PP* TARGET 1234')).toBe('Target');
+  });
 });

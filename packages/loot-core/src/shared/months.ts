@@ -459,20 +459,22 @@ export const getDayMonthRegex = memoizeOne((format: string) => {
 export const getMonthYearFormat = memoizeOne((format: string) => {
   return format
     .replace(/d+/g, '')
-    .replace(/[^\w]$/, '')
-    .replace(/^[^\w]/, '')
-    .replace(/\/\//, '/')
-    .replace(/\.\./, '.')
-    .replace(/--/, '-');
+    .replace(/[^\w]+$/, '')
+    .replace(/^[^\w]+/, '')
+    .replace(/\/{2,}/g, '/')
+    .replace(/\.{2,}/g, '.')
+    .replace(/-{2,}/g, '-');
 });
 
 export const getMonthYearRegex = memoizeOne((format: string) => {
   const regex = format
     .replace(/d+/g, '')
-    .replace(/[^\w]$/, '')
-    .replace(/^[^\w]/, '')
-    .replace(/\/\//, '/')
+    .replace(/[^\w]+$/, '')
+    .replace(/^[^\w]+/, '')
+    .replace(/\/{2,}/g, '/')
     .replace(/M+/g, '\\d{1,2}')
+    .replace(/\.{2,}/g, '.')
+    .replace(/-{2,}/g, '-')
     .replace(/y+/g, '\\d{2,4}');
   return new RegExp('^' + regex + '$');
 });

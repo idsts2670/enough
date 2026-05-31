@@ -1,4 +1,4 @@
-import { join, resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 import { config } from '#load-config';
 
@@ -18,9 +18,25 @@ export function isValidGroupId(id: string): id is GroupId {
 }
 
 export function getPathForUserFile(fileId: FileId) {
-  return join(resolve(config.get('userFiles')), `file-${fileId}.blob`);
+  const userFilesRoot = resolve(config.get('userFiles'));
+  const filePath = resolve(userFilesRoot, `file-${fileId}.blob`);
+  const relativePath = relative(userFilesRoot, filePath);
+
+  if (relativePath.startsWith('..') || relativePath.includes(`..${sep}`)) {
+    throw new Error('User file path escapes user-files directory');
+  }
+
+  return filePath;
 }
 
 export function getPathForGroupFile(groupId: GroupId) {
-  return join(resolve(config.get('userFiles')), `group-${groupId}.sqlite`);
+  const userFilesRoot = resolve(config.get('userFiles'));
+  const filePath = resolve(userFilesRoot, `group-${groupId}.sqlite`);
+  const relativePath = relative(userFilesRoot, filePath);
+
+  if (relativePath.startsWith('..') || relativePath.includes(`..${sep}`)) {
+    throw new Error('Group file path escapes user-files directory');
+  }
+
+  return filePath;
 }

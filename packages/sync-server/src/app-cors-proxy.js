@@ -7,6 +7,8 @@ import { requestLoggerMiddleware } from './util/middlewares';
 import { validateSession } from './util/validate-user';
 
 const app = express();
+const PLUGIN_STORE_ALLOWLIST_URL =
+  'https://raw.githubusercontent.com/actualbudget/plugin-store/refs/heads/main/plugins.json';
 
 app.use(express.json());
 app.use(requestLoggerMiddleware);
@@ -40,9 +42,7 @@ async function fetchAllowlist() {
   }
 
   try {
-    const response = await fetch(
-      'https://raw.githubusercontent.com/actualbudget/plugin-store/refs/heads/main/plugins.json',
-    );
+    const response = await fetch(PLUGIN_STORE_ALLOWLIST_URL);
     if (!response.ok) {
       throw new Error(`Failed to fetch allowlist: ${response.status}`);
     }
@@ -59,71 +59,121 @@ async function fetchAllowlist() {
   }
 }
 
-/**
- * Return true only if the URL is on an allowlist and not a local/private address.
- */
-function isUrlAllowed(targetUrl) {
-  try {
-    const url = new URL(targetUrl);
-    const hostname = url.hostname;
+function isBlockedHostname(hostname) {
+  const normalizedHostname = hostname.toLowerCase();
 
-    // Block private/local IP addresses
-    if (ipaddr.isValid(hostname)) {
-      const ip = ipaddr.parse(hostname);
-      if (
-        [
-          'private',
-          'loopback',
-          'linkLocal',
-          'uniqueLocal',
-          'unspecified',
-        ].includes(ip.range())
-      ) {
-        console.warn(`Blocked request to private/localhost IP: ${hostname}`);
-        return false;
-      }
-    }
+  if (
+    normalizedHostname === 'localhost' ||
+    normalizedHostname.endsWith('.localhost') ||
+    normalizedHostname.endsWith('.local')
+  ) {
+    console.warn(`Blocked request to local hostname: ${hostname}`);
+    return true;
+  }
 
-    // Always allow the specific plugin-store URL
+  // Block private/local IP addresses
+  if (ipaddr.isValid(hostname)) {
+    const ip = ipaddr.parse(hostname);
     if (
-      targetUrl ===
-      'https://raw.githubusercontent.com/actualbudget/plugin-store/refs/heads/main/plugins.json'
+      [
+        'private',
+        'loopback',
+        'linkLocal',
+        'uniqueLocal',
+        'unspecified',
+      ].includes(ip.range())
     ) {
+      console.warn(`Blocked request to private/localhost IP: ${hostname}`);
       return true;
     }
+  }
 
-    // Check against allowlisted repositories
-    for (const repoUrl of allowlistedRepos) {
-      try {
-        const { pathname } = new URL(repoUrl);
-        const [, repoOwner, repoName] = pathname.split('/');
+  return false;
+}
 
-        if (
-          targetUrl === repoUrl ||
-          targetUrl.startsWith(repoUrl + '/') ||
-          (hostname === 'api.github.com' &&
-            url.pathname.startsWith(`/repos/${repoOwner}/${repoName}`)) ||
-          (hostname === 'raw.githubusercontent.com' &&
-            url.pathname.startsWith(`/${repoOwner}/${repoName}/`)) ||
-          (hostname === 'github.com' &&
-            url.pathname.startsWith(`/${repoOwner}/${repoName}/releases/`))
-        ) {
-          return true;
-        }
-      } catch (e) {
-        console.warn(
-          'Invalid repository URL in allowlist:',
-          repoUrl,
-          e.message,
-        );
-      }
+function getAllowlistedRepo(repoUrl) {
+  try {
+    const url = new URL(repoUrl);
+    const pathParts = url.pathname.split('/').filter(Boolean);
+
+    if (
+      url.protocol !== 'https:' ||
+      url.hostname !== 'github.com' ||
+      pathParts.length < 2
+    ) {
+      return null;
     }
 
-    return false;
+    return {
+      owner: pathParts[0],
+      repo: pathParts[1].replace(/\.git$/i, ''),
+    };
+  } catch (error) {
+    console.warn(
+      'Invalid repository URL in allowlist:',
+      repoUrl,
+      error.message,
+    );
+    return null;
+  }
+}
+
+function matchesPath(pathname, prefix) {
+  return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+/**
+ * Return a URL only after it has been normalized and matched to the plugin
+ * allowlist. Callers must use the returned URL for network requests.
+ */
+function getAllowedProxyUrl(targetUrl) {
+  let url;
+  try {
+    url = new URL(targetUrl);
   } catch (e) {
     console.warn('Invalid target URL:', targetUrl, e.message);
-    return false;
+    return null;
   }
+
+  url.username = '';
+  url.password = '';
+  url.hash = '';
+
+  if (isBlockedHostname(url.hostname)) {
+    return null;
+  }
+
+  if (url.protocol !== 'https:') {
+    console.warn('Blocked non-HTTPS proxy URL:', url.toString());
+    return null;
+  }
+
+  if (url.toString() === PLUGIN_STORE_ALLOWLIST_URL) {
+    return url;
+  }
+
+  for (const repoUrl of allowlistedRepos) {
+    const repo = getAllowlistedRepo(repoUrl);
+    if (!repo) {
+      continue;
+    }
+
+    const repoPath = `/${repo.owner}/${repo.repo}`;
+
+    if (
+      (url.hostname === 'github.com' &&
+        (matchesPath(url.pathname, repoPath) ||
+          url.pathname.startsWith(`${repoPath}/releases/`))) ||
+      (url.hostname === 'api.github.com' &&
+        matchesPath(url.pathname, `/repos/${repo.owner}/${repo.repo}`)) ||
+      (url.hostname === 'raw.githubusercontent.com' &&
+        url.pathname.startsWith(`${repoPath}/`))
+    ) {
+      return url;
+    }
+  }
+
+  return null;
 }
 
 app.use('/', async (req, res) => {
@@ -142,15 +192,19 @@ app.use('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing url parameter' });
   }
 
+  if (typeof targetUrlString !== 'string') {
+    return res.status(400).json({ error: 'Invalid url parameter' });
+  }
+
   // Validate session/token
   const session = await validateSession(req, res);
   if (!session) {
     return; // validateSession already sent the response
   }
 
-  let url;
+  let parsedTargetUrl;
   try {
-    url = new URL(targetUrlString);
+    parsedTargetUrl = new URL(targetUrlString);
   } catch {
     return res.status(400).json({ error: 'Invalid url parameter' });
   }
@@ -167,8 +221,9 @@ app.use('/', async (req, res) => {
   }
 
   // Check if the URL is allowed
-  if (!isUrlAllowed(url.href)) {
-    console.warn('Blocked request to unauthorized URL:', url.href);
+  const url = getAllowedProxyUrl(parsedTargetUrl.toString());
+  if (!url) {
+    console.warn('Blocked request to unauthorized URL:', parsedTargetUrl.href);
     return res.status(403).json({
       error: 'URL not allowed',
       message:
@@ -217,10 +272,10 @@ app.use('/', async (req, res) => {
       );
     }
 
-    const response = await fetch(url.href, {
-      method,
+    const response = await fetch(url.toString(), {
+      method: methodNormalized,
       headers: requestHeaders,
-      body: ['GET', 'HEAD'].includes(method)
+      body: ['GET', 'HEAD'].includes(methodNormalized)
         ? undefined
         : typeof body === 'string'
           ? body

@@ -46,7 +46,6 @@ export function normalizePayeeName(
 
   value = value
     .replace(/\s+/g, ' ')
-    .replace(/\*/g, '*')
     .replace(/\s+\.\.\.$/, '...')
     .replace(/\.\.\.$/, '')
     .trim();
