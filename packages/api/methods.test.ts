@@ -126,6 +126,8 @@ describe('API CRUD operations', () => {
 
     // create our test category group
     const mainGroupId = await api.createCategoryGroup({
+      hidden: false,
+      is_income: false,
       name: 'test-group',
     });
 
@@ -172,9 +174,13 @@ describe('API CRUD operations', () => {
 
     // create our test category group
     const mainGroupId = await api.createCategoryGroup({
+      hidden: false,
+      is_income: false,
       name: 'test-group',
     });
     const secondaryGroupId = await api.createCategoryGroup({
+      hidden: false,
+      is_income: false,
       name: 'test-secondary-group',
     });
     const categoryId = await api.createCategory({
@@ -254,6 +260,8 @@ describe('API CRUD operations', () => {
 
     // create some new categories to test with
     const groupId = await api.createCategoryGroup({
+      hidden: false,
+      is_income: false,
       name: 'tests',
     });
     const categoryId = await api.createCategory({
