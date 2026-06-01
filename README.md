@@ -20,7 +20,7 @@ It is designed to run locally and stay cheap:
 
 ## AI Capabilities Available Now
 
-- **Savings advisor:** computes aggregate monthly metrics locally, summarizes the current month, suggests concrete actions, and supports chat prompts like "Where can I save?", "What changed this month?", and "What should I review?"
+- **Savings advisor:** computes aggregate monthly metrics locally and supports natural-language questions about spending, budget variance, allocation targets, category totals, and monthly review.
 - **AI categorization suggestions:** reviews uncategorized transactions and proposes categories using existing rules, Plaid categories, payee history, and local Ollama fallback. Suggestions can be accepted, rejected, or turned into a rule.
 - **Privacy-shaped prompting:** the advisor is built around computed aggregate metrics rather than handing an AI model unrestricted access to raw account identifiers or transaction detail.
 
@@ -56,6 +56,13 @@ yarn personal:start
 `yarn personal:start` launches the sync server on `http://localhost:5006` and the web app on `http://localhost:3001/login`.
 
 When prompted for a server URL, enter `http://localhost:5006`.
+
+### Which URL should I use?
+
+- `http://localhost:5006` is the backend/server URL. It owns `/health`, API/sync routes, and in the always-on launchd setup it also serves the built app. For normal personal use, open `http://localhost:5006/budget`.
+- `http://localhost:3001` is the Vite frontend development server. It is useful when actively developing UI code, but it is not required for daily use and it does not have `/health`.
+- `yarn start` starts only the frontend development server on port `3001`; it expects the backend on `5006` to already be running separately.
+- `yarn personal:start` starts both dev servers only when both ports are free. If one or both ports are already occupied, it will not start duplicate servers.
 
 ## Environment
 
@@ -160,7 +167,7 @@ rm ~/Library/LaunchAgents/com.enough.budget.plist
 yarn typecheck     # TypeScript check across all packages
 yarn lint:fix      # Lint + format with auto-fix
 yarn test          # Unit tests (all packages via lage)
-yarn start         # Vite dev server only (port 3001)
+yarn start         # Frontend dev server only (port 3001); backend 5006 must already be running
 ```
 
 All yarn commands must run from the repository root.

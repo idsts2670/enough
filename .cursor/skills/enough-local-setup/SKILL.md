@@ -52,6 +52,19 @@ If Enough asks for the server URL, use:
 http://localhost:5006
 ```
 
+## Port Model
+
+- `http://localhost:5006` is the backend/server URL. It owns `/health`, API/sync routes, and in the launchd always-on setup it also serves the built app. For normal personal use, open `http://localhost:5006/budget`.
+- `http://localhost:3001` is the Vite frontend development server. It is only for active UI development, has no `/health`, and still needs `5006` as its backend server.
+- `curl http://localhost:5006/health` proves the backend is up. It does not prove the `3001` dev frontend is healthy.
+
+## Which command should I run?
+
+- Daily use with launchd already installed: open `http://localhost:5006/budget`.
+- Full development start: run `yarn personal:start`. It starts both `5006` and `3001` only when both ports are free.
+- Frontend-only development: run `yarn start`. This starts only `3001`; make sure `5006` is already running separately.
+- Production rebuild after source changes: run `yarn workspace @actual-app/sync-server build` for server changes, `yarn build:browser` for UI changes, then `launchctl kickstart -k gui/$(id -u)/com.enough.budget`.
+
 ## Scripts
 
 - `scripts/personal/doctor.sh`: checks Node 22+, Yarn, `.env`, ports, and Chrome.
@@ -147,10 +160,16 @@ After Ollama is running and `qwen3:8b` is pulled:
 
 If Enough shows a `SharedArrayBuffer` fatal error in an embedded browser but works in Chrome, Chrome is the source of truth.
 
-If real Chrome shows the fatal error, verify:
+If real Chrome shows the fatal error in frontend development mode, verify:
 
 ```bash
 curl -I http://localhost:3001/login
+```
+
+If using the launchd production app, check the app served from `5006` instead:
+
+```bash
+curl -I http://localhost:5006/budget
 ```
 
 Expected headers:
