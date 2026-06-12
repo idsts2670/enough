@@ -2,6 +2,14 @@ import { keyframes } from '@emotion/css';
 
 import { theme } from './theme';
 import { tokens } from './tokens';
+import {
+  bodyMd,
+  bodySm,
+  bodyStrong,
+  caption,
+  display2xl,
+  displayLg,
+} from './typography';
 
 // oxlint-disable-next-line typescript/no-explicit-any
 export type CSSProperties = Record<string, any>;
@@ -9,18 +17,18 @@ export type CSSProperties = Record<string, any>;
 const MOBILE_MIN_HEIGHT = 40;
 
 const shadowLarge = {
-  boxShadow: '0 15px 30px 0 rgba(0,0,0,0.11), 0 5px 15px 0 rgba(0,0,0,0.08)',
+  boxShadow: '0 12px 40px rgba(12, 10, 9, 0.16)',
 };
 
 export const styles: CSSProperties = {
   incomeHeaderHeight: 70,
-  cardShadow: '0 12px 30px rgba(12, 10, 9, 0.1)',
+  cardShadow:
+    '0 1px 2px rgba(12, 10, 9, 0.05), 0 10px 24px rgba(12, 10, 9, 0.04)',
   monthRightPadding: 5,
   menuBorderRadius: 4,
   mobileMinHeight: MOBILE_MIN_HEIGHT,
   mobileMenuItem: {
-    fontSize: 17,
-    fontWeight: 400,
+    ...bodyMd,
     paddingTop: 8,
     paddingBottom: 8,
     height: MOBILE_MIN_HEIGHT,
@@ -29,49 +37,31 @@ export const styles: CSSProperties = {
   mobileEditingPadding: 12,
   altMenuMaxHeight: 250,
   altMenuText: {
-    fontSize: 14,
+    ...bodySm,
     lineHeight: 1.5,
   },
   altMenuHeaderText: {
-    fontSize: 12,
+    ...caption,
     fontWeight: 600,
-    lineHeight: 1.4,
-    letterSpacing: 0.96,
     textTransform: 'uppercase',
   },
   veryLargeText: {
-    fontFamily: 'var(--font-display)',
-    fontSize: 36,
-    fontWeight: 300,
-    lineHeight: 1.17,
-    letterSpacing: -0.36,
+    ...display2xl,
   },
   largeText: {
-    fontSize: 20,
-    fontWeight: 500,
-    lineHeight: 1.35,
-    letterSpacing: 0,
+    ...displayLg,
   },
   mediumText: {
-    fontSize: 15,
-    fontWeight: 500,
-    lineHeight: 1.4,
-    letterSpacing: 0,
+    ...bodyStrong,
   },
   smallText: {
-    fontSize: 14,
-    fontWeight: 400,
-    lineHeight: 1.5,
-    letterSpacing: 0,
+    ...bodySm,
   },
   verySmallText: {
-    fontSize: 12,
-    fontWeight: 400,
-    lineHeight: 1.4,
-    letterSpacing: 0,
+    ...caption,
   },
   tinyText: {
-    fontSize: 10,
+    ...caption,
   },
   page: {
     flex: 1,
@@ -102,7 +92,8 @@ export const styles: CSSProperties = {
     userSelect: 'none',
   },
   shadow: {
-    boxShadow: '0 8px 20px rgba(12, 10, 9, 0.08)',
+    boxShadow:
+      '0 1px 2px rgba(12, 10, 9, 0.05), 0 10px 24px rgba(12, 10, 9, 0.04)',
   },
   shadowLarge,
   tnum: {
@@ -113,10 +104,7 @@ export const styles: CSSProperties = {
   },
   notFixed: { fontFeatureSettings: '' },
   text: {
-    fontSize: 16,
-    fontWeight: 400,
-    lineHeight: 1.5,
-    letterSpacing: 0.16,
+    ...bodyMd,
   },
   delayedFadeIn: {
     animationName: keyframes({
