@@ -133,9 +133,6 @@ export const enoughOnAccentAction = '#ffffff';
 export const enoughSurfaceSelected = '#eef4ff';
 export const enoughSurfaceHover = '#f5f4f1';
 export const enoughDisabled = '#b8b3ad';
-export const enoughSuccess = '#16a34a';
-export const enoughError = '#dc2626';
-export const enoughWarning = '#b88115';
 
 export const categoryHousing = '#B45309';
 export const categoryHousingTint = '#FEF3C7';
