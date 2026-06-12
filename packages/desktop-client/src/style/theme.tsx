@@ -306,7 +306,7 @@ button {
 }
 
 ::selection {
-  background: #f4c5a8;
+  background: #DBEAFE;
   color: #0c0a09;
 }`}</style>
   );
