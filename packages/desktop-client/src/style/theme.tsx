@@ -223,7 +223,7 @@ export function BrandStyle() {
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --letter-spacing-normal: 0;
-  --color-pageBackground: #f5f5f5;
+  --color-pageBackground: #f8f7f4;
   --color-pageBackgroundModalActive: #f0efed;
   --color-pageText: #0c0a09;
   --color-pageTextLight: #4e4e4e;
@@ -261,7 +261,7 @@ html,
 body,
 #root,
 [data-theme] {
-  background: #f5f5f5 !important;
+  background: #f8f7f4 !important;
   color: #0c0a09;
   font-family: var(--font-family);
 }
@@ -306,7 +306,7 @@ button {
 }
 
 ::selection {
-  background: #f4c5a8;
+  background: #DBEAFE;
   color: #0c0a09;
 }`}</style>
   );
