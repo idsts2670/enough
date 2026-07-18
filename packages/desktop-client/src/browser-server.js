@@ -43,10 +43,14 @@ const getBackendWorkerScriptUrl = ({ publicUrl = '', hash }) => {
     throw new Error('Invalid backend worker hash');
   }
 
-  const baseUrl =
-    typeof publicUrl === 'string' && publicUrl.length > 0
-      ? new URL(publicUrl, self.location.href)
-      : new URL('./', self.location.href);
+  let baseUrl;
+  if (typeof publicUrl === 'string' && publicUrl.length > 0) {
+    baseUrl = new URL(publicUrl, self.location.href);
+  } else {
+    // In Vite dev, this worker is served from /src/browser-server.js.
+    // Empty PUBLIC_URL must still resolve kcab from the app root.
+    baseUrl = new URL('/', self.location.origin);
+  }
 
   if (baseUrl.origin !== self.location.origin) {
     throw new Error('Invalid backend worker origin');

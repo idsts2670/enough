@@ -367,6 +367,10 @@ const pluginsServiceAssets = (): Plugin => ({
   },
 });
 
+function shouldStartLootCoreBackend(mode: string) {
+  return mode !== 'desktop' && !process.env.VITEST;
+}
+
 export default defineConfig(async ({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const devHeaders = {
@@ -504,7 +508,7 @@ export default defineConfig(async ({ mode, command }) => {
       injectShims(),
       plaidLinkHelper(),
       addWatchers(),
-      mode === 'desktop' ? undefined : lootCoreBackend(),
+      shouldStartLootCoreBackend(mode) ? lootCoreBackend() : undefined,
       mode === 'desktop' ? undefined : pluginsServiceAssets(),
       react(),
       babel({
